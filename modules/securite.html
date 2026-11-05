@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module Cybersécurité & hacking éthique : cadre légal, labo isolé, méthodologie de pentest, reconnaissance et scan Nmap, OWASP Top 10, durcissement des systèmes, défense réseau et hygiène numérique.">
+    <title>Cybersécurité &amp; Hacking éthique — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a> · Parcours 04 · Virtualisation, homelab &amp; sécurité · 4 / 4</p>
+        <h1 class="hero__title">Cybersécurité &amp;<br>Hacking <em>éthique</em></h1>
+        <p class="hero__lead">Comprendre l'attaque pour mieux défendre. Ce module pose les fondamentaux offensifs <em>et</em> défensifs : méthodologie d'un test d'intrusion, reconnaissance, vulnérabilités courantes, puis durcissement, pare-feu et hygiène numérique — le tout en labo isolé et dans un cadre strictement légal.</p>
+        <div class="hero__meta">
+            <span class="chip">Éthique &amp; loi</span><span class="chip">Kali</span><span class="chip">Pentest</span><span class="chip">OWASP</span><span class="chip">Hardening</span><span class="chip">VPN</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n1"><b>Niveau</b> Débutant</span>
+            <span class="fact"><b>Durée</b> ≈ 1 h 30</span>
+            <span class="fact"><b>Chapitres</b> 8</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> <a href="linux-debian.html">Linux Debian</a> · <a href="subnetting.html">Subnetting</a></span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">Cybersécurité</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#ethique"><span>01</span> Éthique &amp; cadre légal</a></li>
+            <li><a class="toc__link" href="#labo"><span>02</span> Monter un labo isolé</a></li>
+            <li><a class="toc__link" href="#methodo"><span>03</span> Méthodologie de pentest</a></li>
+            <li><a class="toc__link" href="#recon"><span>04</span> Reconnaissance &amp; scan</a></li>
+            <li><a class="toc__link" href="#vulns"><span>05</span> Vulnérabilités &amp; OWASP</a></li>
+            <li><a class="toc__link" href="#hardening"><span>06</span> Durcir les systèmes</a></li>
+            <li><a class="toc__link" href="#reseau"><span>07</span> Défense réseau</a></li>
+            <li><a class="toc__link" href="#hygiene"><span>08</span> Hygiène numérique</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <p class="theory"><b>Module de théorie, pas encore pratiqué.</b> Rédigé à partir de documentations publiques : aucun TP de sécurité offensive n'a encore été fait dans la formation. Les commandes sont à éprouver sur un lab avant de s'y fier — et ce module sera réécrit avec les vraies sorties et les vrais pièges le jour où il le sera.</p>
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Énoncer le cadre légal, et refuser tout test hors d'un périmètre explicitement autorisé.</li>
+                <li>Monter un labo attaquant / cible totalement isolé, avec un snapshot propre.</li>
+                <li>Dérouler les cinq phases d'un test d'intrusion, et dire laquelle produit réellement de la valeur.</li>
+                <li>Lire un résultat Nmap côté attaque, et en tirer une action concrète côté défense.</li>
+                <li>Reconnaître les grandes classes de failles de l'OWASP Top 10 et leur contre-mesure.</li>
+                <li>Durcir un système et un réseau, et appliquer les cinq réflexes d'hygiène numérique.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> <a href="linux-debian.html">Linux Debian</a> · <a href="subnetting.html">Subnetting</a></p>
+            <p class="brief__foot">Le labo isolé se monte avec <a href="proxmox.html">Proxmox</a>, le durcissement s'applique aux serveurs des modules <a href="linux-debian.html">Linux Debian</a> et <a href="windows-server.html">Windows Server</a>.</p>
+        </section>
+
+        <!-- 01 -->
+        <section class="chapter" id="ethique">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">Éthique &amp; cadre légal — à lire en premier</h2>
+            <p class="chapter__intro">La seule différence entre un test d'intrusion et un délit, c'est <strong>l'autorisation</strong>. Avant toute technique, ce chapitre fixe les règles. Elles ne sont pas négociables.</p>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Avertissement</p>
+                <p>Accéder à un système <strong>sans autorisation écrite</strong> est illégal ; tester ou scanner sans autorisation est <strong>risqué</strong>, car le droit varie selon les pays. En <strong>Belgique</strong>, l'<strong>article 550bis du Code pénal</strong> punit d'emprisonnement et d'amende le simple fait d'accéder sans autorisation à un système informatique, ou de s'y maintenir — plus lourdement avec une intention frauduleuse ; en <strong>France</strong>, ce sont les <strong>articles 323-1 et suivants</strong> du Code pénal, qui visent l'accès ou le maintien <em>frauduleux</em>. Les « bonnes intentions » ne changent rien : l'accès sans autorisation est l'infraction. Tout ce qui suit s'applique <strong>uniquement</strong> à des systèmes que tu possèdes ou que tu es explicitement autorisé à tester, dans un <strong>labo isolé</strong>.</p>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">L'exception belge, très encadrée</p>
+                <p>La loi belge du 26 avril 2024 de transposition de NIS2 (articles 22 et 23) protège la personne qui cherche et signale une vulnérabilité <strong>sans</strong> autorisation préalable (sauf réseaux de certains organismes et des organes judiciaires, où un accord écrit doit être conclu avant la recherche), à des conditions strictes : aucune intention frauduleuse ni de nuire, ne faire que le <strong>strict nécessaire</strong> pour démontrer la faille, la signaler au plus vite à l'organisation <strong>et</strong> au <strong>CCB</strong> (Centre pour la Cybersécurité Belgique), et ne rien divulguer sans l'accord du CCB. Ce n'est pas un permis de tester : hors de ces conditions, l'article 550bis s'applique.</p>
+            </div>
+
+            <h3>Les trois « chapeaux »</h3>
+            <ul>
+                <li><strong>White hat</strong> — hacker éthique : agit avec autorisation, signale les failles pour qu'elles soient corrigées.</li>
+                <li><strong>Black hat</strong> — attaque à des fins malveillantes ou criminelles.</li>
+                <li><strong>Grey hat</strong> — zone grise : agit parfois sans autorisation « pour le bien », ce qui reste illégal.</li>
+            </ul>
+
+            <h3>Où pratiquer légalement</h3>
+            <ul>
+                <li><strong>Ton propre labo</strong> — des VM cibles que tu as installées (chapitre suivant).</li>
+                <li><strong>Plateformes dédiées</strong> — TryHackMe, Hack The Box, PortSwigger Web Security Academy, VulnHub : des environnements <em>conçus</em> pour être attaqués.</li>
+                <li><strong>Programmes de bug bounty</strong> — avec un périmètre (scope) explicitement autorisé.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Pas d'autorisation = pas de test. On s'entraîne sur <strong>ses propres machines</strong> ou sur des <strong>plateformes prévues pour</strong>. L'objectif de ce module est <strong>défensif</strong> : comprendre l'attaque pour protéger.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">En révisant Nmap, tu as envie de scanner le serveur web de ton ancienne école « juste pour voir quels ports sont ouverts », sans rien attaquer. Est-ce légal ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Non : sans autorisation écrite du propriétaire, tu n&#x27;as pas à interroger ses machines</button>
+                        <button class="scenario__opt" data-why="Un scan actif interroge directement les machines d&#x27;autrui ; c&#x27;est souvent l&#x27;acte préparatoire d&#x27;une intrusion, et il peut perturber le service. Sans autorisation, on s&#x27;abstient.">Oui, un scan ne fait que regarder, il n&#x27;entre pas</button>
+                        <button class="scenario__opt" data-why="Signaler après coup ne crée pas l&#x27;autorisation qui manquait au départ ; le cadre belge exige en plus de ne faire que le strict nécessaire et de prévenir le CCB.">Oui, si tu leur envoies ensuite les résultats</button>
+                    </div>
+                    <div class="scenario__why"><p>La règle du module : <strong>pas d'autorisation écrite = pas de test</strong>, même « passif » à tes yeux. Pour t'entraîner, scanne ton labo isolé ou une plateforme prévue pour (TryHackMe, Hack The Box, <code>scanme.nmap.org</code>, que le projet Nmap autorise explicitement à scanner).</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="chapter" id="labo">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Monter un labo isolé</h2>
+            <p class="chapter__intro">On construit un bac à sable coupé d'Internet : une machine d'attaque (Kali Linux) et une ou deux cibles volontairement vulnérables, sur un réseau <em>privé</em> qui ne peut rien atteindre d'autre.</p>
+
+            <h3>Les briques du labo</h3>
+            <ul>
+                <li><strong>Attaquant</strong> — Kali Linux (distribution orientée sécurité, livrée avec les outils).</li>
+                <li><strong>Cibles</strong> — Metasploitable 2, OWASP Juice Shop, DVWA, ou une VM Windows/Linux non patchée.</li>
+                <li><strong>Isolation</strong> — un réseau interne only (Proxmox : un <code>vmbr</code> sans carte physique ; VirtualBox : « réseau interne »).</li>
+            </ul>
+
+            <div class="tip">
+                <p class="tip__label">Règle d'or du labo</p>
+                <p>Le réseau du labo ne doit avoir <strong>aucune route vers Internet ni vers ton réseau domestique</strong>. Une VM volontairement vulnérable exposée en ligne se fait compromettre — et peut servir de rebond vers le reste.</p>
+            </div>
+
+            <p>Sur Proxmox (cf. module <a href="proxmox.html">Proxmox &amp; Virtualisation</a>), on crée un pont dédié avec <code>bridge-ports none</code>, puis on y branche Kali et les cibles. Elles se voient entre elles, et nulle part ailleurs.</p>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Le labo est-il isolé : aucune route vers l'extérieur sur Kali, et un pont sans carte physique ?</p>
+                <div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Kali, puis nœud Proxmox</span></div>
+                    <pre class="terminal__code"><span class="c"># sur Kali : la table de routage</span>
+<span class="k">ip</span> route
+<span class="c"># sur le nœud Proxmox : le pont du labo (vmbr1 ici)</span>
+<span class="k">cat</span> <span class="s">/etc/network/interfaces</span></pre>
+                </div>
+                <p class="verify__sub">Sortie attendue</p>
+                <pre class="verify__out">10.10.10.0/24 dev eth0 proto kernel scope link src 10.10.10.10
+
+auto vmbr1
+iface vmbr1 inet manual
+        bridge-ports none
+        bridge-stp off
+        bridge-fd 0</pre>
+                <p class="verify__fail">Une ligne <code>default</code> dans la table de Kali : la VM a une passerelle, donc une sortie possible. Supprime-la. Sur le pont, <code>bridge-ports</code> désigne une carte physique au lieu de <code>none</code> : le labo touche alors le vrai réseau. Corrige avant tout test.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un labo de sécurité = <strong>attaquant + cible + isolation totale</strong>. Kali pour attaquer, une VM vulnérable pour cible, et un réseau interne sans sortie. On sauvegarde un snapshot « propre » pour repartir de zéro après chaque test.</p>
+            </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="chapter" id="methodo">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">La méthodologie d'un test d'intrusion</h2>
+            <p class="chapter__intro">Un pentest n'est pas une suite d'outils lancés au hasard : c'est un processus en phases. Le connaître aide autant à attaquer (en labo) qu'à défendre (savoir ce que cherche un attaquant).</p>
+
+            <div class="timeline">
+                <div class="tl-item"><div class="tl-year">1</div><div class="tl-dot"></div><div class="tl-body"><strong>Reconnaissance</strong> — collecter de l'information sur la cible (passive : OSINT ; active : scans).</div></div>
+                <div class="tl-item"><div class="tl-year">2</div><div class="tl-dot"></div><div class="tl-body"><strong>Scanning</strong> — cartographier ports ouverts, services, versions, vulnérabilités connues.</div></div>
+                <div class="tl-item"><div class="tl-year">3</div><div class="tl-dot"></div><div class="tl-body"><strong>Exploitation</strong> — tirer parti d'une faille pour obtenir un accès (dans le périmètre autorisé).</div></div>
+                <div class="tl-item"><div class="tl-year">4</div><div class="tl-dot"></div><div class="tl-body"><strong>Post-exploitation</strong> — évaluer l'impact : élévation de privilèges, mouvement latéral, données accessibles.</div></div>
+                <div class="tl-item"><div class="tl-year">5</div><div class="tl-dot"></div><div class="tl-body"><strong>Rapport</strong> — la phase la plus importante : documenter les failles, leur criticité et surtout les <em>correctifs</em>.</div></div>
+            </div>
+
+            <p>Côté défense, on décrit l'attaque elle-même avec la <strong>kill chain</strong> : chaque étape est une occasion de la casser.</p>
+            <div class="walk">
+                <p class="walk__label">Pas à pas</p>
+                <p class="walk__title">Une intrusion type, vue par la « kill chain » (Lockheed Martin)</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · attaquant → sources publiques</p>
+                        <p class="walk__head">Reconnaissance</p>
+                        <p>L'attaquant collecte : noms et adresses e-mail sur le site et LinkedIn, sous-domaines, services exposés (moteurs comme Shodan). Rien n'a encore touché la cible.</p>
+                        <p class="walk__change">Défense : réduire ce qui est <b>exposé</b> et ce qui <b>fuite</b> (bannières, organigrammes, e-mails publics).</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · attaquant</p>
+                        <p class="walk__head">Armement</p>
+                        <p>Il prépare son outil : un document piégé (macro), un lien vers une fausse page de connexion, ou un exploit pour la version de VPN repérée.</p>
+                        <p class="walk__change">Défense : <b>mises à jour</b> (l'exploit vise une version connue), macros bloquées.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · attaquant → victime</p>
+                        <p class="walk__head">Livraison</p>
+                        <p>L'e-mail d'hameçonnage arrive dans la boîte d'un employé, ou l'exploit est envoyé au service exposé.</p>
+                        <p class="walk__change">Défense : <b>filtrage</b> des e-mails, sensibilisation au <b>phishing</b>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · victime → poste</p>
+                        <p class="walk__head">Exploitation</p>
+                        <p>L'employé ouvre la pièce jointe, ou saisit son mot de passe sur la fausse page : le code s'exécute, ou l'identifiant est volé.</p>
+                        <p class="walk__change">Défense : <b>MFA</b> (un mot de passe volé ne suffit plus), EDR, moindre privilège.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 5</b> · poste compromis</p>
+                        <p class="walk__head">Installation</p>
+                        <p>L'attaquant s'installe durablement : tâche planifiée, service, compte ajouté — pour survivre à un redémarrage.</p>
+                        <p class="walk__change">Défense : <b>journalisation</b> des créations de services et de comptes, alertes.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 6</b> · poste → serveur de l'attaquant</p>
+                        <p class="walk__head">Commande et contrôle (C2)</p>
+                        <p>Le poste compromis contacte régulièrement un serveur de l'attaquant (souvent en HTTPS) pour recevoir des ordres.</p>
+                        <p class="walk__change">Défense : <b>filtrage sortant</b>, DNS filtrant, détection de connexions inhabituelles (IDS).</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 7</b> · attaquant → réseau interne</p>
+                        <p class="walk__head">Actions sur l'objectif</p>
+                        <p>Mouvement latéral, élévation de privilèges, vol de données, puis souvent chiffrement par rançongiciel.</p>
+                        <p class="walk__change">Défense : <b>segmentation</b>, comptes admin séparés, <b>sauvegardes hors ligne</b>.</p>
+                    </li>
+                </ol>
+            </div>
+            <p>Des cadres formalisent cette démarche : <strong>PTES</strong> (Penetration Testing Execution Standard), le <strong>MITRE ATT&amp;CK</strong> (base de connaissances des tactiques et techniques réellement observées chez les attaquants, plus fine que la kill chain : sert autant à planifier un test qu'à vérifier ce que la défense détecte) ou l'<strong>OWASP Testing Guide</strong> pour le web.</p>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Recon → Scan → Exploitation → Post-exploitation → <strong>Rapport</strong> (cinq phases simplifiées : le PTES en compte sept). Un test sans rapport de correctifs ne sert à rien : la valeur d'un pentest, c'est ce qu'on <em>corrige</em> ensuite.</p>
+            </div>
+        </section>
+
+        <!-- 04 -->
+        <section class="chapter" id="recon">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">Reconnaissance &amp; scan</h2>
+            <p class="chapter__intro">La reconnaissance dessine la surface d'attaque. Passive, on lit ce qui est public sans toucher la cible ; active, on interroge directement les machines (uniquement dans le périmètre autorisé).</p>
+
+            <h3>Scanner un hôte du labo avec Nmap</h3>
+            <p><code>nmap</code> est l'outil de cartographie réseau de référence. Sur une cible <strong>de ton labo</strong> :</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Kali — nmap (cible du labo)</span></div>
+                <pre class="terminal__code"><span class="c"># Découvrir les hôtes actifs du sous-réseau labo</span>
+<span class="k">nmap</span> <span class="p">-sn</span> <span class="s">10.10.10.0/24</span>
+
+<span class="c"># Scan des ports + détection de version des services</span>
+<span class="k">nmap</span> <span class="p">-sV</span> <span class="p">-p-</span> <span class="s">10.10.10.20</span>
+
+<span class="c"># Détection d'OS + scripts par défaut (reconnaissance approfondie)</span>
+<span class="k">nmap</span> <span class="p">-A</span> <span class="s">10.10.10.20</span></pre>
+            </div>
+            <p class="note">Lecture d'un résultat : un port <code>open</code> avec un service et sa <em>version</em> permet de chercher des vulnérabilités connues (<strong>CVE</strong> = identifiant public d'une faille, ex. <code>CVE-2024-3094</code>) associées à cette version. Chaque CVE porte une note <strong>CVSS</strong> de 0 à 10 (version 4.0 depuis novembre 2023, la 3.1 reste très répandue) : 0,1–3,9 faible, 4,0–6,9 moyenne, 7,0–8,9 élevée, 9,0–10 critique. La note mesure la gravité technique, pas le risque <em>chez toi</em> : une faille critique sur un service non exposé peut passer après une faille moyenne sur Internet.</p>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Le scan voit-il les ports ouverts, avec leur service et leur version ?</p>
+                <div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Kali — nmap (cible du labo)</span></div>
+                    <pre class="terminal__code"><span class="c"># la cible du labo</span>
+<span class="k">nmap</span> <span class="p">-sV</span> <span class="p">-p-</span> <span class="s">10.10.10.20</span></pre>
+                </div>
+                <p class="verify__sub">Sortie attendue</p>
+                <pre class="verify__out">Nmap scan report for 10.10.10.20
+Host is up (0.0012s latency).
+Not shown: 65533 closed ports
+PORT     STATE    SERVICE     VERSION
+21/tcp   open     ftp         vsftpd 2.3.4
+23/tcp   filtered telnet</pre>
+                <p class="verify__fail">Aucun port <code>open</code>, ou seulement des <code>filtered</code> : la cible ne répond pas, ou un pare-feu bloque le sondage. Vérifie d'abord qu'elle répond à <code>nmap -sn</code> (ping scan, sans scan de ports). Et si l'adresse n'est pas celle de ton labo, arrête-toi : sans autorisation, pas de scan.</p>
+            </div>
+
+            <h3>Côté défense : ce que ça t'apprend</h3>
+            <ul>
+                <li>Chaque port ouvert = une porte à justifier. Ferme/filtre ce qui n'est pas nécessaire.</li>
+                <li>Masquer les <em>bannières</em> de version complique la vie de l'attaquant.</li>
+                <li>Un scan qui « voit » trop de choses = surface d'attaque à réduire.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Nmap cartographie ports, services et versions. En défense, l'objectif est l'inverse : <strong>réduire la surface</strong> — moins de ports ouverts, pas de bannières bavardes, services à jour.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le scan de ta cible de labo montre <code>21/tcp open ftp vsftpd 2.3.4</code>. Quelle est ta prochaine étape ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Chercher les CVE connues pour vsftpd 2.3.4, et noter la correction à proposer</button>
+                        <button class="scenario__opt" data-why="Un seul port ouvert suffit si le service est vulnérable : la version exacte est justement l&#x27;indice à exploiter.">Conclure que le serveur est sûr, puisque seul le FTP est ouvert</button>
+                        <button class="scenario__opt" data-why="Un scan complet est utile, mais il ne dit rien de plus sur ce service : la version déjà trouvée est l&#x27;information à exploiter.">Relancer le scan avec -p- pour être certain</button>
+                    </div>
+                    <div class="scenario__why"><p>La <strong>version</strong> est l'information la plus précieuse d'un scan : vsftpd 2.3.4 est célèbre pour une porte dérobée (CVE-2011-2523). Côté défense, la conclusion du rapport est simple : mettre à jour ou couper ce service, et filtrer le port.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="chapter" id="vulns">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Vulnérabilités courantes &amp; OWASP</h2>
+            <p class="chapter__intro">La majorité des compromissions exploitent quelques classes de failles bien connues. Les repérer, c'est déjà pouvoir les éviter dans ce qu'on développe ou administre.</p>
+
+            <h3>Les grands classiques (OWASP Top 10:2025)</h3>
+            <p>L'<strong>OWASP Top 10</strong> classe les risques des applications web à partir de données réelles. Dans l'édition 2025, le premier rang reste au <strong>contrôle d'accès défaillant</strong> — un utilisateur qui lit ou modifie ce qui ne lui appartient pas, souvent en changeant simplement un identifiant dans l'URL.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Rang</th><th>Faille</th><th>En bref</th><th>Défense</th></tr></thead>
+                    <tbody>
+                        <tr><td>A01</td><td><strong>Contrôle d'accès défaillant</strong></td><td>Accéder aux données ou fonctions d'un autre (<code>/facture?id=124</code> au lieu de 123) ; inclut désormais le SSRF</td><td>Refuser par défaut, vérifier les droits <strong>côté serveur</strong> à chaque requête</td></tr>
+                        <tr><td>A02</td><td>Mauvaise configuration</td><td>Défauts d'usine, comptes par défaut, messages d'erreur bavards, services exposés</td><td>Hardening, moindre privilège, configuration reproductible</td></tr>
+                        <tr><td>A03</td><td>Chaîne d'approvisionnement logicielle</td><td>Bibliothèque, image ou paquet compromis ou obsolète</td><td>Sources fiables, versions figées, mises à jour, veille CVE</td></tr>
+                        <tr><td>A04</td><td>Défaillances cryptographiques</td><td>Données sensibles en clair, algorithmes faibles</td><td>TLS partout, hachage fort des mots de passe</td></tr>
+                        <tr><td>A05</td><td>Injection (SQLi, XSS…)</td><td>Du code glissé dans une entrée non filtrée</td><td>Requêtes préparées, échappement des sorties, CSP</td></tr>
+                        <tr><td>A07</td><td>Défaillances d'authentification</td><td>Sessions ou mots de passe mal gérés</td><td>MFA, verrouillage, gestion de session robuste</td></tr>
+                        <tr><td>A09</td><td>Journalisation et alertes insuffisantes</td><td>L'attaque passe inaperçue</td><td>Journaux centralisés, alertes testées</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>Les trois autres catégories : conception non sécurisée (A06), intégrité des logiciels et des données (A08) et mauvaise gestion des conditions exceptionnelles (A10 — une erreur qui laisse le système « ouvert »).</p>
+
+            <h3>Le maillon faible : les mots de passe</h3>
+            <p>Beaucoup d'attaques ne « cassent » rien : elles <em>devinent</em>. Attaques par dictionnaire, <em>credential stuffing</em> (réutilisation de fuites), force brute sur des mots de passe courts. La contre-mesure n'est pas un mot de passe « compliqué » mais un mot de passe <strong>long, unique par service</strong>, plus un second facteur.</p>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Contrôle d'accès, configuration, dépendances, chiffrement, injection : le Top 10 OWASP couvre l'essentiel. La défense tient en peu de mots : <strong>valider les entrées, mettre à jour, MFA, moindre privilège</strong>.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Connecté à une boutique en ligne, tu ouvres <code>/commande?id=1052</code>, ta commande. En tapant <code>id=1051</code>, tu vois l&#x27;adresse d&#x27;un autre client. Quelle catégorie de l&#x27;OWASP Top 10 ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>A01 — contrôle d&#x27;accès défaillant</button>
+                        <button class="scenario__opt" data-why="Rien n&#x27;est injecté : l&#x27;identifiant est une valeur normale. C&#x27;est le serveur qui oublie de vérifier à qui appartient la commande.">A05 — injection</button>
+                        <button class="scenario__opt" data-why="L&#x27;authentification a marché : tu es bien toi. C&#x27;est l&#x27;autorisation (ce que tu as le droit de voir) qui manque.">A07 — défaillance d&#x27;authentification</button>
+                    </div>
+                    <div class="scenario__why"><p>C'est un <strong>IDOR</strong> (référence directe à un objet non contrôlée), cas d'école du <strong>A01</strong>. La correction : à chaque requête, le serveur vérifie que l'objet demandé appartient à l'utilisateur connecté — masquer ou rendre l'identifiant aléatoire ne suffit pas.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 06 -->
+        <section class="chapter" id="hardening">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">Durcir les systèmes (hardening)</h2>
+            <p class="chapter__intro">Le durcissement réduit la surface d'attaque d'une machine : on désactive l'inutile, on met à jour, on applique le moindre privilège. C'est le travail défensif quotidien de l'admin.</p>
+
+            <h3>Réflexes de base (Linux &amp; Windows)</h3>
+            <ul>
+                <li><strong>Mises à jour</strong> — automatiser les correctifs de sécurité, c'est la mesure n°1.</li>
+                <li><strong>Moindre privilège</strong> — pas de travail en root/admin au quotidien ; <code>sudo</code> ciblé (cf. module <a href="linux-debian.html">Linux Debian</a>).</li>
+                <li><strong>Désactiver l'inutile</strong> — services et comptes non nécessaires coupés.</li>
+                <li><strong>SSH durci</strong> — clés plutôt que mot de passe, root login désactivé, port/limitation.</li>
+            </ul>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Durcissement SSH — /etc/ssh/sshd_config</span></div>
+                <pre class="terminal__code"><span class="p">PermitRootLogin</span> <span class="s">no</span>          <span class="c"># pas de connexion root directe</span>
+<span class="p">PasswordAuthentication</span> <span class="s">no</span>  <span class="c"># clés uniquement</span>
+<span class="p">MaxAuthTries</span> <span class="s">3</span>              <span class="c"># limite les essais</span>
+<span class="c"># puis : sshd -t (vérifie la syntaxe), systemctl restart ssh — et installer fail2ban</span></pre>
+            </div>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Ne pas se fermer la porte</p>
+                <p>Avant <code>PasswordAuthentication no</code>, <strong>vérifier que la connexion par clé marche</strong> (<code>ssh -i ~/.ssh/id_ed25519 user@serveur</code> depuis un second terminal) et garder la session actuelle ouverte pendant le redémarrage de SSH. Si la clé n'est pas reconnue, on n'a plus d'accès à distance — sur un serveur loué, cela veut dire passer par la console de secours. Autre piège : sur Debian, <code>sshd_config</code> commence par <code>Include /etc/ssh/sshd_config.d/*.conf</code>, et pour chaque réglage <strong>la première valeur lue l'emporte</strong>. Un fichier déposé là (par cloud-init, par exemple) avec <code>PasswordAuthentication yes</code> annule ta ligne. Contrôle la configuration réellement appliquée avec <code>sudo sshd -T | grep -i passwordauthentication</code>.</p>
+            </div>
+
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>La configuration SSH est-elle valide, et la valeur réellement appliquée est-elle <code>no</code> ?</p>
+                <div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash — serveur</span></div>
+                    <pre class="terminal__code"><span class="k">sudo</span> <span class="k">sshd</span> <span class="p">-t</span>      <span class="c"># syntaxe : aucune erreur signalée</span>
+<span class="k">sudo</span> <span class="k">sshd</span> <span class="p">-T</span> | <span class="k">grep</span> <span class="p">-i</span> passwordauthentication   <span class="c"># valeur effective</span></pre>
+                </div>
+                <p class="verify__sub">Sortie attendue</p>
+                <pre class="verify__out">passwordauthentication no</pre>
+                <p class="verify__fail"><code>passwordauthentication yes</code> : une autre valeur, lue avant la tienne, l'emporte (la première valeur lue est retenue). Cherche dans <code>/etc/ssh/sshd_config.d/</code>. Une erreur affichée par <code>sshd -t</code> : corrige la ligne indiquée avant tout redémarrage, et garde la session ouverte.</p>
+            </div>
+
+            <p>Pour aller plus loin, des <strong>guides de référence</strong> existent : les <em>CIS Benchmarks</em> et les <em>STIG</em> listent, système par système, les réglages à appliquer. On les suit comme des checklists.</p>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Durcir = <strong>mettre à jour + désactiver l'inutile + moindre privilège + SSH par clés</strong>. Un antivirus/EDR et <code>fail2ban</code> complètent. Les <em>CIS Benchmarks</em> donnent la checklist par OS.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Tu as mis <code>PasswordAuthentication no</code> à la fin de <code>/etc/ssh/sshd_config</code> et redémarré SSH. Pourtant, une connexion par mot de passe passe encore. Que vérifies-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Un fichier de sshd_config.d qui fixe la valeur avant ta ligne</button>
+                        <button class="scenario__opt" data-why="Sur Debian, le service s&#x27;appelle ssh ; le nom du service n&#x27;y change rien. Le comportement vient de la configuration lue.">Que le service s&#x27;appelle bien sshd et pas ssh</button>
+                        <button class="scenario__opt" data-why="Ta valeur no est déjà en minuscules, la forme documentée (dans sshd_config, les mots-clés ignorent la casse, pas leurs arguments) : le problème est ailleurs.">Qu&#x27;il faut écrire « No » avec une majuscule</button>
+                    </div>
+                    <div class="scenario__why"><p>Pour sshd, la <strong>première</strong> occurrence d'un mot-clé gagne. Or l'<code>Include</code> de <code>sshd_config.d/*.conf</code> est en tête du fichier. <code>sudo sshd -T</code> affiche la configuration effective ; on corrige le fichier fautif, ou on place son réglage dans un fichier de ce dossier au nom qui passe en premier.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="chapter" id="reseau">
+            <p class="chapter__num">07</p>
+            <h2 class="chapter__title">Défense réseau</h2>
+            <p class="chapter__intro">Au-delà des machines, le réseau lui-même se défend : filtrer, segmenter, chiffrer et surveiller. C'est le prolongement des modules réseau (cf. <a href="subnetting.html">Subnetting</a> &amp; <a href="ccna-reseau.html">CCNA</a>).</p>
+
+            <h3>Pare-feu — filtrer les flux</h3>
+            <p>Le principe : <strong>tout interdire par défaut</strong>, n'ouvrir que le nécessaire. Sur Linux, <code>ufw</code> simplifie <code>iptables</code> :</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">ufw — pare-feu simple</span></div>
+                <pre class="terminal__code"><span class="k">ufw</span> default <span class="s">deny incoming</span>      <span class="c"># bloquer tout en entrée</span>
+<span class="k">ufw</span> default <span class="s">allow outgoing</span>     <span class="c"># autoriser les sorties</span>
+<span class="k">ufw</span> allow <span class="s">22/tcp</span>               <span class="c"># n'ouvrir que SSH — AVANT enable si tu es connecté en SSH</span>
+<span class="k">ufw</span> enable
+<span class="k">ufw</span> status verbose               <span class="c"># politique par défaut et règles actives</span></pre>
+            </div>
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Deux pièges</p>
+                <p>Sur un serveur distant, un <code>ufw enable</code> avant d'autoriser SSH coupe ta propre session. Et sur un hôte Docker, un port publié avec <code>-p</code> <strong>contourne</strong> ufw : Docker écrit ses règles avant celles d'ufw (voir le module <a href="docker.html">Docker</a>, chapitre réseau).</p>
+            </div>
+
+            <h3>Segmentation, VPN &amp; surveillance</h3>
+            <ul>
+                <li><strong>Segmentation (VLAN)</strong> — isoler IoT, invités, serveurs sensibles pour limiter la propagation.</li>
+                <li><strong>VPN</strong> — chiffrer les accès distants. <em>WireGuard</em> est moderne, simple et rapide ; on préfère un VPN à l'exposition directe d'un service sur Internet.</li>
+                <li><strong>IDS/IPS</strong> — détecter/bloquer les comportements suspects (Suricata, Snort).</li>
+                <li><strong>Journalisation</strong> — centraliser les logs pour repérer une intrusion <em>après coup</em>.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Pare-feu en <strong>deny par défaut</strong>, réseau <strong>segmenté</strong>, accès distant par <strong>VPN (WireGuard)</strong> et non par exposition directe, et des <strong>logs centralisés</strong> pour la détection. La défense en profondeur, c'est empiler ces couches.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Une caméra connectée bon marché est installée sur le même réseau que le NAS familial. Quelle mesure limite le plus les dégâts si la caméra est compromise ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>La placer dans un VLAN IoT qui n&#x27;a pas le droit de joindre le NAS</button>
+                        <button class="scenario__opt" data-why="On ne peut généralement rien installer sur ce genre d&#x27;objet : c&#x27;est le réseau qu&#x27;on adapte.">Installer un antivirus sur la caméra</button>
+                        <button class="scenario__opt" data-why="Le Wi-Fi n&#x27;y change rien : une fois la caméra compromise, elle est déjà dans le réseau, avec un accès direct au NAS.">Changer le mot de passe Wi-Fi tous les mois</button>
+                    </div>
+                    <div class="scenario__why"><p>La <strong>segmentation</strong> transforme une compromission en incident local : la caméra compromise ne voit que son VLAN, et le pare-feu entre VLAN bloque tout ce qui n'est pas explicitement autorisé (deny par défaut).</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="chapter" id="hygiene">
+            <p class="chapter__num">08</p>
+            <h2 class="chapter__title">Hygiène numérique</h2>
+            <p class="chapter__intro">La majorité des compromissions réelles n'ont rien de sophistiqué : mot de passe réutilisé, phishing, machine non à jour. Ces réflexes protègent plus que n'importe quel outil.</p>
+
+            <h3>Les cinq essentiels</h3>
+            <ul>
+                <li><strong>Gestionnaire de mots de passe</strong> — un mot de passe long et unique par service (Bitwarden, KeePassXC). On ne les retient plus, on les génère.</li>
+                <li><strong>MFA / 2FA partout</strong> — un second facteur (appli TOTP, clé FIDO2) bloque l'essentiel des vols de compte.</li>
+                <li><strong>Mises à jour</strong> — OS, navigateur, applis : les failles corrigées ne servent qu'à ceux qui n'ont pas patché.</li>
+                <li><strong>Phishing</strong> — vérifier l'expéditeur et l'URL, ne pas cliquer dans l'urgence. L'humain reste la première cible.</li>
+                <li><strong>Sauvegardes 3-2-1</strong> — le dernier rempart contre le rançongiciel, à condition qu'une copie soit <strong>hors ligne</strong> (un rançongiciel chiffre aussi les sauvegardes qu'il peut atteindre) et que la restauration ait été testée (cf. module <a href="proxmox.html">Proxmox</a>, chapitre backup).</li>
+            </ul>
+
+            <div class="tip">
+                <p class="tip__label">Pour aller plus loin</p>
+                <p>Côté chaîne : <a href="https://www.youtube.com/@zSecurity" target="_blank" rel="noopener">zSecurity</a> pour le hacking éthique. Côté pratique légale : <em>TryHackMe</em> et <em>Hack The Box</em> pour s'entraîner sur des cibles prévues pour ça. En Belgique, le <strong>CCB</strong> publie ses conseils sur <em>Safeonweb</em> et reçoit les signalements ; en France, l'<strong>ANSSI</strong> publie d'excellents guides de sécurité gratuits.</p>
+            </div>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Rappel final</p>
+                <p>Tout ce module vise la <strong>défense</strong>. On n'utilise ces connaissances que sur ses propres systèmes ou avec autorisation écrite. Le savoir offensif engage ta responsabilité — reste du bon côté.</p>
+            </div>
+        </section>
+
+        <section class="test" id="test" data-test="securite">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#virtualisation">examen du Parcours 04 · Virtualisation, homelab & sécurité</a>, qui le croise avec les autres modules du parcours, puis par l'<a href="../examens.html#final">examen final</a> sur les vingt-sept modules.</p>
+        </section>
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+                <details class="sources__verif">
+                    <summary>Sources officielles relues pour la vérification des faits du 08/10/2026 (11)</summary>
+                    <ul>
+                    <li><a href="https://github.com/OWASP/Top10/blob/master/2025/docs/en/index.md" rel="noopener">OWASP — OWASP Top 10:2025, liste des dix catégories</a></li>
+                    <li><a href="https://github.com/OWASP/Top10/blob/master/2025/docs/en/0x00_2025-Introduction.md" rel="noopener">OWASP — OWASP 2025, SSRF intégré à A01</a></li>
+                    <li><a href="https://github.com/OWASP/Top10/blob/master/2025/docs/en/A01_2025-Broken_Access_Control.md" rel="noopener">OWASP — OWASP A01:2025, IDOR et deny by default</a></li>
+                    <li><a href="https://github.com/OWASP/Top10/blob/master/2025/docs/en/A05_2025-Injection.md" rel="noopener">OWASP — OWASP A05:2025, requêtes paramétrées</a></li>
+                    <li><a href="https://github.com/OWASP/Top10/blob/master/2025/docs/en/A07_2025-Authentication_Failures.md" rel="noopener">OWASP — OWASP A07:2025, MFA et complexité déconseillée</a></li>
+                    <li><a href="https://github.com/OWASP/Top10/blob/master/2025/docs/en/A04_2025-Cryptographic_Failures.md" rel="noopener">OWASP — OWASP A04:2025, TLS et hachage des mots de passe</a></li>
+                    <li><a href="https://github.com/docker/docs/blob/main/content/manuals/engine/network/packet-filtering-firewalls.md" rel="noopener">Docker Docs — Docker : ports publiés et ufw</a></li>
+                    <li><a href="https://github.com/openssh/openssh-portable/blob/master/sshd_config.5" rel="noopener">OpenSSH — sshd_config(5) amont : mots-clés insensibles, arguments sensibles, directive Include</a></li>
+                    <li><a href="https://github.com/openssh/openssh-portable/blob/master/sshd.8" rel="noopener">OpenSSH — sshd(8) : -t (validité), -T (configuration effective)</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-network.adoc" rel="noopener">Proxmox VE — Proxmox : pont privé sans port (bridge-ports none)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/entra-docs/blob/main/docs/identity/conditional-access/policy-all-users-mfa-strength.md" rel="noopener">Microsoft Learn — Entra : MFA réduit de plus de 99,9 % le risque de compromission</a></li>
+                    </ul>
+                    <p class="sources__note">Liens vers les dépôts publics de la documentation (le texte source des pages officielles).</p>
+                </details>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>Cybersécurité &amp; Hacking éthique</strong> — Module du centre d'apprentissage IT · usage éthique &amp; légal uniquement</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · Pour approfondir : <a href="https://www.youtube.com/@zSecurity" target="_blank" rel="noopener">zSecurity</a></p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/securite.js?v=76137511"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+</body>
+</html>

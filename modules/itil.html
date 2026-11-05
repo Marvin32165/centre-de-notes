@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module ITIL 4 : ce qu'est un service et la valeur, le système de valeur et les sept principes, la chaîne de valeur et les quatre dimensions, incident, problème, demande de service et changement, service desk et SLA, puis le lien avec Scrum.">
+    <title>ITIL 4 — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a> · Parcours 05 · Cloud, supervision &amp; méthode · 6 / 7</p>
+        <h1 class="hero__title">ITIL 4 :<br><em>gérer l'IT comme un service</em></h1>
+        <p class="hero__lead">Scrum t'apprend à construire un produit ; ITIL apprend à le faire vivre. Ce qu'est un service, comment la valeur se crée, et les quatre situations à ne jamais confondre au support : incident, problème, demande, changement.</p>
+        <div class="hero__meta">
+            <span class="chip">Service</span><span class="chip">Valeur</span><span class="chip">SVS</span><span class="chip">Chaîne de valeur</span><span class="chip">Incident</span><span class="chip">Changement</span><span class="chip">SLA</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n1"><b>Niveau</b> Débutant</span>
+            <span class="fact"><b>Durée</b> ≈ 1 h 30</span>
+            <span class="fact"><b>Chapitres</b> 6</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> aucun</span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">ITIL 4</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#service"><span>01</span> Service et valeur</a></li>
+            <li><a class="toc__link" href="#svs"><span>02</span> Le système de valeur et ses principes</a></li>
+            <li><a class="toc__link" href="#chaine"><span>03</span> Chaîne de valeur et dimensions</a></li>
+            <li><a class="toc__link" href="#quatuor"><span>04</span> Incident, problème, demande, changement</a></li>
+            <li><a class="toc__link" href="#support"><span>05</span> Service desk, niveaux et SLA</a></li>
+            <li><a class="toc__link" href="#bout-en-bout"><span>06</span> Un cas de bout en bout, et Scrum</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Expliquer ce qu'est un service et distinguer sortie et résultat, client, utilisateur et sponsor.</li>
+                <li>Nommer les cinq composants du système de valeur, les sept principes directeurs et les six activités de la chaîne de valeur.</li>
+                <li>Classer une situation : incident, problème, demande de service ou changement.</li>
+                <li>Choisir le type d'un changement (standard, normal, urgent) et lire une priorité à partir de l'impact et de l'urgence.</li>
+                <li>Dire où Scrum s'arrête et où ITIL commence.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> aucun. Le module <a href="scrum.html">Agile &amp; Scrum</a> aide pour le chapitre 06, et <a href="redmine.html">Redmine — helpdesk</a> montre l'outil de tickets qui sert ces pratiques.</p>
+        </section>
+
+        <p class="theory">Module de théorie, non pratiqué en TP : il décrit <strong>ITIL 4</strong> et a été écrit avant le cours du 28/10/2026. Depuis 2026 existe aussi <strong>ITIL (Version 5)</strong>, publiée par PeopleCert, qui prolonge ITIL 4 ; ce module suit ITIL 4. Les chapitres 02 et 03 sont ceux qui peuvent différer.</p>
+
+        <section class="chapter" id="service">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">Service et valeur</h2>
+            <p class="chapter__intro">Dans une petite structure, « l'informatique », c'est une personne qu'on appelle quand ça plante. En grandissant, la même panne est réparée trois fois sans que personne cherche pourquoi, et un changement fait un vendredi fait tomber la messagerie le lundi.</p>
+
+            <h3>Ce qu'est ITIL</h3>
+            <p><strong>ITIL</strong> est un recueil de <strong>bonnes pratiques</strong> pour gérer l'informatique comme un <strong>service rendu à des clients</strong>, plutôt que comme des machines à réparer. Ce n'est ni une norme à appliquer à la lettre, ni un logiciel : c'est un vocabulaire commun et une façon d'organiser le travail, à adapter. On range cela sous le nom d'<strong>ITSM</strong> (IT Service Management). ITIL 4 date de 2019 et a remplacé ITIL v3, organisé en cinq phases de cycle de vie.</p>
+
+            <h3>Un service</h3>
+            <p>Un <strong>service</strong> est un moyen de permettre la <strong>co-création de valeur</strong> en facilitant les résultats que le client veut atteindre, <strong>sans qu'il ait à gérer lui-même les coûts et les risques</strong> correspondants. L'employé veut envoyer des e-mails ; il ne veut pas acheter, sauvegarder et sécuriser un serveur. L'équipe IT porte ce coût et ce risque.</p>
+
+            <div class="table-wrap"><table>
+                <thead><tr><th>Mot</th><th>Sens</th><th>Exemple : un portail de demandes</th></tr></thead>
+                <tbody>
+                <tr><td><strong>Sortie</strong> (output)</td><td>ce que le fournisseur livre</td><td>le portail est en ligne</td></tr>
+                <tr><td><strong>Résultat</strong> (outcome)</td><td>ce que le client en retire</td><td>les employés règlent seuls leurs demandes courantes</td></tr>
+                <tr><td><strong>Coût</strong></td><td>ce que le client ne paie pas en gérant lui-même</td><td>pas de serveur à acheter</td></tr>
+                <tr><td><strong>Risque</strong></td><td>l'incertitude que le fournisseur absorbe</td><td>si le portail tombe, l'IT gère</td></tr>
+                </tbody>
+            </table></div>
+
+            <div class="tip">
+                <p class="tip__label">Utilité et garantie</p>
+                <p>On juge un service sur deux critères : l'<strong>utilité</strong> (il fait ce dont j'ai besoin) et la <strong>garantie</strong> (il le fait de façon fiable : disponible, assez rapide, sécurisé). Il faut les deux. Cette distinction est tirée du vocabulaire usuel d'ITIL 4 ; à confirmer sur le support du cours.</p>
+            </div>
+
+            <h3>Les acteurs</h3>
+            <ul>
+                <li>le <strong>fournisseur de services</strong> : l'organisation qui rend le service, ici l'équipe IT ;</li>
+                <li>le <strong>consommateur</strong>, qui regroupe trois rôles : le <strong>client</strong> (il définit les besoins), l'<strong>utilisateur</strong> (il se sert du service) et le <strong>sponsor</strong> (il autorise le budget). Une même personne peut cumuler les trois.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>ITIL = bonnes pratiques pour gérer l'IT <strong>comme un service</strong>. Un service apporte de la valeur sans que le client porte coûts et risques. La valeur est <strong>co-créée</strong> et se juge sur le <strong>résultat</strong>, pas sur la livraison.</p>
+            </div>
+        </section>
+
+        <section class="chapter" id="svs">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Le système de valeur et ses principes</h2>
+            <p class="chapter__intro">ITIL 4 résume tout dans un schéma : à gauche une <strong>opportunité</strong> ou une <strong>demande</strong>, à droite de la <strong>valeur</strong>, et entre les deux une « machine » de cinq composants : le <strong>SVS</strong> (Service Value System).</p>
+
+            <div class="table-wrap"><table>
+                <thead><tr><th>Composant</th><th>En une phrase</th></tr></thead>
+                <tbody>
+                <tr><td><strong>Principes directeurs</strong></td><td>sept règles de bon sens pour décider</td></tr>
+                <tr><td><strong>Gouvernance</strong></td><td>la direction fixe le cap et vérifie</td></tr>
+                <tr><td><strong>Chaîne de valeur</strong></td><td>six activités qui transforment la demande en valeur (chapitre 03)</td></tr>
+                <tr><td><strong>Pratiques</strong></td><td>les « métiers » : incidents, changements… (chapitres 04 et 05)</td></tr>
+                <tr><td><strong>Amélioration continue</strong></td><td>on ne cesse pas de corriger et d'améliorer</td></tr>
+                </tbody>
+            </table></div>
+
+            <h3>Les sept principes directeurs</h3>
+            <p>Ils servent quand aucune procédure ne couvre le cas, et ressemblent beaucoup à l'esprit Agile.</p>
+            <div class="table-wrap"><table>
+                <thead><tr><th>#</th><th>Principe</th><th>Idée</th></tr></thead>
+                <tbody>
+                <tr><td>1</td><td><strong>Se concentrer sur la valeur</strong></td><td>tout doit servir le client, directement ou non</td></tr>
+                <tr><td>2</td><td><strong>Partir de là où on est</strong></td><td>réutiliser ce qui marche déjà</td></tr>
+                <tr><td>3</td><td><strong>Progresser par itérations, avec du retour</strong></td><td>petits pas, on vérifie, on corrige</td></tr>
+                <tr><td>4</td><td><strong>Collaborer et favoriser la visibilité</strong></td><td>les équipes cloisonnées travaillent mal</td></tr>
+                <tr><td>5</td><td><strong>Penser et travailler de façon globale</strong></td><td>personnes, outils et fournisseurs sont liés</td></tr>
+                <tr><td>6</td><td><strong>Rester simple et pratique</strong></td><td>une étape sans valeur se supprime</td></tr>
+                <tr><td>7</td><td><strong>Optimiser et automatiser</strong></td><td>simplifier d'abord, automatiser ensuite</td></tr>
+                </tbody>
+            </table></div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Cinq composants (principes, gouvernance, chaîne de valeur, pratiques, amélioration continue), sept principes. L'idée commune des principes : <strong>valeur, simplicité, petits pas, collaboration</strong>. Automatiser un processus chaotique donne un chaos plus rapide : on simplifie avant d'automatiser.</p>
+            </div>
+        </section>
+
+        <section class="chapter" id="chaine">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">Chaîne de valeur et dimensions</h2>
+            <p class="chapter__intro">La chaîne de valeur est le cœur opérationnel du SVS : six activités, sans ordre figé. Selon la situation on les enchaîne, on en saute ou on en répète.</p>
+
+            <div class="table-wrap"><table>
+                <thead><tr><th>Activité</th><th>Question</th><th>Exemple : le portail</th></tr></thead>
+                <tbody>
+                <tr><td><strong>Planifier</strong></td><td>où veut-on aller ?</td><td>stratégie et budget du portail</td></tr>
+                <tr><td><strong>Améliorer</strong></td><td>comment faire mieux ?</td><td>comprendre pourquoi on abandonne le formulaire</td></tr>
+                <tr><td><strong>Impliquer</strong> (engage)</td><td>que veulent les parties prenantes ?</td><td>recueillir les demandes, répondre aux utilisateurs</td></tr>
+                <tr><td><strong>Concevoir et faire la transition</strong></td><td>comment doit être le service, et comment le mettre en production sans casse ?</td><td>maquettes, tests, plan de mise en ligne</td></tr>
+                <tr><td><strong>Obtenir / construire</strong></td><td>comment se procurer ou fabriquer ?</td><td>développer le portail (c'est là que Scrum intervient)</td></tr>
+                <tr><td><strong>Fournir et soutenir</strong></td><td>comment le service est-il rendu au quotidien ?</td><td>support, résolution des incidents</td></tr>
+                </tbody>
+            </table></div>
+
+            <h3>Les quatre dimensions</h3>
+            <p>À chaque décision, ITIL demande de regarder quatre angles. En oublier un, c'est préparer un problème : un tabouret à trois pieds boite.</p>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Dimension</th><th>Exemple d'oubli</th></tr></thead>
+                <tbody>
+                <tr><td><strong>Organisations et personnes</strong></td><td>portail livré, personne de formé pour le faire vivre</td></tr>
+                <tr><td><strong>Information et technologie</strong></td><td>aucune base de connaissances pour guider les utilisateurs</td></tr>
+                <tr><td><strong>Partenaires et fournisseurs</strong></td><td>l'hébergeur ne garantit pas le temps de reprise voulu</td></tr>
+                <tr><td><strong>Flux de valeur et processus</strong></td><td>quatre validations manuelles pour un mot de passe</td></tr>
+                </tbody>
+            </table></div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Six activités : <strong>planifier, améliorer, impliquer, concevoir/transition, obtenir/construire, fournir/soutenir</strong>, dans l'ordre que la situation impose. Quatre dimensions à vérifier chaque fois : <strong>personnes, technologie, partenaires, processus</strong>.</p>
+            </div>
+        </section>
+
+        <section class="chapter" id="quatuor">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">Incident, problème, demande, changement</h2>
+            <p class="chapter__intro">ITIL 4 décrit 34 pratiques (les « processus » de la v3). Quatre situations reviennent partout et sont constamment mélangées.</p>
+
+            <div class="table-wrap"><table>
+                <thead><tr><th>Situation</th><th>Définition</th><th>Exemple</th><th>Objectif</th></tr></thead>
+                <tbody>
+                <tr><td><strong>Incident</strong></td><td>interruption ou dégradation <em>non prévue</em> d'un service</td><td>la messagerie ne répond plus</td><td><strong>rétablir</strong> au plus vite</td></tr>
+                <tr><td><strong>Problème</strong></td><td>cause (ou cause possible) d'un ou plusieurs incidents</td><td>un disque défaillant provoque des pannes à répétition</td><td><strong>supprimer la cause</strong></td></tr>
+                <tr><td><strong>Demande de service</strong></td><td>demande <em>prévue et standard</em> d'un utilisateur</td><td>« je voudrais un nouveau poste »</td><td><strong>satisfaire</strong> par une procédure connue</td></tr>
+                <tr><td><strong>Changement</strong></td><td>ajout, modification ou suppression pouvant affecter un service</td><td>migrer le serveur de messagerie</td><td><strong>maîtriser</strong> le risque</td></tr>
+                </tbody>
+            </table></div>
+
+            <p>Pour ne pas se tromper : l'incident se <strong>règle</strong>, le problème se <strong>comprend</strong>, la demande se <strong>satisfait</strong>, le changement se <strong>maîtrise</strong>.</p>
+
+            <h3>Contournement et erreur connue</h3>
+            <p>On peut rétablir un service par une <strong>solution de contournement</strong> (workaround) sans avoir compris la panne. Un problème <strong>analysé mais pas encore résolu</strong> s'appelle une <strong>erreur connue</strong> (known error), souvent documentée avec son contournement.</p>
+
+            <h3>Priorité d'un incident</h3>
+            <p>On classe selon l'<strong>impact</strong> (combien de monde, quelle gravité) et l'<strong>urgence</strong> (dans quel délai). La <strong>priorité en découle</strong>, souvent lue dans une matrice : un serveur qui plante pour tout le monde un jour de paie passe avant une imprimante qui bloque un seul poste.</p>
+
+            <h3>Maîtrise des changements (change enablement)</h3>
+            <p>Elle cherche à maximiser les changements réussis en évaluant les risques, en autorisant et en tenant un calendrier. Trois types :</p>
+            <ul>
+                <li><strong>standard</strong> : faible risque, pré-autorisé, répétitif (installer un logiciel validé) ;</li>
+                <li><strong>normal</strong> : évalué et autorisé selon le risque, parfois par un comité (CAB) ;</li>
+                <li><strong>urgent</strong> (emergency) : à faire tout de suite pour traiter un incident grave, avec une procédure accélérée.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><strong>Incident</strong> : rétablir. <strong>Problème</strong> : supprimer la cause. <strong>Demande</strong> : satisfaire. <strong>Changement</strong> : maîtriser le risque. Un incident n'est pas un problème : on peut rétablir sans comprendre. La priorité dépend de l'<strong>impact</strong> et de l'<strong>urgence</strong>.</p>
+            </div>
+        </section>
+
+        <section class="chapter" id="support">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Service desk, niveaux et SLA</h2>
+            <p class="chapter__intro">Le reste du quotidien du support : qui reçoit, qui escalade, et ce qu'on s'engage à tenir.</p>
+
+            <h3>Le service desk</h3>
+            <p>C'est le <strong>point de contact unique</strong> entre les utilisateurs et l'IT : il enregistre, catégorise, oriente et suit. Ses qualités premières sont l'écoute et la communication ; le technique vient après.</p>
+
+            <h3>Niveaux de support et escalade</h3>
+            <ul>
+                <li><strong>N1</strong> : service desk, accueille, enregistre, résout les cas simples ;</li>
+                <li><strong>N2</strong> : techniciens spécialisés ;</li>
+                <li><strong>N3</strong> : experts, éditeur ou constructeur.</li>
+            </ul>
+            <p>Passer un incident au niveau supérieur s'appelle l'<strong>escalade</strong>. Découpage N1 à N3 très courant ; à confirmer sur le support du cours.</p>
+
+            <h3>SLA</h3>
+            <p>Un <strong>SLA</strong> (accord de niveau de service) est un engagement chiffré passé avec le client : par exemple « messagerie disponible à 99,5 % sur les heures de bureau ; incident critique pris en charge en 30 minutes ». La pratique qui le gère est la <strong>gestion des niveaux de service</strong>.</p>
+
+            <h3>Autres pratiques à connaître de nom</h3>
+            <ul>
+                <li><strong>gestion des connaissances</strong> : capitaliser (articles, FAQ) pour ne pas résoudre deux fois ;</li>
+                <li><strong>gestion de la configuration des services</strong> : savoir de quoi est fait chaque service (éléments de configuration, ou CI, recensés dans une CMDB) ;</li>
+                <li><strong>mise en production</strong> et <strong>déploiement</strong> ; disponibilité, capacité, continuité ;</li>
+                <li><strong>amélioration continue</strong>, qui irrigue toutes les autres.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Le <strong>service desk</strong> est le point de contact unique. Les incidents montent de <strong>N1</strong> vers <strong>N3</strong> par escalade. Un <strong>SLA</strong> est un engagement chiffré avec le client.</p>
+            </div>
+        </section>
+
+        <section class="chapter" id="bout-en-bout">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">Un cas de bout en bout, et Scrum</h2>
+            <p class="chapter__intro">On reprend le portail interne d'une entreprise de 200 personnes et on le suit sur une semaine.</p>
+
+            <ol class="steps">
+                <li class="step"><div class="step__num">01</div><div class="step__body">La direction (sponsor) veut réduire la charge du support : on <strong>planifie</strong> et on <strong>s'implique</strong> auprès des utilisateurs.</div></li>
+                <li class="step"><div class="step__num">02</div><div class="step__body">L'équipe construit le portail en sprints Scrum : <strong>obtenir / construire</strong>.</div></li>
+                <li class="step"><div class="step__num">03</div><div class="step__body">La mise en ligne est un <strong>changement normal</strong>, évalué, avec un plan de retour arrière.</div></li>
+                <li class="step"><div class="step__num">04</div><div class="step__body">Une employée ne peut pas se connecter : <strong>incident</strong>. Le service desk (N1) l'enregistre, évalue impact et urgence, applique un contournement et rétablit l'accès.</div></li>
+                <li class="step"><div class="step__num">05</div><div class="step__body">Quinze employés ont la même panne : on ouvre un <strong>problème</strong>. L'analyse trouve un certificat mal installé : <strong>erreur connue</strong> jusqu'à correction.</div></li>
+                <li class="step"><div class="step__num">06</div><div class="step__body">La correction passe en <strong>changement</strong> (urgent si la panne est grave).</div></li>
+                <li class="step"><div class="step__num">07</div><div class="step__body">Un nouvel arrivant demande un accès : <strong>demande de service</strong>, traitée par le portail selon un modèle.</div></li>
+                <li class="step"><div class="step__num">08</div><div class="step__body">Fin du mois : SLA tenus ? incidents en baisse ? C'est l'<strong>amélioration continue</strong>.</div></li>
+            </ol>
+
+            <h3>ITIL et Scrum</h3>
+            <div class="table-wrap"><table>
+                <thead><tr><th></th><th>Scrum</th><th>ITIL</th></tr></thead>
+                <tbody>
+                <tr><td><strong>Objet</strong></td><td>construire un produit par petits cycles</td><td>faire vivre un service dans la durée</td></tr>
+                <tr><td><strong>Horizon</strong></td><td>un sprint</td><td>toute la vie du service</td></tr>
+                <tr><td><strong>Question</strong></td><td>que livre-t-on dans ce sprint ?</td><td>le service rend-il la valeur attendue, de façon fiable ?</td></tr>
+                </tbody>
+            </table></div>
+            <p>Ils ne s'opposent pas : Scrum <strong>construit</strong>, ITIL <strong>exploite</strong>. Les principes « progresser par itérations » et « rester simple » viennent du même esprit que l'Agile.</p>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un même service traverse tous les chapitres : on le conçoit, on le déploie, on le fait vivre, on le corrige, on l'améliore. <strong>Scrum construit, ITIL exploite.</strong></p>
+            </div>
+        </section>
+
+        <section class="test" id="test" data-test="itil">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#cloud">examen du Parcours 05 · Cloud, supervision &amp; méthode</a>, puis par l'<a href="../examens.html#final">examen final</a>.</p>
+        </section>
+
+        <div class="gloss">
+            <div class="gl"><b>ITIL</b><span>Recueil de bonnes pratiques de gestion des services informatiques.</span></div>
+            <div class="gl"><b>ITSM</b><span>IT Service Management : gestion des services informatiques.</span></div>
+            <div class="gl"><b>SVS</b><span>Service Value System : transforme une opportunité ou une demande en valeur.</span></div>
+            <div class="gl"><b>SLA</b><span>Service Level Agreement : engagement chiffré de niveau de service.</span></div>
+            <div class="gl"><b>CAB</b><span>Change Advisory Board : comité qui évalue les changements normaux.</span></div>
+            <div class="gl"><b>CMDB</b><span>Base qui recense les éléments de configuration (CI) et leurs liens.</span></div>
+        </div>
+
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+            <ul>
+                <li><a href="https://www.itil.com/itil-in-focus" rel="noopener">itil.com — ITIL en bref</a></li>
+                <li><a href="https://www.peoplecert.org/browse-certifications/it-governance-and-service-management/ITIL-1/itil-4-foundation-2565" rel="noopener">PeopleCert — ITIL 4 Foundation</a></li>
+                <li><a href="https://www.itil.com/professionals/certifications/ITIL-Foundation-Version-5" rel="noopener">itil.com — ITIL Foundation (Version 5)</a></li>
+            </ul>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>ITIL 4</strong> — Module du centre d'apprentissage IT</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a></p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/itil.js?v=0ef43a99"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+</body>
+</html>

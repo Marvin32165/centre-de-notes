@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module IIS (Internet Information Services) : rôle Web Server de Windows Server, console IIS Manager, pools d'applications, bindings et noms d'hôte, alias CNAME dans le DNS, publication de plusieurs sites et service FTP.">
+    <title>IIS — Serveur web Windows — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a> · Parcours 02 · Infrastructure Windows · 5 / 9</p>
+        <h1 class="hero__title">IIS — serveur<br>web <em>Windows</em></h1>
+        <p class="hero__lead">Publier des sites depuis un Windows Server joint au domaine : installer le rôle, comprendre la console, isoler chaque site dans son pool, héberger plusieurs noms d'hôte sur une seule adresse IP, puis ouvrir un service FTP sur la même machine.</p>
+        <div class="hero__meta">
+            <span class="chip">Rôle Web Server</span><span class="chip">IIS Manager</span><span class="chip">Pools</span><span class="chip">Bindings</span><span class="chip">CNAME</span><span class="chip">FTP</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n2"><b>Niveau</b> Intermédiaire</span>
+            <span class="fact"><b>Durée</b> ≈ 2 h</span>
+            <span class="fact"><b>Chapitres</b> 9</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> <a href="windows-server.html">Windows Server</a> · <a href="powershell.html">PowerShell</a></span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">IIS</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#role"><span>01</span> Ce qu'est IIS</a></li>
+            <li><a class="toc__link" href="#labo"><span>02</span> Topologie du labo</a></li>
+            <li><a class="toc__link" href="#install"><span>03</span> Installer le rôle</a></li>
+            <li><a class="toc__link" href="#console"><span>04</span> La console IIS Manager</a></li>
+            <li><a class="toc__link" href="#pools"><span>05</span> Pools d'applications</a></li>
+            <li><a class="toc__link" href="#sites"><span>06</span> Publier un site</a></li>
+            <li><a class="toc__link" href="#deploiement"><span>07</span> Déployer deux sites</a></li>
+            <li><a class="toc__link" href="#ftp"><span>08</span> Le service FTP</a></li>
+            <li><a class="toc__link" href="#pratique"><span>09</span> S'entraîner</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Installer le rôle Web Server sur un serveur membre du domaine, au Server Manager ou en PowerShell.</li>
+                <li>Te repérer dans IIS Manager : niveau sélectionné, fonctionnalités du centre, actions de droite.</li>
+                <li>Expliquer à quoi sert un pool d'applications et quand lui donner une identité de domaine.</li>
+                <li>Publier plusieurs sites sur une même IP grâce aux <em>bindings</em> et aux noms d'hôte.</li>
+                <li>Déclarer ces noms dans le DNS en <strong>alias CNAME</strong>, et dire pourquoi pas en enregistrements A.</li>
+                <li>Ajouter un site FTP authentifié sur des comptes du domaine.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> <a href="windows-server.html">Windows Server</a> (domaine, DNS) et <a href="powershell.html">PowerShell</a> pour les scripts de préparation.</p>
+            <p class="brief__foot">Ce module prépare directement <a href="sharepoint.html">SharePoint Server SE</a>, dont chaque application web est un site IIS : les notions de site, de pool et de binding y reviennent telles quelles.</p>
+        </section>
+
+        <!-- 01 -->
+        <section class="chapter" id="role">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">Ce qu'est IIS</h2>
+            <p class="chapter__intro">IIS (<em>Internet Information Services</em>) est le serveur web de Microsoft, livré comme un <strong>rôle</strong> de Windows Server. Il héberge sites et applications web, et c'est la plateforme d'exécution habituelle des technologies ASP.NET. Sa version suit celle de Windows : <strong>IIS 10</strong> sur Windows Server 2016 et 2019 ; la version la plus récente de Windows Server livre toujours la dernière version d'IIS.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Protocole</th><th>Usage</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>HTTP / HTTPS</strong></td><td>Publication de sites web — le cœur du rôle</td></tr>
+                        <tr><td><strong>FTP</strong></td><td>Dépôt et récupération de fichiers (chapitre 08)</td></tr>
+                        <tr><td><strong>SMTP</strong></td><td>Relais de messagerie, sans boîte aux lettres. Attention : c'est une <strong>fonctionnalité Windows à part</strong> (<em>SMTP Server</em>), <strong>retirée de Windows Server 2025</strong>. Pour du courrier, on passe par Exchange ou un relais tiers.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Les quatre méthodes d'installation</h3>
+            <p>Toutes donnent le même résultat ; seul le contexte change.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Méthode</th><th>Quand l'utiliser</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Server Manager</strong></td><td>Installation manuelle, une machine — c'est celle du labo</td></tr>
+                        <tr><td><strong>Depuis un autre serveur</strong></td><td>Le Server Manager d'un serveur d'administration installe le rôle sur une machine distante</td></tr>
+                        <tr><td><strong>PowerShell</strong></td><td><code>Install-WindowsFeature Web-Server -IncludeManagementTools</code></td></tr>
+                        <tr><td><strong>Module <code>WebAdministration</code></strong></td><td>Pas l'installation du rôle, mais la <em>configuration</em> ensuite : sites, pools, bindings, en script (lecteur <code>IIS:\</code>, <code>New-Website</code>…). Son successeur, <code>IISAdministration</code> (<code>Get-IISSite</code>, <code>New-IISSite</code>), fait la même chose plus vite ; la ligne de commande historique <code>%windir%\system32\inetsrv\appcmd.exe</code> existe toujours.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">Côté client FTP</p>
+                <p>Deux outils suffisent : <strong>FileZilla</strong> (graphique) ou <strong>WinSCP</strong> (graphique et ligne de commande). Ils servent au chapitre 08.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>IIS est un <strong>rôle Windows Server</strong>, pas un produit séparé : HTTP/HTTPS d'abord, FTP en option (le SMTP est une fonctionnalité voisine, en voie de disparition). Le rôle s'installe nu, et les modules supplémentaires (FTP, authentifications avancées, ASP.NET) s'ajoutent après coup <strong>sans réinstaller</strong> quoi que ce soit.</p>
+            </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="chapter" id="labo">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Topologie du labo</h2>
+            <p class="chapter__intro">Le serveur web rejoint la forêt <code>orion.local</code> déjà montée pour le module <a href="sql-server.html">SQL Server</a> : même contrôleur de domaine, même DNS, même plan d'adressage <code>172.16.50.0/24</code>.</p>
+
+            <div class="net">
+                <div class="node"><b>SRV-AD01</b><span class="ip">172.16.50.10</span><span>Contrôleur de domaine + DNS — <code>orion.local</code> (NetBIOS <code>ORION</code>)</span></div>
+                <div class="node"><b>SRV-SQL01</b><span class="ip">172.16.50.30</span><span>Serveur SQL Server, membre du domaine</span></div>
+                <div class="node"><b>SRV-WEB01</b><span class="ip">172.16.50.25</span><span>Serveur web, membre du domaine — <code>srv-web01.orion.local</code></span></div>
+            </div>
+
+            <p class="note">Machines et adresses du <a href="../labo.html">lab de référence Orion</a> : le TP du cours utilisait ses propres noms, transposés ici.</p>
+            <p>Trois noms circulent dans tout le module : <code>srv-web01.orion.local</code> (le serveur lui-même), <code>cafe.orion.local</code> (le second site publié) et <code>ftp.orion.local</code> (le service FTP).</p>
+
+            <h3>Préparer la VM</h3>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — sur la VM IIS</span></div>
+                <pre class="terminal__code"><span class="c"># Adressage fixe, DNS pointé sur le contrôleur de domaine</span>
+<span class="k">New-NetIPAddress</span> <span class="p">-InterfaceAlias</span> <span class="s">"Ethernet"</span> <span class="p">-IPAddress</span> 172.16.50.25 <span class="p">-PrefixLength</span> 24 <span class="p">-DefaultGateway</span> 172.16.50.1
+<span class="k">Set-DnsClientServerAddress</span> <span class="p">-InterfaceAlias</span> <span class="s">"Ethernet"</span> <span class="p">-ServerAddresses</span> 172.16.50.10
+<span class="k">Disable-NetAdapterBinding</span> <span class="p">-Name</span> <span class="s">"Ethernet"</span> <span class="p">-ComponentID</span> ms_tcpip6
+
+<span class="c"># Nom de machine puis jonction au domaine (un redémarrage à chaque fois)</span>
+<span class="k">Rename-Computer</span> <span class="p">-NewName</span> <span class="s">"SRV-WEB01"</span> <span class="p">-Restart</span>
+<span class="k">Add-Computer</span> <span class="p">-DomainName</span> <span class="s">"orion.local"</span> <span class="p">-Restart</span></pre>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Le point qui conditionne tout le reste est le <strong>DNS pointé sur le contrôleur de domaine</strong>. Sans lui, ni la jonction au domaine ni la résolution de <code>srv-web01.orion.local</code> ne fonctionnent — et comme la publication de sites repose entièrement sur des noms, un serveur web mal résolu est un serveur web injoignable.</p>
+            </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="chapter" id="install">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">Installer le rôle Web Server</h2>
+            <p class="chapter__intro">Au Server Manager, l'installation tient en cinq écrans. Le réflexe important : <strong>ne rien cocher de plus</strong> que le rôle lui-même.</p>
+
+            <ol class="steps">
+                <li class="step"><div class="step__num">01</div><div class="step__body"><strong>Add roles and features</strong>Depuis le Server Manager de la VM IIS.</div></li>
+                <li class="step"><div class="step__num">02</div><div class="step__body"><strong>Type d'installation</strong><em>Role-based or feature-based installation</em>.</div></li>
+                <li class="step"><div class="step__num">03</div><div class="step__body"><strong>Cocher Web Server (IIS)</strong>La fenêtre qui s'ouvre propose les outils d'administration : <em>Add Features</em>.</div></li>
+                <li class="step"><div class="step__num">04</div><div class="step__body"><strong>Rôles de services</strong>Ne rien cocher de plus → <em>Next</em>. Les modules laissés de côté (FTP, authentification avancée, ASP.NET) s'ajoutent plus tard.</div></li>
+                <li class="step"><div class="step__num">05</div><div class="step__body"><strong>Install</strong>Puis ouvrir la console : <em>Tools → Internet Information Services (IIS) Manager</em>.</div></li>
+            </ol>
+
+            <p>En une ligne, la même chose :</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell</span></div>
+                <pre class="terminal__code"><span class="k">Install-WindowsFeature</span> Web-Server <span class="p">-IncludeManagementTools</span></pre>
+            </div>
+
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Le rôle est installé et le service web tourne ; la page d'accueil d'IIS répond en local.</p>
+                <div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-WEB01</span></div>
+                    <pre class="terminal__code"><span class="k">Get-WindowsFeature</span> Web-Server       <span class="c"># [X] = installé</span>
+<span class="k">Get-Service</span> W3SVC, WAS               <span class="c"># les deux en Running</span>
+(<span class="k">Invoke-WebRequest</span> http://localhost <span class="p">-UseBasicParsing</span>).StatusCode   <span class="c"># 200</span></pre>
+                </div>
+                <p class="verify__sub">Sortie attendue (extrait)</p>
+                <pre class="verify__out">Display Name                 Name         Install State
+------------                 ----         -------------
+[X] Web Server (IIS)         Web-Server       Installed
+
+Status   Name    DisplayName
+------   ----    -----------
+Running  W3SVC   World Wide Web Publishing Service
+Running  WAS     Windows Process Activation Service
+200</pre>
+                <p class="verify__fail"><code>Available</code> au lieu d'<code>Installed</code> : l'installation n'a pas abouti (relancer, lire le message). Services arrêtés : <code>Start-Service WAS, W3SVC</code>. Pas de 200 en local alors que tout tourne : un autre programme occupe peut-être le port 80 (<code>netstat -ano | findstr :80</code>).</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>On installe <strong>le rôle nu</strong>, et on ajoute les services de rôle au moment où on en a besoin. C'est du moindre privilège appliqué aux composants : chaque module installé est du code qui tourne et une surface d'attaque en plus.</p>
+            </div>
+        </section>
+
+        <!-- 04 -->
+        <section class="chapter" id="console">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">La console IIS Manager</h2>
+            <p class="chapter__intro">La console est découpée en <strong>trois colonnes</strong>, et cette disposition se retrouve à chaque écran. Comprendre ce découpage, c'est savoir où chercher n'importe quel réglage.</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>À gauche — Connections</h3>
+                    <ul>
+                        <li>L'arborescence : le serveur, puis <strong>Application Pools</strong> et <strong>Sites</strong>.</li>
+                        <li>Le <strong>niveau sélectionné</strong> détermine ce qu'affiche le centre.</li>
+                        <li>Les réglages d'un site <strong>héritent</strong> de ceux du serveur tant qu'on ne les surcharge pas.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>À droite — Actions</h3>
+                    <ul>
+                        <li><strong>Edit Site → Bindings…</strong> : protocole + IP + port + nom d'hôte.</li>
+                        <li><strong>Basic Settings…</strong> : nom, pool et chemin physique.</li>
+                        <li><strong>Manage Website</strong> : Start / Stop / Restart, site par site.</li>
+                        <li><strong>Browse Website</strong> : ouvrir le site pour vérifier tout de suite.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Au centre — les fonctionnalités du niveau sélectionné</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Icône</th><th>Ce qu'elle règle</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Authentication</strong></td><td>Qui a le droit d'accéder : anonyme, Windows, basique…</td></tr>
+                        <tr><td><strong>Compression</strong></td><td>Compression des réponses (statique / dynamique), pour réduire la bande passante</td></tr>
+                        <tr><td><strong>Default Document</strong></td><td>Le fichier servi quand l'URL ne nomme pas de page (<code>index.html</code>, <code>default.aspx</code>) et son ordre de priorité</td></tr>
+                        <tr><td><strong>Directory Browsing</strong></td><td>Affiche ou non la liste des fichiers d'un dossier sans page d'accueil — <strong>à laisser désactivé</strong></td></tr>
+                        <tr><td><strong>Error Pages</strong></td><td>Pages renvoyées sur 404, 500…, et détail affiché ou non</td></tr>
+                        <tr><td><strong>Handler Mappings</strong></td><td>Quel moteur traite quelle extension (<code>.aspx</code> → ASP.NET, <code>.php</code> → FastCGI)</td></tr>
+                        <tr><td><strong>HTTP Response Headers</strong></td><td>En-têtes ajoutés à chaque réponse : cache, en-têtes de sécurité</td></tr>
+                        <tr><td><strong>Logging</strong></td><td>Journaux : emplacement, format, champs, rotation</td></tr>
+                        <tr><td><strong>MIME Types</strong></td><td>Associe une extension à un type de contenu — un type absent = fichier non servi</td></tr>
+                        <tr><td><strong>Output Caching</strong></td><td>Mise en cache des réponses générées</td></tr>
+                        <tr><td><strong>Request Filtering</strong></td><td>Extensions et verbes interdits, taille maximale — la première barrière de sécurité</td></tr>
+                        <tr><td><strong>SSL Settings</strong></td><td>Exigence du HTTPS et gestion des certificats client</td></tr>
+                        <tr><td><strong>Configuration Editor</strong></td><td>Édition directe de <code>web.config</code> / <code>applicationHost.config</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">Astuce</p>
+                <p>En bas de la vue centrale, l'onglet <strong>Content View</strong> bascule de la liste des fonctionnalités vers le <em>contenu réel</em> du dossier publié. Pratique pour vérifier d'un coup d'œil que les fichiers sont bien là où IIS les cherche.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Tout dans IIS Manager est <strong>contextuel au niveau sélectionné</strong> : serveur, site, dossier. Et les niveaux inférieurs <strong>héritent</strong> des réglages du dessus. Avant de chercher pourquoi une option « ne s'applique pas », vérifier d'abord <em>à quel niveau</em> elle a été posée.</p>
+            </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="chapter" id="pools">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Les pools d'applications</h2>
+            <p class="chapter__intro">Un <strong>pool d'applications</strong> est le processus de travail (<code>w3wp.exe</code>) dans lequel tourne un site. C'est l'unité d'<strong>isolation</strong> d'IIS : deux sites dans deux pools distincts ne peuvent pas se planter l'un l'autre, et tournent sous des identités différentes.</p>
+
+            <p>Quand on crée un site <strong>dans IIS Manager</strong> (<em>Add Website…</em>), la console <strong>crée automatiquement un pool portant son nom</strong>. En PowerShell, <code>New-Website</code> ne le fait pas : sans <code>-ApplicationPool</code>, le site prend le pool par défaut de <code>applicationDefaults</code> (<code>DefaultAppPool</code> dans les exemples officiels) — d'où le <code>New-WebAppPool</code> du chapitre 09.</p>
+            <p> On en crée un séparé quand un site a besoin d'une identité propre — typiquement pour l'<strong>authentification</strong> : le pool s'exécute alors sous un compte de domaine qui, seul, a les droits sur les données visées.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Colonne</th><th>Sens</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Name</strong></td><td>Nom du pool ; <code>DefaultAppPool</code> est celui du site par défaut</td></tr>
+                        <tr><td><strong>Status</strong></td><td><code>Started</code> / <code>Stopped</code> — un pool arrêté rend son site injoignable</td></tr>
+                        <tr><td><strong>.NET CLR Version</strong></td><td><code>v4.0</code>, ou <strong>No Managed Code</strong> pour un site statique ou PHP</td></tr>
+                        <tr><td><strong>Managed Pipeline Mode</strong></td><td><code>Integrated</code> (moderne) ou <code>Classic</code> (compatibilité ascendante)</td></tr>
+                        <tr><td><strong>Identity</strong></td><td>Compte sous lequel tourne le processus — <code>ApplicationPoolIdentity</code> par défaut : un <strong>compte virtuel</strong> propre au pool, <code>IIS AppPool\&lt;nom du pool&gt;</code>, qui sort sur le réseau sous le compte ordinateur (<code>ORION\SRV-WEB01$</code>). Autres choix : <em>LocalService</em>, <em>NetworkService</em>, <em>LocalSystem</em> (à éviter : des privilèges étendus sur la machine) ou un compte de domaine personnalisé (idéalement un <strong>gMSA</strong>, dont le mot de passe tourne tout seul)</td></tr>
+                        <tr><td><strong>Applications</strong></td><td>Nombre d'applications hébergées par le pool</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un site = <strong>son</strong> pool. C'est ce qui permet d'arrêter, de redémarrer ou de compromettre un site sans toucher aux autres. L'identité du pool est aussi le compte que les droits NTFS doivent autoriser : un site qui renvoie <strong>401.3</strong> (accès refusé par une ACL) alors que les fichiers sont bien là, c'est presque toujours le compte qui lit le contenu qui n'a pas la lecture.</p>
+            </div>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Piège : quel compte lit vraiment les fichiers ?</p>
+                <p>Deux comptes interviennent. Le processus <code>w3wp.exe</code>, sous l'<strong>identité du pool</strong>, lit toujours la configuration (<code>web.config</code>) : s'il ne peut pas, c'est un <strong>500.19</strong>. Le <em>contenu</em>, lui, est lu sous l'identité de la requête : en authentification <strong>anonyme</strong>, c'est par défaut le compte <strong>IUSR</strong> (<em>Authentication → Anonymous Authentication → Edit</em>) ; en authentification Windows, c'est l'utilisateur connecté. S'il manque la lecture NTFS, IIS répond <strong>401.3</strong>. Le réglage courant pour un site isolé : passer l'anonyme sur <strong>Application pool identity</strong>, pour qu'un seul compte, <code>IIS AppPool\&lt;pool&gt;</code>, lise tout.</p>
+            </div>
+
+            <div class="walk">
+                <p class="walk__label">Pas à pas</p>
+                <p class="walk__title">Le trajet d'une requête HTTP dans IIS : HTTP.sys → WAS → w3wp</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · client → HTTP.sys (noyau)</p>
+                        <p class="walk__head">La requête arrive sur le port 80</p>
+                        <p>Le navigateur envoie <code>GET / HTTP/1.1</code> avec <code>Host: cafe.orion.local</code>. Ce n'est pas un processus IIS qui écoute le port, mais <strong>HTTP.sys</strong>, un pilote du <strong>noyau</strong> Windows. Si la réponse est dans son cache noyau, il la renvoie tout de suite, sans rien réveiller.</p>
+                        <p class="walk__change">L'écoute du port est faite par <b>HTTP.sys</b>, en mode noyau.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · HTTP.sys</p>
+                        <p class="walk__head">Aiguillage vers la file du bon pool</p>
+                        <p>HTTP.sys compare IP, port et en-tête <code>Host</code> aux <strong>bindings</strong> qu'on lui a déclarés, trouve le site <code>cafe</code>, donc son pool, et dépose la requête dans la <strong>file d'attente de ce pool</strong>.</p>
+                        <p class="walk__change">Chaque pool a <b>sa propre file</b> dans HTTP.sys.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · W3SVC / WAS → applicationHost.config</p>
+                        <p class="walk__head">Qui a configuré HTTP.sys ?</p>
+                        <p>Au démarrage, <strong>WAS</strong> (<em>Windows Process Activation Service</em>) lit <code>%windir%\system32\inetsrv\config\applicationHost.config</code> ; le service <strong>W3SVC</strong> s'en sert pour déclarer à HTTP.sys les URL à écouter. Modifier un binding dans la console met à jour ce fichier, puis HTTP.sys.</p>
+                        <p class="walk__change"><b>W3SVC</b> configure HTTP.sys ; la configuration vit dans <b>applicationHost.config</b>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · HTTP.sys → WAS</p>
+                        <p class="walk__head">Aucun processus pour ce pool ? WAS en démarre un</p>
+                        <p>Si aucun <code>w3wp.exe</code> ne sert encore le pool (premier accès, ou processus arrêté après 20 minutes sans requête, le <em>Idle Time-out</em> par défaut), la requête attend dans la file et <strong>WAS lance un processus de travail</strong> <code>w3wp.exe</code> sous l'<strong>identité du pool</strong>. D'où la première page plus lente après un moment d'inactivité.</p>
+                        <p class="walk__change"><b>WAS</b> crée, surveille et recycle les <b>w3wp.exe</b>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 5</b> · w3wp.exe</p>
+                        <p class="walk__head">Le processus de travail traite la requête</p>
+                        <p>Le <code>w3wp.exe</code> prend la requête dans la file et la fait passer par ses modules : authentification, filtrage, document par défaut, puis le gestionnaire du fichier (fichier statique, ASP.NET…). Il lit le contenu sous l'identité de la requête : <strong>IUSR</strong> en anonyme par défaut, ou l'<strong>identité du pool</strong> si l'anonyme est réglé ainsi, ou l'utilisateur en authentification Windows. C'est ici que tombe un <strong>401.3</strong> si les droits NTFS manquent.</p>
+                        <p class="walk__change">Le contenu est lu <b>sous l'identité de la requête</b> (IUSR ou pool), jamais sous ton compte d'admin.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 6</b> · w3wp → HTTP.sys → client</p>
+                        <p class="walk__head">La réponse repart par le même chemin</p>
+                        <p>La réponse (200, 404…) est rendue à HTTP.sys, qui l'envoie au client et peut la mettre en cache. Si WAS ne peut pas démarrer le processus (mot de passe de l'identité expiré, plantages répétés qui déclenchent la <em>protection rapide contre les échecs</em>), c'est HTTP.sys qui répond lui-même <strong>503</strong>.</p>
+                        <p class="walk__change">Un <b>503</b> vient de HTTP.sys : le pool n'a pas de processus pour répondre.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Tu copies les fichiers du site <code>cafe</code> dans <code>D:\web\cafe</code> en tant qu'administrateur. L'authentification anonyme est réglée sur <em>Application pool identity</em>. Le site répond <strong>401.3</strong>, alors que toi, tu ouvres les fichiers sans problème. Que corriges-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Donner la lecture à <code>IIS AppPool\cafe</code> sur le dossier</button>
+                        <button class="scenario__opt" data-why="Ton compte n&#x27;est pas celui qui lit les fichiers : c&#x27;est l&#x27;identité du pool. Et passer le pool en LocalSystem donnerait des privilèges étendus sur la machine à un site web.">Passer l&#x27;identité du pool en <em>LocalSystem</em></button>
+                        <button class="scenario__opt" data-why="Un 401.3 n&#x27;est pas un pool arrêté (ce serait un 503) : redémarrer ne change rien aux droits NTFS.">Redémarrer le pool <code>cafe</code> dans la console</button>
+                    </div>
+                    <div class="scenario__why"><p>401.3 = accès refusé par une ACL. Avec l'anonyme sur <em>Application pool identity</em>, le contenu est lu par <code>w3wp.exe</code> sous l'identité du pool, pas sous le compte qui a copié les fichiers (avec le réglage par défaut, ce serait <code>IUSR</code>). <code>icacls "D:\web\cafe" /grant "IIS AppPool\cafe:(OI)(CI)RX" /T</code> donne la lecture au seul compte virtuel du pool : moindre privilège respecté.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 06 -->
+        <section class="chapter" id="sites">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">Publier un site avec son propre nom</h2>
+            <p class="chapter__intro"><code>Default Web Site</code> publie <code>C:\inetpub\wwwroot</code> sur le port 80 : <code>http://localhost</code> depuis le serveur, <code>http://srv-web01.orion.local</code> depuis le réseau. C'est un site de test, pas un emplacement de production.</p>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Mauvaise pratique</p>
+                <p>Déposer son site directement dans <code>Default Web Site</code> / <code>C:\inetpub\wwwroot</code> mélange son contenu avec le site par défaut, lui fait hériter de ses réglages et de son pool, et interdit d'arrêter ou de sécuriser l'un sans l'autre. <strong>Un site = son propre dossier, son propre binding, son propre pool.</strong></p>
+            </div>
+
+            <h3>Ajouter le site</h3>
+            <p>Clic droit sur <code>Sites</code> → <em>Add Website…</em> :</p>
+            <ul>
+                <li><strong>Site name</strong> : le nom dans la console — crée aussi le pool du même nom.</li>
+                <li><strong>Physical path</strong> : le dossier du site, en dehors de <code>wwwroot</code>.</li>
+                <li><strong>Host name</strong> : <code>cafe.orion.local</code>.</li>
+            </ul>
+
+            <p>Le <em>host name</em> est ce qui permet d'héberger <strong>plusieurs sites sur la même IP et le même port 80</strong> : IIS lit l'en-tête <code>Host</code> de la requête HTTP et aiguille vers le bon site. Sans lui, deux sites en <code>*:80</code> entrent en conflit.</p>
+
+            <h3>Et en HTTPS ? Le rôle de SNI</h3>
+            <p>En HTTPS, le serveur doit présenter son <strong>certificat</strong> pendant la poignée de main TLS, donc <em>avant</em> d'avoir lu l'en-tête <code>Host</code>, qui voyage chiffré. Sans aide, IIS ne sait pas quel certificat envoyer : historiquement, il fallait une IP par site HTTPS. <strong>SNI</strong> (<em>Server Name Indication</em>, extension TLS gérée depuis IIS 8) règle le problème : le client annonce le nom voulu dès son premier message.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th><span class="sr-only">Critère</span></th><th>Binding HTTP</th><th>Binding HTTPS</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Port par défaut</strong></td><td>80</td><td>443</td></tr>
+                        <tr><td><strong>Ce qui distingue les sites</strong></td><td>L'en-tête <code>Host</code></td><td>Le nom annoncé par <strong>SNI</strong>, puis l'en-tête <code>Host</code></td></tr>
+                        <tr><td><strong>Dans la fenêtre <em>Add Site Binding</em></strong></td><td><em>Host name</em></td><td><em>Host name</em> + case <strong>Require Server Name Indication</strong> + <em>SSL certificate</em></td></tr>
+                        <tr><td><strong>Plusieurs sites sur une IP</strong></td><td>Oui, un nom chacun</td><td>Oui, avec SNI : un certificat par nom (ou un certificat multi-noms)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Puis déclarer le nom dans le DNS</h3>
+            <p>C'est l'étape qu'on oublie : sans elle, le navigateur ne sait pas où envoyer la requête, et le binding ne sert à rien. Sur <code>SRV-AD01</code>, dans la zone <code>orion.local</code>, on crée un <strong>alias (CNAME)</strong> — pas un enregistrement A :</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Enregistrement</th><th>Type</th><th>Valeur</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>srv-web01</code></td><td><strong>A</strong></td><td>172.16.50.25 <em>(le serveur lui-même)</em></td></tr>
+                        <tr><td><code>cafe</code></td><td><strong>CNAME</strong></td><td><code>srv-web01.orion.local</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le seul enregistrement A est donc celui du serveur ; chaque site publié n'est qu'un alias vers lui. L'intérêt : <strong>si l'IP du serveur change, une seule ligne est à corriger</strong>, et tous les sites suivent. Avec des enregistrements A multiples, il faudrait reprendre chacun d'eux — avec le risque d'en oublier un.</p>
+
+            <p>Le mécanisme reste transparent pour IIS : le client résout <code>cafe.orion.local</code> → <code>srv-web01.orion.local</code> → 172.16.50.25, mais il envoie toujours l'en-tête <code>Host: cafe.orion.local</code>, qui est ce sur quoi le binding fait l'aiguillage.</p>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 1 — le site qui ne répond pas</p>
+                <p>Tu as créé le site <code>cafe</code> avec le binding <code>http/*:80:cafe.orion.local</code>, le dossier contient bien un <code>index.html</code>, et le pool est démarré. Depuis un poste du domaine, <code>http://cafe.orion.local</code> ne donne rien du tout — pas même une erreur d'IIS. Où chercher, et dans quel ordre ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body">
+                        <p>« Pas même une erreur d'IIS » est l'indice : si IIS avait répondu quoi que ce soit (401, 403, 404, 500), c'est que la requête serait arrivée jusqu'à lui. Ici elle n'arrive pas.</p>
+                        <ol>
+                            <li><strong>La résolution du nom</strong> : <code>nslookup cafe.orion.local</code> depuis le client. Pas de réponse → l'alias CNAME n'a pas été créé dans la zone <code>orion.local</code>. C'est l'oubli classique : le binding seul ne suffit pas.</li>
+                            <li>Le nom résout mais rien ne répond → vérifier que le client interroge bien le DNS du domaine (<code>172.16.50.10</code>) et non un DNS public.</li>
+                            <li>Enfin seulement : pare-feu du serveur sur le port 80, puis état du site et du pool dans la console.</li>
+                        </ol>
+                        <p>Le raisonnement général : <em>le nom résout-il ? la requête arrive-t-elle ? IIS répond-il ?</em> — dans cet ordre, jamais l'inverse.</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Publier un site, c'est <strong>deux gestes, sur deux machines</strong> : le <em>binding</em> côté IIS, et l'<strong>alias CNAME</strong> côté DNS. Un seul enregistrement A, celui du serveur ; tout le reste en alias, pour n'avoir qu'une ligne à corriger le jour où l'IP change.</p>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le site <code>cafe</code> a son binding <code>http/*:80:cafe.orion.local</code> et son CNAME. Un collègue ouvre <code>http://172.16.50.25</code> et tombe sur la page par défaut d'IIS, pas sur le café. Est-ce une panne ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Non : sans le nom, l&#x27;en-tête Host ne correspond pas à <code>cafe</code></button>
+                        <button class="scenario__opt" data-why="Le CNAME sert au client à trouver l&#x27;IP. Ici le client a déjà l&#x27;IP : le DNS n&#x27;intervient pas du tout.">Oui : le CNAME <code>cafe</code> pointe vers le mauvais serveur</button>
+                        <button class="scenario__opt" data-why="Le pool de cafe n&#x27;est pas en cause : la requête n&#x27;a jamais été aiguillée vers ce site, elle est partie vers Default Web Site.">Oui : le pool <code>cafe</code> est arrêté, IIS se rabat sur le défaut</button>
+                    </div>
+                    <div class="scenario__why"><p>En tapant l'IP, le navigateur envoie <code>Host: 172.16.50.25</code>. Aucun binding ne porte ce nom : IIS sert le site lié à <code>*:80</code> sans nom d'hôte, c'est-à-dire <code>Default Web Site</code>. C'est le comportement attendu : on teste un site par son <strong>nom</strong>, jamais par l'IP.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="chapter" id="deploiement">
+            <p class="chapter__num">07</p>
+            <h2 class="chapter__title">Déployer deux sites de bout en bout</h2>
+            <p class="chapter__intro">Le labo publie deux sites statiques indépendants — <code>guitare.orion.local</code> et <code>poissons.orion.local</code> — sans aucune dépendance externe, pour qu'ils fonctionnent sur une VM coupée d'Internet. Chacun porte son <code>web.config</code>.</p>
+
+            <ol class="steps">
+                <li class="step"><div class="step__num">01</div><div class="step__body"><strong>Copier les fichiers hors de <code>wwwroot</code></strong>Par exemple <code>C:\sites\guitare\</code> et <code>C:\sites\poissons\</code>, via le partage admin ou une session RDP.</div></li>
+                <li class="step"><div class="step__num">02</div><div class="step__body"><strong>Donner la lecture à l'identité du pool</strong>C'est <code>IIS AppPool\&lt;nom du pool&gt;</code> qui lit les fichiers (authentification anonyme réglée sur <em>Application pool identity</em> ; sinon c'est <code>IUSR</code>), pas l'administrateur qui les a copiés.</div></li>
+                <li class="step"><div class="step__num">03</div><div class="step__body"><strong>Créer les sites</strong>À la console (<em>Add Website…</em>) ou en script : un pool en <strong>No Managed Code</strong> — il n'y a aucun code .NET ici — le site, et son binding <code>http/*:80:&lt;hôte&gt;</code>.</div></li>
+                <li class="step"><div class="step__num">04</div><div class="step__body"><strong>Déclarer les noms dans le DNS</strong>Deux CNAME vers <code>srv-web01.orion.local</code>, comme au chapitre précédent.</div></li>
+            </ol>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — droits, DNS, vérification</span></div>
+                <pre class="terminal__code"><span class="c"># Sur la VM IIS : lecture + exécution pour l'identité de chaque pool</span>
+<span class="k">icacls</span> <span class="s">"C:\sites\guitare"</span>  <span class="p">/grant</span> <span class="s">"IIS AppPool\guitare:(OI)(CI)RX"</span>  <span class="p">/T</span>
+<span class="k">icacls</span> <span class="s">"C:\sites\poissons"</span> <span class="p">/grant</span> <span class="s">"IIS AppPool\poissons:(OI)(CI)RX"</span> <span class="p">/T</span>
+
+<span class="c"># Sur le contrôleur de domaine : un alias par site, jamais un enregistrement A</span>
+<span class="k">Add-DnsServerResourceRecordCName</span> <span class="p">-ZoneName</span> orion.local <span class="p">-Name</span> guitare  <span class="p">-HostNameAlias</span> srv-web01.orion.local
+<span class="k">Add-DnsServerResourceRecordCName</span> <span class="p">-ZoneName</span> orion.local <span class="p">-Name</span> poissons <span class="p">-HostNameAlias</span> srv-web01.orion.local
+
+<span class="c"># Vérification : on attend 200 pour chacun</span>
+<span class="k">Invoke-WebRequest</span> http://guitare.orion.local  <span class="p">-UseBasicParsing</span> | <span class="k">Select-Object</span> StatusCode
+<span class="k">Invoke-WebRequest</span> http://poissons.orion.local <span class="p">-UseBasicParsing</span> | <span class="k">Select-Object</span> StatusCode</pre>
+            </div>
+
+            <h3>Ce qu'on contrôle dans le navigateur</h3>
+            <ul>
+                <li>L'accueil s'affiche <strong>sans</strong> <code>/index.html</code> dans l'URL → le <em>Default Document</em> est bon.</li>
+                <li>Une URL inexistante renvoie la <strong>page 404 du site</strong>, pas celle d'IIS → les <code>httpErrors</code> sont pris en compte.</li>
+                <li>Le pied de page affiche le nom d'hôte réellement utilisé → on vérifie que c'est bien le binding attendu qui a répondu.</li>
+                <li>Une page générée en JavaScript est vide → le fichier <code>.js</code> n'est pas servi : vérifier les <strong>types MIME</strong> et le <strong>filtrage des requêtes</strong>.</li>
+            </ul>
+
+            <div class="tip">
+                <p class="tip__label">Erreur 500.19 au premier chargement</p>
+                <p>La section <code>httpErrors</code> est déverrouillée par défaut ; elle peut être verrouillée au niveau serveur sur certaines installations. On la déverrouille une fois : <code>Set-WebConfiguration /System.webServer/httpErrors -Metadata overrideMode -Value Allow -PSPath IIS:/</code>. À défaut, retirer le bloc <code>&lt;httpErrors&gt;</code> du <code>web.config</code> concerné — le reste de la configuration fonctionne sans lui. Le 500.19 a d'autres causes : XML mal formé, élément d'un module non installé (URL Rewrite par exemple), ou <code>web.config</code> illisible par IIS. La page d'erreur détaillée, consultée <strong>sur le serveur</strong>, cite la ligne fautive.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un <code>web.config</code> posé à la racine d'un site porte sa configuration <em>avec lui</em> : document par défaut, page 404, compression, en-têtes de sécurité, types MIME, filtrage. C'est ce qui rend un site déplaçable — mais une section <strong>verrouillée au niveau serveur</strong> fait échouer tout le fichier en <strong>500.19</strong>, pas seulement la ligne fautive.</p>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le site <code>poissons</code> s'affiche, mais sa galerie, générée par un fichier <code>.js</code>, reste vide. La console du navigateur montre un <strong>404</strong> sur ce <code>.js</code>, alors qu'il est bien dans le dossier. Que vérifies-tu en premier ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Les types MIME et le filtrage des requêtes du site</button>
+                        <button class="scenario__opt" data-why="Un problème de droits NTFS donnerait un 401.3, et toucherait aussi index.html, qui lui s&#x27;affiche.">Les droits NTFS de l&#x27;identité du pool sur le dossier</button>
+                        <button class="scenario__opt" data-why="Le DNS est forcément bon : la page d&#x27;accueil du même site, sur le même nom, s&#x27;affiche.">L&#x27;alias CNAME <code>poissons</code> dans la zone DNS</button>
+                    </div>
+                    <div class="scenario__why"><p>Un fichier présent mais servi en 404, c'est IIS qui refuse de le livrer : extension sans <strong>type MIME</strong> connu, ou extension bloquée par le <strong>Request Filtering</strong>. Le journal IIS (<code>C:\inetpub\logs\LogFiles</code>) donne le sous-code : 404.3 pour un type MIME manquant, 404.7 pour une extension refusée par le filtrage.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="chapter" id="ftp">
+            <p class="chapter__num">08</p>
+            <h2 class="chapter__title">Le service FTP</h2>
+            <p class="chapter__intro">Le FTP n'est pas installé avec le rôle : il s'ajoute par <em>Add roles and features → Web Server (IIS) → FTP Server</em>. C'est l'illustration du chapitre 03 — un service de rôle qui arrive après coup, sans rien réinstaller.</p>
+
+            <p>Ensuite, dans IIS Manager : clic droit sur le nœud <strong>Sites</strong> → <em>Add FTP Site…</em> (un clic droit sur un site web existant propose plutôt <em>Add FTP Publishing…</em>, qui greffe le FTP sur ce site et son dossier).</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Écran</th><th>Valeur du labo</th></tr></thead>
+                    <tbody>
+                        <tr><td>Nom du site</td><td><code>ftp</code></td></tr>
+                        <tr><td>SSL</td><td><strong>No SSL</strong> — labo uniquement : sans SSL, identifiants et fichiers circulent <strong>en clair</strong></td></tr>
+                        <tr><td>Authentication</td><td><strong>Basic</strong> (comptes du domaine) ; <em>Anonymous</em> donnerait un accès sans mot de passe</td></tr>
+                        <tr><td>Authorization</td><td><em>Specified roles or user groups</em> : <code>ORION\Domain Users</code></td></tr>
+                        <tr><td>Permissions</td><td><strong>Read</strong> et <strong>Write</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Puis clic droit sur le site FTP → <em>Edit Bindings…</em> et ajouter le nom d'hôte <code>ftp.orion.local</code> — à déclarer dans le DNS comme au chapitre 06, donc là aussi en <strong>alias CNAME vers <code>srv-web01.orion.local</code></strong>. La connexion se fait ensuite depuis FileZilla ou WinSCP sur <code>ftp://ftp.orion.local</code>, avec un compte du domaine.</p>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Piège : le nom d'hôte FTP</p>
+                <p>Le protocole FTP n'a pas d'en-tête <code>Host</code> comme HTTP. Dès que le site FTP a un <strong>nom d'hôte virtuel</strong> dans son binding, IIS attend ce nom <strong>dans l'identifiant</strong> : <code>ftp.orion.local|utilisateur</code> (barre verticale). Un client qui envoie seulement <code>utilisateur</code> reçoit un <strong>530</strong> (connexion refusée) alors que le mot de passe est bon. Deux sorties : taper l'identifiant complet, ou laisser le binding FTP sans nom d'hôte s'il n'y a qu'un site FTP sur la machine.</p>
+            </div>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 2 — le FTP qui publie le site</p>
+                <p>On veut que les fichiers déposés par FTP mettent à jour <em>immédiatement</em> le site <code>guitare.orion.local</code>. Qu'est-ce que cela impose, et quel est le risque introduit ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body">
+                        <p>Il faut que le site FTP pointe sur le <strong>même chemin physique</strong> que le site web (<code>C:\sites\guitare</code>) : un fichier déposé est alors servi au rechargement suivant, sans copie ni redémarrage.</p>
+                        <p>Deux conséquences à assumer :</p>
+                        <ul>
+                            <li>L'identité du pool doit garder la <strong>lecture</strong>, et le compte FTP l'<strong>écriture</strong> : deux jeux de droits NTFS sur le même dossier.</li>
+                            <li>Surtout : n'importe quel membre de <code>Domain Users</code> peut alors <strong>modifier le contenu publié</strong>, et ses identifiants circulent <strong>en clair</strong> puisque le labo est en <em>No SSL</em>. En production : FTPS, un groupe dédié au lieu de <code>Domain Users</code>, et l'écriture limitée au strict nécessaire.</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Labo vs production</p>
+                <p><strong>No SSL + Basic</strong>, c'est un mot de passe de domaine envoyé en clair sur le réseau. Acceptable dans un labo isolé, jamais ailleurs : en production, c'est <strong>FTPS</strong> (ou SFTP via un autre service), un <strong>groupe dédié</strong> plutôt que <code>Domain Users</code>, et des permissions réduites au dossier concerné.</p>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le site FTP a le binding <code>ftp.orion.local</code>. Dans FileZilla, <code>ORION\alice</code> et son bon mot de passe donnent <strong>530 Not logged in</strong>. Que tapes-tu dans le champ identifiant ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok><code>ftp.orion.local|alice</code></button>
+                        <button class="scenario__opt" data-why="L&#x27;UPN identifie bien le compte, mais ne dit pas à IIS vers quel site FTP virtuel aller : le nom d&#x27;hôte manque toujours.">L&#x27;UPN <code>alice@orion.local</code></button>
+                        <button class="scenario__opt" data-why="Anonymous est une méthode d&#x27;authentification désactivée ici, et elle contournerait le contrôle d&#x27;accès au lieu de régler le problème.">Le compte <code>anonymous</code>, sans mot de passe</button>
+                    </div>
+                    <div class="scenario__why"><p>FTP n'envoie pas d'en-tête <code>Host</code> : avec un nom d'hôte virtuel, IIS le lit dans l'identifiant, sous la forme <code>nom-d-hôte|utilisateur</code>. Sans lui, IIS ne sait pas à quel site FTP rattacher la connexion et la refuse.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="gloss">
+            <div class="gl"><b>IIS</b><span>Internet Information Services — le rôle serveur web de Windows Server.</span></div>
+            <div class="gl"><b>Binding</b><span>Le couple protocole + IP + port + nom d'hôte par lequel un site répond.</span></div>
+            <div class="gl"><b>Host header</b><span>En-tête <code>Host</code> de la requête HTTP : ce que lit IIS pour aiguiller vers le bon site.</span></div>
+            <div class="gl"><b>Pool d'applications</b><span>Le processus <code>w3wp.exe</code> qui exécute un site — unité d'isolation et identité d'exécution.</span></div>
+            <div class="gl"><b>CNAME</b><span>Enregistrement DNS d'alias : un nom qui pointe vers un autre nom, et non vers une IP.</span></div>
+            <div class="gl"><b>web.config</b><span>Fichier de configuration XML posé dans le dossier d'un site, qui le suit quand on le déplace.</span></div>
+            <div class="gl"><b>MIME type</b><span>Association extension → type de contenu ; une extension inconnue d'IIS n'est pas servie.</span></div>
+            <div class="gl"><b>500.19</b><span>Configuration invalide : <code>web.config</code> mal formé, section verrouillée au niveau serveur, ou module absent.</span></div>
+        </div>
+
+        <!-- Test de fin de module — rendu par assets/quiz.js -->
+        <!-- 09 -->
+        <section class="chapter" id="pratique">
+            <p class="chapter__num">09</p>
+            <h2 class="chapter__title">S'entraîner : publier, vérifier, dépanner</h2>
+            <p class="chapter__intro">Les gestes d'IIS en PowerShell, une vérification de bout en bout depuis le client, et les codes d'erreur HTTP qui disent où chercher.</p>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-WEB01 : un site par nom d'hôte, en script (module WebAdministration)</span></div>
+                <pre class="terminal__code"><span class="k">New-Item</span> <span class="p">-ItemType</span> Directory C:\inetpub\cafe
+<span class="k">Set-Content</span> C:\inetpub\cafe\index.html <span class="s">"&lt;h1&gt;Café&lt;/h1&gt;"</span>
+<span class="k">New-WebAppPool</span> <span class="p">-Name</span> <span class="s">"cafe"</span>
+<span class="k">New-Website</span> <span class="p">-Name</span> <span class="s">"cafe"</span> <span class="p">-Port</span> 80 <span class="p">-HostHeader</span> <span class="s">"cafe.orion.local"</span> <span class="p">-PhysicalPath</span> <span class="s">"C:\inetpub\cafe"</span> <span class="p">-ApplicationPool</span> <span class="s">"cafe"</span>
+<span class="k">Add-DnsServerResourceRecordCName</span> <span class="p">-ZoneName</span> orion.local <span class="p">-Name</span> cafe <span class="p">-HostNameAlias</span> srv-web01.orion.local <span class="p">-ComputerName</span> SRV-AD01</pre>
+            </div>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Depuis le client : le nom se résout, et le bon site répond.</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — CLIENT-WIN11</span></div>
+                <pre class="terminal__code"><span class="k">Resolve-DnsName</span> cafe.orion.local
+(<span class="k">Invoke-WebRequest</span> http://cafe.orion.local <span class="p">-UseBasicParsing</span>).StatusCode</pre>
+            </div>
+                <p class="verify__sub">Sortie attendue</p>
+            <pre class="verify__out">Name                Type   TTL  Section    NameHost
+----                ----   ---  -------    --------
+cafe.orion.local    CNAME  3600 Answer     srv-web01.orion.local
+
+Name       : srv-web01.orion.local
+QueryType  : A
+TTL        : 3600
+Section    : Answer
+IP4Address : 172.16.50.25
+
+200</pre>
+                <p class="verify__fail">200 mais la page du site par défaut s'affiche : le binding du site ne porte pas le nom d'hôte <code>cafe.orion.local</code> (ou il est écrit autrement). Vérifier avec <code>Get-WebBinding -Name cafe</code>.</p>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Code</th><th>Ce qu'il signifie ici</th><th>Où chercher</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>404</strong></td><td>Le site répond, mais pas la ressource</td><td>Chemin physique, document par défaut (<code>index.html</code>)</td></tr>
+                        <tr><td><strong>401</strong></td><td>Authentification refusée</td><td>Méthodes d'authentification du site, compte utilisé</td></tr>
+                        <tr><td><strong>401.3</strong></td><td>Accès refusé par une ACL NTFS</td><td>Le compte qui lit le contenu (<code>IUSR</code> en anonyme par défaut, ou <code>IIS AppPool\cafe</code>) doit pouvoir lire le dossier</td></tr>
+                        <tr><td><strong>403</strong></td><td>Interdit par IIS lui-même</td><td>Sous-code : 403.14 = pas de document par défaut et listage désactivé, 403.4 = HTTPS exigé, 403.503 = restriction d'adresse IP</td></tr>
+                        <tr><td><strong>500</strong></td><td>Erreur côté serveur</td><td>Journal d'événements Application, <code>web.config</code> invalide</td></tr>
+                        <tr><td><strong>503</strong></td><td>Service indisponible</td><td>Le <strong>pool d'applications est arrêté</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="cmdex" data-accept="Get-WebBinding (-Name )?&quot;?cafe&quot;?">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Liste les bindings (protocole, port, nom d'hôte) du site <code>cafe</code>.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>Get-WebBinding -Name cafe</code> — on doit y lire <code>http *:80:cafe.orion.local</code>.</p></div>
+                </details>
+            </div>
+            <div class="cmdex" data-accept="Restart-WebAppPool (-Name )?&quot;?cafe&quot;?;;Start-WebAppPool (-Name )?&quot;?cafe&quot;?">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Redémarre le pool d'applications <code>cafe</code>.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>Restart-WebAppPool -Name cafe</code> (ou <code>Start-WebAppPool</code> s'il est arrêté). Un 503 qui revient après un redémarrage : regarder pourquoi le pool s'arrête (journal Système, protection rapide contre les échecs).</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un site = un dossier + un pool + un binding (IP, port, nom d'hôte) + un nom dans le DNS. Le code HTTP dit la couche : 404 contenu, 401 authentification (401.3 = ACL NTFS), 403 refus d'IIS, 500 application, 503 pool arrêté. Le sous-code est dans le journal IIS (colonne <code>sc-substatus</code>).</p>
+            </div>
+        </section>
+
+        <section class="test" id="test" data-test="iis">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#windows">examen du Parcours 02 · Infrastructure Windows</a>, qui le croise avec les autres modules du parcours, puis par l'<a href="../examens.html#final">examen final</a>.</p>
+        </section>
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+                <details class="sources__verif">
+                    <summary>Sources officielles relues pour la vérification des faits du 08/10/2026 (49)</summary>
+                    <ul>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/get-started/removed-deprecated-features-windows-server.md" rel="noopener">Microsoft Learn — Fonctionnalités retirées de WS2025 (SMTP Server)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/whats-new-in-iis-10-version-1809/new-features-introduced-in-iis-10-1809.md" rel="noopener">Microsoft Learn — IIS 10.0 livré avec Windows Server 2019</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/whats-new-in-iis-10/new-features-introduced-in-iis-10.md" rel="noopener">Microsoft Learn — IIS 10.0 livré avec Windows Server 2016</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/networking/core-network-guide/cncg/server-certs/Install-the-Web-Server-WEB1.md" rel="noopener">Microsoft Learn — Install-WindowsFeature Web-Server -IncludeManagementTools</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/ServerManager/Install-WindowsFeature.md" rel="noopener">Microsoft Learn — Install-WindowsFeature (syntaxe)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/WebAdministration/WebAdministration.md" rel="noopener">Microsoft Learn — Module WebAdministration (cmdlets)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/IISAdministration/IISAdministration.md" rel="noopener">Microsoft Learn — Module IISAdministration (Get-IISSite)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/IISAdministration/New-IISSite.md" rel="noopener">Microsoft Learn — New-IISSite</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/whats-new-in-iis-10/iisadministration-powershell-cmdlets.md" rel="noopener">Microsoft Learn — IISAdministration : scripts longs, pipeline</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/whats-new-in-iis-10/introducing-iis-on-nano-server.md" rel="noopener">Microsoft Learn — IISAdministration remplace WebAdministration sur Nano ; appcmd possible</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/manage/creating-websites/scenario-build-a-static-website-on-iis.md" rel="noopener">Microsoft Learn — Ajouter un site : Host Header, appcmd, format de liaison</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/NetAdapter/Disable-NetAdapterBinding.md" rel="noopener">Microsoft Learn — Disable-NetAdapterBinding -ComponentID</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/SupportArticles-docs/blob/main/support/windows-server/networking/configure-ipv6-in-windows.md" rel="noopener">Microsoft Learn — ms_tcpip6 ; désactivation d&#x27;IPv6 déconseillée</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/NetTCPIP/New-NetIPAddress.md" rel="noopener">Microsoft Learn — New-NetIPAddress -PrefixLength</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/DnsClient/Set-DnsClientServerAddress.md" rel="noopener">Microsoft Learn — Set-DnsClientServerAddress</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/7.5/Microsoft.PowerShell.Management/Rename-Computer.md" rel="noopener">Microsoft Learn — Rename-Computer -NewName -Restart</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Management/Add-Computer.md" rel="noopener">Microsoft Learn — Add-Computer -DomainName -Restart</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/administration/server-core/server-core-roles-and-services.md" rel="noopener">Microsoft Learn — Rôles et services : Web-Server, Web-Ftp-Server (non installés par défaut)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/ServerManager/Get-WindowsFeature.md" rel="noopener">Microsoft Learn — Get-WindowsFeature</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/introduction-to-iis/introduction-to-iis-architecture.md" rel="noopener">Microsoft Learn — Architecture : HTTP.sys, W3SVC, WAS, applicationHost.config</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/administration/windows-commands/netstat.md" rel="noopener">Microsoft Learn — netstat -a -n -o</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/getting-started-with-iis/getting-started-with-the-iis-manager-in-iis-7-and-iis-8.md" rel="noopener">Microsoft Learn — Content View</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/manage/configuring-security/application-pool-identities.md" rel="noopener">Microsoft Learn — Identité ApplicationPoolIdentity, IIS AppPool\&lt;nom&gt;, compte machine</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/planning-for-security/understanding-built-in-user-and-group-accounts-in-iis.md" rel="noopener">Microsoft Learn — IUSR, compte intégré</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/configuration/system.webServer/security/authentication/anonymousAuthentication.md" rel="noopener">Microsoft Learn — Anonyme : IUSR ou identité du pool</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/SupportArticles-docs/blob/main/support/developer/webapps/iis/health-diagnostic-performance/http-status-code.md" rel="noopener">Microsoft Learn — Codes HTTP (401.3, 403.x, 404.x, 500.19, 503.0)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/SupportArticles-docs/blob/main/support/developer/webapps/iis/site-behavior-performance/http-error-500-19-webpage.md" rel="noopener">Microsoft Learn — 500.19 : causes, section verrouillée, journal</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/configuration/system.applicationHost/applicationPools/add/processModel.md" rel="noopener">Microsoft Learn — idleTimeout 20 min ; maxProcesses 1 ; manualGroupMembership</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/configuration/system.applicationHost/applicationPools/add/index.md" rel="noopener">Microsoft Learn — queueLength : file HTTP.sys par pool</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/configuration/system.applicationHost/applicationPools/add/failure.md" rel="noopener">Microsoft Learn — loadBalancerCapabilities : 503</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/identity/ad-ds/manage/understand-service-accounts.md" rel="noopener">Microsoft Learn — gMSA : mot de passe géré automatiquement</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/getting-started-with-iis/create-a-web-site.md" rel="noopener">Microsoft Learn — Default Web Site dans \Inetpub\Wwwroot</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/configuration/system.applicationHost/sites/site/bindings/binding.md" rel="noopener">Microsoft Learn — Exemples de liaisons HTTP 80 et HTTPS 443</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/manage/provisioning-and-managing-iis/provisioning-sample-in-c.md" rel="noopener">Microsoft Learn — Plusieurs sites par host header sur une même IP</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/get-started/whats-new-in-iis-8/iis-80-server-name-indication-sni-ssl-scalability.md" rel="noopener">Microsoft Learn — SNI, IIS 8.0 ; une IP par site HTTPS auparavant</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/application-frameworks/scenario-build-an-aspnet-website-on-iis/configuring-step-4-configure-application-security.md" rel="noopener">Microsoft Learn — Case Require Server Name Indication</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/DnsServer/Add-DnsServerResourceRecordCName.md" rel="noopener">Microsoft Learn — Add-DnsServerResourceRecordCName</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/administration/windows-commands/icacls.md" rel="noopener">Microsoft Learn — icacls /grant, RX, (OI)(CI), /T</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/configuration/system.applicationHost/sites/site/logFile/index.md" rel="noopener">Microsoft Learn — Dossier des journaux %SystemDrive%\inetpub\logs\LogFiles</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/configuration/system.applicationHost/sites/applicationDefaults.md" rel="noopener">Microsoft Learn — Application pool par défaut (exemple DefaultAppPool)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/manage/provisioning-and-managing-iis/configure-logging-in-iis.md" rel="noopener">Microsoft Learn — Champ sc-substatus du journal</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/WebAdministration/New-Website.md" rel="noopener">Microsoft Learn — New-Website (paramètres)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/WebAdministration/New-WebAppPool.md" rel="noopener">Microsoft Learn — New-WebAppPool -Name</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/WebAdministration/Get-WebBinding.md" rel="noopener">Microsoft Learn — Get-WebBinding -Name</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/WebAdministration/Restart-WebAppPool.md" rel="noopener">Microsoft Learn — Restart-WebAppPool -Name</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/WebAdministration/Start-WebAppPool.md" rel="noopener">Microsoft Learn — Start-WebAppPool -Name</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/publish/using-the-ftp-service/scenario-build-an-ftp-site-on-iis.md" rel="noopener">Microsoft Learn — Assistant FTP : Basic, Anonymous, rôles, Read/Write, No SSL</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/publish/using-the-ftp-service/using-ftp-virtual-host-names-in-iis-7.md" rel="noopener">Microsoft Learn — utilisateur</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/iis-docs/blob/main/iis/publish/using-the-ftp-service/adding-ftp-publishing-to-a-web-site-in-iis-7.md" rel="noopener">Microsoft Learn — Add FTP Publishing (volet Actions)</a></li>
+                    </ul>
+                    <p class="sources__note">Liens vers les dépôts publics de la documentation (le texte source des pages officielles).</p>
+                </details>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>IIS — Serveur web Windows</strong> — Module du centre d'apprentissage IT</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · Synthèse du labo IIS</p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/iis.js?v=4e325514"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+</body>
+</html>

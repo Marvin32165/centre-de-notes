@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module Homelab & Self-hosting : matériel de départ, Docker et Compose, reverse proxy et HTTPS, DNS local Pi-hole, services à héberger, NAS et partages, sauvegardes 3-2-1 et accès distant par VPN.">
+    <title>Homelab &amp; Self-hosting — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a> · Parcours 04 · Virtualisation, homelab &amp; sécurité · 3 / 4</p>
+        <h1 class="hero__title">Homelab &amp;<br><em>Self-hosting</em></h1>
+        <p class="hero__lead">Le meilleur terrain d'apprentissage, c'est le sien. Un homelab, c'est un serveur à soi pour héberger ses services, casser des choses sans risque et apprendre en vrai. On part de Docker pour arriver à une stack complète : reverse proxy, DNS local, cloud perso, sauvegardes et accès distant sécurisé.</p>
+        <div class="hero__meta">
+            <span class="chip">Docker</span><span class="chip">Compose</span><span class="chip">Reverse proxy</span><span class="chip">Pi-hole</span><span class="chip">NAS</span><span class="chip">VPN</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n1"><b>Niveau</b> Débutant</span>
+            <span class="fact"><b>Durée</b> ≈ 1 h 30</span>
+            <span class="fact"><b>Chapitres</b> 9</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> <a href="linux-debian.html">Linux Debian</a> · <a href="proxmox.html">Proxmox</a> · <a href="docker.html">Docker</a> (utiles)</span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">Homelab</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#pourquoi"><span>01</span> C'est quoi, un homelab</a></li>
+            <li><a class="toc__link" href="#docker"><span>02</span> Docker &amp; Compose</a></li>
+            <li><a class="toc__link" href="#proxy"><span>03</span> Reverse proxy &amp; HTTPS</a></li>
+            <li><a class="toc__link" href="#dns"><span>04</span> DNS local &amp; Pi-hole</a></li>
+            <li><a class="toc__link" href="#services"><span>05</span> Les services à héberger</a></li>
+            <li><a class="toc__link" href="#stockage"><span>06</span> Stockage &amp; NAS</a></li>
+            <li><a class="toc__link" href="#backup"><span>07</span> Sauvegardes &amp; résilience</a></li>
+            <li><a class="toc__link" href="#distant"><span>08</span> Accès distant sécurisé</a></li>
+            <li><a class="toc__link" href="#pratique"><span>09</span> S'entraîner</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <p class="theory"><b>Module de théorie, pas encore pratiqué.</b> Rédigé à partir de documentations publiques : le homelab n'a pas encore fait l'objet d'un TP dans la formation. Les commandes sont à éprouver sur un lab avant de s'y fier — et ce module sera réécrit avec les vraies sorties et les vrais pièges le jour où il le sera.</p>
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Choisir un matériel de départ proportionné à ce qu'on veut vraiment héberger.</li>
+                <li>Décrire une stack Docker Compose propre : image, conteneur, volume, un dossier par service.</li>
+                <li>Mettre les services derrière un reverse proxy et obtenir un HTTPS valide sans ouvrir de port entrant.</li>
+                <li>Installer un DNS local filtrant, et anticiper qu'il devient un point unique de défaillance.</li>
+                <li>Sauvegarder ce qui compte vraiment, et ouvrir un accès distant sans exposer le moindre service.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> <a href="linux-debian.html">Linux Debian</a> · <a href="proxmox.html">Proxmox</a> et <a href="docker.html">Docker</a> (utiles)</p>
+            <p class="brief__foot">L'infrastructure tourne idéalement sur <a href="proxmox.html">Proxmox</a>, le durcissement se travaille avec le module <a href="securite.html">Cybersécurité</a>, et les certificats s'expliquent dans <a href="exchange-securite.html">Exchange &amp; PKI</a>.</p>
+        </section>
+
+        <!-- 01 -->
+        <section class="chapter" id="pourquoi">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">C'est quoi, un homelab</h2>
+            <p class="chapter__intro">Un homelab est un environnement informatique personnel — d'un simple Raspberry Pi à un vieux serveur d'entreprise — sur lequel on apprend, on teste et on héberge ses propres services. C'est le complément idéal des modules <a href="proxmox.html">Proxmox</a> et <a href="linux-debian.html">Linux</a>.</p>
+
+            <h3>Pourquoi s'en monter un</h3>
+            <ul>
+                <li><strong>Apprendre en vrai</strong> — rien ne remplace un service qu'on installe, casse et répare soi-même.</li>
+                <li><strong>Reprendre le contrôle de ses données</strong> — son cloud, ses médias, ses mots de passe chez soi.</li>
+                <li><strong>Automatiser sa maison</strong> — DNS local, domotique, sauvegardes centralisées.</li>
+                <li><strong>Un CV vivant</strong> — un homelab documenté vaut mieux qu'une ligne « je connais Docker ».</li>
+            </ul>
+
+            <h3>Le matériel : commencer petit</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Option</th><th>Pour qui</th><th>Atouts</th></tr></thead>
+                    <tbody>
+                        <tr><td>Raspberry Pi</td><td>Débuter, faible conso</td><td>Silencieux, parfait pour Pi-hole</td></tr>
+                        <tr><td>Mini-PC (NUC, Tiny)</td><td>Le meilleur rapport</td><td>x86, silencieux, tient plein de conteneurs</td></tr>
+                        <tr><td>PC recyclé / tour</td><td>Récup gratuite</td><td>Extensible (RAM, disques), idéal Proxmox</td></tr>
+                        <tr><td>Serveur d'occasion</td><td>Aller loin</td><td>Beaucoup de RAM/cœurs — mais bruit &amp; conso</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un homelab n'a pas besoin d'être gros : un <strong>mini-PC</strong> ou un vieux PC sous <a href="proxmox.html">Proxmox</a> suffit pour démarrer. On commence petit, on ajoute des services au fil de l'envie et des besoins.</p>
+            </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="chapter" id="docker">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Docker &amp; Compose : la brique de base</h2>
+            <p class="chapter__intro">Docker empaquette une application et toutes ses dépendances dans un <strong>conteneur</strong> : ça tourne pareil partout, ça s'installe et se supprime proprement. C'est le format standard du self-hosting moderne.</p>
+
+            <h3>Image, conteneur, volume</h3>
+            <ul>
+                <li><strong>Image</strong> — le modèle figé d'une appli (ex. <code>nginx:latest</code>).</li>
+                <li><strong>Conteneur</strong> — une instance qui tourne, créée à partir d'une image.</li>
+                <li><strong>Volume</strong> — le stockage <em>persistant</em> : les données survivent à la suppression du conteneur.</li>
+            </ul>
+
+            <h3>Docker Compose : décrire sa stack en YAML</h3>
+            <p>Plutôt que de longues commandes, on décrit les services dans un fichier <code>docker-compose.yml</code>, versionnable et rejouable (Compose v2 préfère le nom <code>compose.yaml</code>, mais lit les deux). Exemple minimal :</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">docker-compose.yml</span></div>
+                <pre class="terminal__code"><span class="k">services</span>:
+  <span class="k">web</span>:
+    <span class="p">image</span>: <span class="s">nginx:latest</span>
+    <span class="p">container_name</span>: <span class="s">mon-web</span>
+    <span class="p">ports</span>:
+      - <span class="s">"8080:80"</span>          <span class="c"># hôte:conteneur</span>
+    <span class="p">volumes</span>:
+      - <span class="s">./site:/usr/share/nginx/html:ro</span>
+    <span class="p">restart</span>: <span class="s">unless-stopped</span>  <span class="c"># redémarre tout seul</span></pre>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Lancer &amp; gérer la stack</span></div>
+                <pre class="terminal__code"><span class="k">docker</span> compose up <span class="p">-d</span>      <span class="c"># démarrer en arrière-plan</span>
+<span class="k">docker</span> compose logs <span class="p">-f</span>    <span class="c"># suivre les journaux</span>
+<span class="k">docker</span> compose pull &amp;&amp; <span class="k">docker</span> compose up <span class="p">-d</span>  <span class="c"># mettre à jour</span>
+<span class="k">docker</span> compose down       <span class="c"># tout arrêter proprement</span></pre>
+            </div>
+            <div class="cmdex" data-accept="docker compose( -f \S+)? up (-d|--detach)" data-hint="il manque l'option qui détache les conteneurs du terminal : -d.">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Dans le dossier du <code>docker-compose.yml</code>, lance toute la stack <strong>en arrière-plan</strong>, pour récupérer ton terminal.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>docker compose up -d</code> (ou <code>--detach</code>). Avec <code>-d</code>, les conteneurs tournent en arrière-plan et le terminal est rendu. Sans <code>-d</code>, <code>up</code> reste attaché et affiche les journaux de tous les conteneurs : <code>Ctrl+C</code> arrête alors la stack.</p></div>
+                </details>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">Astuce</p>
+                <p>Ajoute <strong>Portainer</strong> pour piloter tes conteneurs depuis une interface web, et <strong>Diun</strong> pour être <em>averti</em> des nouvelles versions d'images. Méfiance avec les outils qui mettent à jour <em>automatiquement</em> : <strong>Watchtower</strong>, le plus connu, n'est plus maintenu (dépôt archivé en décembre 2025), et une mise à jour majeure appliquée la nuit peut casser un service sans que tu le saches. Garde chaque service dans son propre dossier avec son <code>docker-compose.yml</code> et un <code>.env</code>.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Docker Compose = ta stack décrite dans un fichier <code>.yml</code> versionnable. <strong>Volumes</strong> pour les données persistantes, <code>restart: unless-stopped</code> pour la résilience, un dossier par service. C'est reproductible et propre.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Tu fais <code>docker compose pull</code> puis <code>docker compose down</code> et <code>up -d</code> sur ta stack Nextcloud. Qu'est-ce qui garantit que tes fichiers sont toujours là ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Ils sont dans un volume (ou un dossier monté) déclaré dans le fichier Compose</button>
+                        <button class="scenario__opt" data-why="restart relance le conteneur après un arrêt ou un redémarrage ; il ne conserve aucune donnée.">La politique restart: unless-stopped</button>
+                        <button class="scenario__opt" data-why="down supprime les conteneurs, comme rm : sans volume, la couche d&#x27;écriture et ses données partent avec eux.">Le fait d&#x27;utiliser docker compose down plutôt que docker rm</button>
+                    </div>
+                    <div class="scenario__why"><p>Mettre à jour un service Docker, c'est <strong>jeter le conteneur</strong> et en recréer un depuis la nouvelle image. Seul ce qui est dans un <strong>volume</strong> ou un <strong>bind mount</strong> survit — c'est aussi ce qu'il faut sauvegarder.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="chapter" id="proxy">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">Reverse proxy &amp; HTTPS</h2>
+            <p class="chapter__intro">Sans reverse proxy, chaque service vit sur un port différent (<code>:8080</code>, <code>:9000</code>…) et sans chiffrement. Un reverse proxy met tout derrière de jolis noms en <strong>https://</strong> et gère les certificats automatiquement.</p>
+
+            <div class="net">
+                <div class="node"><b>Navigateur</b><span class="ip">https://jelly.lab.exemple.be</span><span>Un nom, un cadenas</span></div>
+                <div class="node"><b>Reverse proxy</b><span class="ip">:443</span><span>Aiguille selon le nom + termine le TLS</span></div>
+                <div class="node"><b>Jellyfin</b><span class="ip">:8096</span><span>Service réel, en HTTP interne</span></div>
+                <div class="node"><b>Nextcloud</b><span class="ip">:8080</span><span>Autre service derrière le même proxy</span></div>
+            </div>
+
+            <h3>Quel proxy choisir</h3>
+            <ul>
+                <li><strong>Nginx Proxy Manager (NPM)</strong> — interface web, idéal pour débuter : on ajoute un « proxy host » et on clique pour obtenir un certificat Let's Encrypt.</li>
+                <li><strong>Traefik</strong> — puissant, config par labels Docker, auto-découverte des conteneurs. Plus technique.</li>
+                <li><strong>Caddy</strong> — minimaliste, HTTPS automatique en une ligne de config.</li>
+            </ul>
+
+            <p>Pour un certificat <em>valide</em> (cadenas vert) sans exposer le service, on utilise un domaine réel et le <strong>challenge DNS</strong> de Let's Encrypt : le certificat est émis sans ouvrir de port entrant. C'est le prolongement du module <a href="exchange-securite.html">PKI &amp; certificats</a>.</p>
+            <div class="tip">
+                <p class="tip__label">Quel nom de domaine pour la maison ?</p>
+                <p>Let's Encrypt ne délivre de certificat que pour un domaine public qui t'appartient (ex. <code>lab.exemple.be</code>, des sous-domaines dont le serveur reste interne, si le TXT de validation est publié dans le DNS public). Pour un nom purement interne, sans certificat public, utilise un suffixe réservé : <code>home.arpa</code> (RFC 8375) ou <code>.internal</code> (réservé par l'ICANN en 2024). <code>.lan</code> ou <code>.local</code> ne sont pas faits pour ça : <code>.local</code> est réservé au mDNS.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un reverse proxy = <strong>un point d'entrée unique</strong> qui aiguille par nom de domaine et gère le HTTPS. Débute avec <strong>Nginx Proxy Manager</strong> ; passe à Traefik quand tu veux l'auto-découverte. Certificats via Let's Encrypt (challenge DNS = pas de port à ouvrir).</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Ton Nginx Proxy Manager doit obtenir un certificat Let&#x27;s Encrypt pour <code>jellyfin.home.arpa</code>. La demande échoue. Pourquoi ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Let&#x27;s Encrypt ne certifie que des domaines publics, et home.arpa ne l&#x27;est pas</button>
+                        <button class="scenario__opt" data-why="Même avec un port ouvert, aucune autorité publique ne peut prouver que tu possèdes home.arpa : il est réservé aux réseaux privés.">Il faut ouvrir le port 443 sur la box</button>
+                        <button class="scenario__opt" data-why="NPM sait faire le challenge DNS ; le blocage vient du nom, pas de l&#x27;outil.">Le challenge DNS ne marche qu&#x27;avec Traefik</button>
+                    </div>
+                    <div class="scenario__why"><p>Une autorité publique vérifie que tu contrôles le domaine. Pour <code>home.arpa</code>, personne ne le contrôle publiquement. Solution : un vrai domaine (ex. <code>lab.exemple.be</code>) avec le challenge DNS, ou une petite autorité de certification interne dont tu installes la racine sur tes appareils.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04 -->
+        <section class="chapter" id="dns">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">DNS local &amp; filtrage — Pi-hole</h2>
+            <p class="chapter__intro">Pi-hole est un serveur DNS pour tout ton réseau qui bloque pubs et traceurs à la source. Bonus : il sert de DNS local pour donner des noms à tes machines (au lieu de retenir des IP).</p>
+
+            <h3>Comment ça marche</h3>
+            <p>On déclare le Pi-hole comme <strong>serveur DNS</strong> du réseau (dans le DHCP de la box/routeur). Chaque requête DNS passe par lui : il répond <code>0.0.0.0</code> (mode de blocage par défaut, <em>NULL</em>) pour les domaines publicitaires, et transmet le reste à un DNS amont (ou à <em>Unbound</em> pour de la résolution récursive privée).</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h4>Ce que Pi-hole apporte</h4>
+                    <ul>
+                        <li>Blocage pubs/traceurs sur tous les appareils</li>
+                        <li>DNS local : <code>nas.home.arpa → 192.168.1.20</code></li>
+                        <li>Statistiques de requêtes du réseau</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Bonnes pratiques</h4>
+                    <ul>
+                        <li>Prévoir un DNS de secours (sinon plus d'Internet si le Pi-hole tombe) — idéalement un <strong>second Pi-hole</strong> : un DNS public en secondaire laisse passer les pubs, car les clients l'interrogent parfois</li>
+                        <li>Le mettre sur une IP fixe</li>
+                        <li>Alternative équivalente : AdGuard Home</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Pi-hole = <strong>DNS + bloqueur de pub</strong> pour tout le réseau, et un annuaire local pour nommer tes services. Point de vigilance : c'est un point unique de défaillance — prévois un DNS de secours et une IP fixe.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Tu as mis dans le DHCP de la box le Pi-hole en DNS 1 et <code>1.1.1.1</code> en DNS 2, « au cas où ». Des pubs réapparaissent par moments. Pourquoi ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Les appareils interrogent parfois le DNS 2, qui ne filtre rien</button>
+                        <button class="scenario__opt" data-why="Des listes périmées laisseraient passer toujours les mêmes pubs, pas « par moments » selon l&#x27;appareil.">Le Pi-hole n&#x27;a pas mis à jour ses listes</button>
+                        <button class="scenario__opt" data-why="Un DNS public ne connaît pas tes listes : il répond à tout, pubs comprises.">1.1.1.1 copie la liste de blocage du Pi-hole</button>
+                    </div>
+                    <div class="scenario__why"><p>Le DNS 2 ne sert pas seulement quand le Pi-hole est en panne : il suffit que le Pi-hole tarde à répondre pour qu'un appareil passe au suivant, et certains systèmes interrogent leurs serveurs à tour de rôle. Pour garder le filtrage <em>et</em> la redondance, le DNS 2 doit être un <strong>second Pi-hole</strong> (ou AdGuard Home) sur une autre machine.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="chapter" id="services">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Les services à héberger</h2>
+            <p class="chapter__intro">La partie fun : peupler son homelab. Voici les grands classiques, du plus utile au plus geek. Chacun s'installe en quelques lignes de Docker Compose.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Besoin</th><th>Service</th><th>Remplace</th></tr></thead>
+                    <tbody>
+                        <tr><td>Cloud perso (fichiers, agenda)</td><td>Nextcloud</td><td>Google Drive / iCloud</td></tr>
+                        <tr><td>Médiathèque (films, séries)</td><td>Jellyfin</td><td>Netflix (ta propre bibliothèque)</td></tr>
+                        <tr><td>Mots de passe</td><td>Vaultwarden</td><td>LastPass (cf. module <a href="securite.html">Sécurité</a>)</td></tr>
+                        <tr><td>Tableau de bord</td><td>Homepage / Homarr</td><td>Un point d'entrée vers tous tes services</td></tr>
+                        <tr><td>Domotique</td><td>Home Assistant</td><td>Les apps propriétaires des objets connectés</td></tr>
+                        <tr><td>Notes / wiki</td><td>Wiki.js / BookStack</td><td>Notion, Confluence</td></tr>
+                        <tr><td>Photos</td><td>Immich</td><td>Google Photos</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">Astuce — n'en fais pas trop d'un coup</p>
+                <p>L'erreur du débutant : installer 20 services en un week-end, tout casser, se décourager. Ajoute <strong>un service à la fois</strong>, comprends-le, documente-le (un README par service), sauvegarde, puis passe au suivant.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>On commence par ce qui apporte une valeur immédiate (Pi-hole, un cloud, un tableau de bord), puis on étend. Chaque service = son dossier, son <code>docker-compose.yml</code>, son volume de données à sauvegarder.</p>
+            </div>
+        </section>
+
+        <!-- 06 -->
+        <section class="chapter" id="stockage">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">Stockage &amp; NAS</h2>
+            <p class="chapter__intro">Tôt ou tard, il faut de l'espace fiable et partagé : c'est le rôle du NAS (Network Attached Storage). On y centralise fichiers, médias et données de conteneurs.</p>
+
+            <h3>Faire son NAS</h3>
+            <ul>
+                <li><strong>Solutions clé en main</strong> — TrueNAS (basé ZFS), Unraid (souple pour disques de tailles mixtes, tant que la parité est au moins aussi grande que le plus grand disque de données), OpenMediaVault (léger, sur Debian).</li>
+                <li><strong>Sur Proxmox</strong> — un pool <strong>ZFS</strong> (cf. module <a href="proxmox.html">Proxmox</a>) partagé en SMB/NFS, ou une VM TrueNAS avec passthrough des disques.</li>
+            </ul>
+
+            <h3>Partager un dossier (SMB &amp; NFS)</h3>
+            <ul>
+                <li><strong>SMB/CIFS</strong> — le partage multiplateforme, lu par Windows, macOS et Linux (sous Linux, avec le paquet <code>cifs-utils</code>). Idéal pour les postes.</li>
+                <li><strong>NFS</strong> — partage Unix/Linux, qu'un serveur Windows peut aussi servir, parfait entre serveurs/VM.</li>
+            </ul>
+
+            <div class="tip">
+                <p class="tip__label">RAID n'est pas une sauvegarde</p>
+                <p>Un miroir ou un RAIDZ protège d'une <em>panne disque</em>, pas d'une suppression accidentelle, d'un rançongiciel ou d'un incendie. Le NAS reste une source à sauvegarder ailleurs (chapitre suivant).</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un NAS centralise le stockage et le partage (SMB pour les postes, NFS entre serveurs). TrueNAS/Unraid/OMV clé en main, ou ZFS sur Proxmox. <strong>RAID = disponibilité, pas sauvegarde.</strong></p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Ton NAS ZFS en miroir est chiffré par un rançongiciel arrivé depuis un PC de la maison via le partage SMB. Que t&#x27;apporte le miroir ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Rien : il a fidèlement écrit les fichiers chiffrés sur les deux disques</button>
+                        <button class="scenario__opt" data-why="Le miroir recopie chaque écriture en temps réel : le second disque contient la même version chiffrée.">Il permet de reprendre les fichiers sur le second disque</button>
+                        <button class="scenario__opt" data-why="Les sommes de contrôle détectent une corruption du disque, pas une écriture légitime faite par un utilisateur, même malveillante.">Il bloque l&#x27;attaque, car ZFS vérifie les sommes de contrôle</button>
+                    </div>
+                    <div class="scenario__why"><p>Le RAID protège d'une <strong>panne de disque</strong>. Contre la suppression, l'erreur humaine ou le rançongiciel, il faut des <strong>versions anciennes</strong> hors d'atteinte : snapshots ZFS non accessibles en écriture depuis le partage, et une sauvegarde sur une autre machine, dont une copie hors ligne ou hors site.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="chapter" id="backup">
+            <p class="chapter__num">07</p>
+            <h2 class="chapter__title">Sauvegardes &amp; résilience</h2>
+            <p class="chapter__intro">Un homelab sans sauvegarde, c'est une perte de données qui attend son heure. La bonne nouvelle : quelques outils rendent ça simple et automatique.</p>
+
+            <h3>Que sauvegarder</h3>
+            <ul>
+                <li>Les <strong>volumes Docker</strong> et fichiers <code>docker-compose.yml</code> (toute ta config).</li>
+                <li>Les <strong>VM/CT</strong> côté hyperviseur (backups Proxmox, cf. son chapitre dédié).</li>
+                <li>Les <strong>données du NAS</strong> (documents, photos, médias irremplaçables en priorité).</li>
+            </ul>
+
+            <h3>Avec quoi</h3>
+            <ul>
+                <li><strong>Restic / Borg / Kopia</strong> — sauvegarde chiffrée, dédupliquée, incrémentale, vers un disque externe ou du cloud.</li>
+                <li><strong>Proxmox Backup Server</strong> — pour les VM et conteneurs.</li>
+                <li><strong>rsync</strong> — pour de la simple recopie de dossiers.</li>
+            </ul>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Règle du 3-2-1</p>
+                <p><strong>3</strong> copies, sur <strong>2</strong> supports, dont <strong>1</strong> hors site. Et surtout : <strong>teste une restauration</strong>. Une sauvegarde jamais restaurée n'est qu'une hypothèse — automatise le backup, vérifie qu'il tourne, restaure pour de vrai de temps en temps.</p>
+            </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="chapter" id="distant">
+            <p class="chapter__num">08</p>
+            <h2 class="chapter__title">Accès distant sécurisé</h2>
+            <p class="chapter__intro">Accéder à son homelab depuis l'extérieur est tentant — et c'est le premier moyen de se faire pirater si on s'y prend mal. La règle : <strong>ne jamais exposer un service directement sur Internet</strong>. On passe par un tunnel chiffré.</p>
+
+            <h3>Les bonnes approches</h3>
+            <div class="cards">
+                <div class="card">
+                    <h4>VPN — WireGuard</h4>
+                    <ul>
+                        <li>Un tunnel chiffré vers ton réseau maison</li>
+                        <li>Un seul port UDP à rediriger sur la box (par convention <strong>51820/UDP</strong>), ou zéro avec un relais</li>
+                        <li>Moderne, rapide, simple à configurer</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Mesh VPN — Tailscale</h4>
+                    <ul>
+                        <li>Basé sur WireGuard, <strong>zéro port à ouvrir</strong> dans la plupart des cas</li>
+                        <li>Relie tes appareils comme un réseau privé</li>
+                        <li>Le plus simple pour débuter</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Ne fais surtout pas ça</p>
+                <p>Ouvrir un <em>port forwarding</em> direct vers un service (RDP, une appli web, un NAS) est une voie d'entrée des attaquants : des robots balaient régulièrement tout Internet à la recherche de ces ports. Passe <strong>toujours</strong> par un VPN (WireGuard/Tailscale). Si un service doit vraiment être public, mets-le derrière un reverse proxy durci, avec authentification et à jour.</p>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">Pour aller plus loin</p>
+                <p>Chaînes de référence pour ce module : <a href="https://www.youtube.com/@TechnoTim" target="_blank" rel="noopener">TechnoTim</a> (homelab, Docker, reverse proxy) et <a href="https://www.youtube.com/@TechHut" target="_blank" rel="noopener">TechHut</a> (self-hosting). L'infra tourne idéalement sur <a href="proxmox.html">Proxmox</a>, et la sécurité se travaille avec le module <a href="securite.html">Cybersécurité</a>.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Accès distant = <strong>VPN uniquement</strong> (WireGuard, ou Tailscale pour le zéro-config). Jamais de port forwarding direct vers un service. Un homelab bien fait est invisible depuis Internet.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Tu veux consulter ton Jellyfin depuis l&#x27;hôtel. Quelle solution n&#x27;expose aucun service du homelab à Internet ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Un VPN WireGuard (ou Tailscale) vers la maison, puis l&#x27;adresse interne</button>
+                        <button class="scenario__opt" data-why="C&#x27;est exactement l&#x27;exposition directe à éviter : le service répond à n&#x27;importe qui sur Internet.">Rediriger le port 8096 de la box vers Jellyfin</button>
+                        <button class="scenario__opt" data-why="Mieux qu&#x27;un port applicatif brut, mais tous les services derrière le proxy deviennent joignables depuis Internet.">Rediriger le port 443 vers le reverse proxy</button>
+                    </div>
+                    <div class="scenario__why"><p>Avec WireGuard, seul le port du VPN est ouvert, et il ne répond <strong>rien</strong> à un paquet qui ne porte pas une clé connue : un scanner ne voit même pas qu'il existe. Tailscale n'ouvre aucun port. Une fois dans le tunnel, on joint Jellyfin comme à la maison.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 09 -->
+        <section class="chapter" id="pratique">
+            <p class="chapter__num">09</p>
+            <h2 class="chapter__title">S'entraîner : vérifier ses services</h2>
+            <p class="chapter__intro">Un homelab sert à apprendre l'exploitation : savoir vérifier qu'un service tourne, qu'il répond, et ce qui se passe quand il tombe.</p>
+
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Le DNS local répond-il, et filtre-t-il ?</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash</span></div>
+                <pre class="terminal__code"><span class="k">dig</span> @192.168.1.53 debian.org +short<span class="c">             # résolution normale</span>
+<span class="k">dig</span> @192.168.1.53 doubleclick.net +short<span class="c">        # domaine bloqué</span></pre>
+            </div>
+                <p class="verify__sub">Sortie attendue</p>
+            <pre class="verify__out">151.101.2.132
+0.0.0.0</pre>
+                <p>La première adresse varie (c'est celle que renvoie le DNS amont) ; la seconde, <code>0.0.0.0</code>, est la réponse de blocage par défaut de Pi-hole.</p>
+                <p class="verify__fail">Aucune réponse : le conteneur est arrêté ou le port 53 n'est pas publié. Tout le réseau perd Internet quand le DNS local tombe : c'est le point unique de défaillance du chapitre 04 — d'où un second DNS sur une autre machine.</p>
+            </div>
+            <div class="cmdex" data-accept="dig @192\.168\.1\.53 example\.com( A)? \+short;;dig \+short @192\.168\.1\.53 example\.com( A)?" data-hint="le serveur se donne avec @, juste après dig ; +short demande la réponse courte.">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Demande à ton Pi-hole (<code>192.168.1.53</code>) l'adresse IPv4 de <code>example.com</code>, en réponse courte.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>dig @192.168.1.53 example.com +short</code>. <code>@192.168.1.53</code> désigne le serveur à interroger : sans lui, <code>dig</code> s'adresse aux serveurs listés dans <code>/etc/resolv.conf</code>, pas forcément au Pi-hole, et le test ne prouverait rien. <code>+short</code> ne garde que la réponse, et sans type indiqué, <code>dig</code> cherche un enregistrement <code>A</code>.</p></div>
+                </details>
+            </div>
+            <div class="scenario">
+                <p class="scenario__label">Scénario de panne</p>
+                <p class="scenario__title">Plus rien ne marche à la maison</p>
+                <p>Un matin, aucun appareil de la maison n'ouvre de site web, mais <code>ping 1.1.1.1</code> répond depuis le PC.</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Ping vers une IP OK, sites KO : où chercher ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Le DNS : le serveur DNS local (Pi-hole) est-il en marche ?</button>
+                        <button class="scenario__opt" data-why="Le ping vers Internet passe : la box et la sortie fonctionnent.">La box</button>
+                        <button class="scenario__opt" data-why="Le ping passe : le lien est bon.">Le câble du PC</button>
+                    </div>
+                    <div class="scenario__why"><p>Le mini-PC qui hébergeait le DNS a redémarré après une mise à jour, et le conteneur n'avait pas de politique de redémarrage.</p></div>
+                </div>
+                <div class="scenario__end"><strong>Correction :</strong> <code>restart: unless-stopped</code> dans le compose, et un second serveur DNS distribué par le DHCP de la box. Leçon : tout service dont dépend toute la maison mérite un plan B.</div>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Vérifier un service, c'est vérifier qu'il <strong>répond</strong> (dig, curl), pas seulement qu'il tourne. Et tout ce dont dépend tout le réseau — DNS, DHCP — a besoin d'une redondance ou d'un redémarrage automatique.</p>
+            </div>
+        </section>
+
+        <section class="test" id="test" data-test="homelab">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#virtualisation">examen du Parcours 04 · Virtualisation, homelab & sécurité</a>, qui le croise avec les autres modules du parcours, puis par l'<a href="../examens.html#final">examen final</a> sur les vingt-sept modules.</p>
+        </section>
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+                <details class="sources__verif">
+                    <summary>Sources officielles relues pour la vérification des faits du 08/10/2026 (24)</summary>
+                    <ul>
+                    <li><a href="https://github.com/docker/docs/blob/main/content/manuals/engine/containers/start-containers-automatically.md" rel="noopener">Docker Docs — Politiques de redémarrage Docker (unless-stopped)</a></li>
+                    <li><a href="https://github.com/docker/docs/blob/main/content/manuals/engine/storage/volumes.md" rel="noopener">Docker Docs — Volumes Docker persistants</a></li>
+                    <li><a href="https://github.com/docker/docs/blob/main/content/manuals/compose/intro/compose-application-model.md" rel="noopener">Docker Docs — Nom du fichier Compose : compose.yaml (préféré)</a></li>
+                    <li><a href="https://github.com/docker/compose/blob/main/docs/reference/compose.md" rel="noopener">Docker Docs — Compose : compose.yaml ou docker-compose.yaml</a></li>
+                    <li><a href="https://github.com/docker/compose/blob/main/docs/reference/compose_up.md" rel="noopener">Docker Docs — docker compose up -d (détaché, agrège les logs)</a></li>
+                    <li><a href="https://github.com/docker/compose/blob/main/docs/reference/compose_logs.md" rel="noopener">Docker Docs — docker compose logs -f (suivre les journaux)</a></li>
+                    <li><a href="https://github.com/docker/compose/blob/main/docs/reference/compose_down.md" rel="noopener">Docker Docs — docker compose down</a></li>
+                    <li><a href="https://github.com/containrrr/watchtower" rel="noopener">Watchtower (dépôt GitHub) — archivé le 17/12/2025</a></li>
+                    <li><a href="https://github.com/NginxProxyManager/nginx-proxy-manager" rel="noopener">Nginx Proxy Manager — Let&#x27;s Encrypt</a></li>
+                    <li><a href="https://github.com/traefik/traefik/blob/master/docs/content/reference/install-configuration/providers/docker.md" rel="noopener">Traefik — Traefik : labels Docker, découverte</a></li>
+                    <li><a href="https://github.com/traefik/traefik/blob/master/docs/content/reference/install-configuration/tls/certificate-resolvers/acme.md" rel="noopener">Traefik — Traefik ACME : ports HTTP-01 et TLS-ALPN, DNS-01</a></li>
+                    <li><a href="https://github.com/caddyserver/caddy" rel="noopener">Caddy — HTTPS automatique par défaut</a></li>
+                    <li><a href="https://github.com/pi-hole/docs/blob/master/docs/ftldns/blockingmode.md" rel="noopener">Pi-hole — Pi-hole : mode NULL par défaut, 0.0.0.0</a></li>
+                    <li><a href="https://github.com/openmediavault/openmediavault" rel="noopener">OpenMediaVault — basé sur Debian</a></li>
+                    <li><a href="https://github.com/openzfs/zfs/blob/master/man/man7/zfsconcepts.7" rel="noopener">OpenZFS — ZFS : snapshot en lecture seule</a></li>
+                    <li><a href="https://github.com/openzfs/zfs/blob/master/man/man7/zpoolconcepts.7" rel="noopener">OpenZFS — ZFS : miroir et RAIDZ</a></li>
+                    <li><a href="https://github.com/openzfs/zfs/blob/master/man/man7/zfsprops.7" rel="noopener">OpenZFS — ZFS : propriété checksum (intégrité)</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/vzdump.adoc" rel="noopener">Proxmox VE — vzdump et Proxmox Backup Server</a></li>
+                    <li><a href="https://github.com/restic/restic" rel="noopener">restic — chiffrement et déduplication</a></li>
+                    <li><a href="https://github.com/borgbackup/borg" rel="noopener">Borg — chiffrement, déduplication, compression</a></li>
+                    <li><a href="https://github.com/kopia/kopia" rel="noopener">Kopia — sauvegardes incrémentales, chiffrées, dédupliquées</a></li>
+                    <li><a href="https://github.com/wireguard/wireguard-tools/blob/master/src/man/wg.8" rel="noopener">WireGuard — wg : ListenPort optionnel</a></li>
+                    <li><a href="https://github.com/wireguard/wireguard-tools/blob/master/src/man/wg-quick.8" rel="noopener">WireGuard — wg-quick : exemples ListenPort 51820</a></li>
+                    <li><a href="https://github.com/tailscale/tailscale" rel="noopener">Tailscale — réseaux privés WireGuard</a></li>
+                    </ul>
+                    <p class="sources__note">Liens vers les dépôts publics de la documentation (le texte source des pages officielles).</p>
+                </details>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>Homelab &amp; Self-hosting</strong> — Module du centre d'apprentissage IT</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · Pour approfondir : <a href="https://www.youtube.com/@TechnoTim" target="_blank" rel="noopener">TechnoTim</a> · <a href="https://www.youtube.com/@TechHut" target="_blank" rel="noopener">TechHut</a></p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/homelab.js?v=59ae86fa"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+</body>
+</html>

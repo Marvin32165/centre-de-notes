@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <title>Commandes — Centre d'apprentissage IT</title>
+    <meta name="description" content="L'index de toutes les commandes des modules — Linux, PowerShell, Cisco IOS, T-SQL — avec filtre par texte, par shell et par module, et le chapitre qui les explique.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="index.html">← Portail</a> · Commandes</p>
+        <h1 class="hero__title">Les <em>commandes</em></h1>
+        <p class="hero__lead">Chaque commande tapée dans les modules, au même endroit : cherche un mot (« service », « vlan », « backup »), filtre par shell, copie, et suis le lien vers le chapitre qui l'explique. Tape <kbd>Ctrl</kbd> <kbd>K</kbd> pour chercher aussi dans les cours.</p>
+        <div class="hero__facts" data-cmd-facts></div>
+    </div>
+</header>
+
+<main class="glo cmd" id="commandes">
+    <div class="glo__bar">
+        <input class="glo__search" type="search" placeholder="Filtrer : une commande, un mot, une option…" aria-label="Filtrer les commandes" autocomplete="off" spellcheck="false">
+        <div class="glo__doms cmd__shells" role="group" aria-label="Shell"></div>
+        <select class="cmd__module" aria-label="Module"></select>
+    </div>
+    <p class="glo__count" aria-live="polite"></p>
+    <div class="cmd__list"><noscript><p>L'index a besoin de JavaScript.</p></noscript></div>
+    <button type="button" class="btn cmd__more" hidden></button>
+</main>
+
+<footer>
+    <p><strong>Commandes</strong> — Centre d'apprentissage IT</p>
+    <p><a href="index.html">← Retour au portail</a> · <a href="revision.html">Révision du jour</a> · <a href="glossaire.html">Glossaire</a></p>
+</footer>
+
+<script src="assets/catalogue.js?v=835ec2e5"></script>
+<script src="assets/app.js?v=fabe4251"></script>
+<script src="assets/commandes.js?v=7087bc5f"></script>
+<script src="assets/commandes-ui.js?v=12f19476"></script>
+</body>
+</html>

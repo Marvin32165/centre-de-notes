@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <title>Mon carnet — Centre d'apprentissage IT</title>
+    <meta name="description" content="Tes chapitres à revoir et tes notes personnelles, regroupés par module, avec export Markdown. Enregistré dans ce navigateur uniquement.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="index.html">← Portail</a> · Carnet</p>
+        <h1 class="hero__title">Mon <em>carnet</em></h1>
+        <p class="hero__lead">Dans chaque chapitre, marque ce qui reste fragile (« à revoir ») et note le piège, la commande oubliée, la question à poser. Tout se retrouve ici, module par module — et s'exporte en Markdown pour tes propres fiches. Enregistré dans ce navigateur uniquement.</p>
+        <div class="hero__facts" ></div>
+    </div>
+</header>
+
+<main class="glo carnet" id="carnet">
+    <div class="glo__bar">
+        <div class="glo__doms carnet__filter" role="group" aria-label="Filtre">
+            <button type="button" class="srs__chip" aria-pressed="true" data-f="tout">Tout</button>
+            <button type="button" class="srs__chip" aria-pressed="false" data-f="revoir">À revoir seulement</button>
+            <button type="button" class="srs__chip carnet__export">Exporter en Markdown</button>
+        </div>
+    </div>
+    <p class="glo__count carnet__stats" aria-live="polite"></p>
+    <div class="carnet__list"><noscript><p>Le carnet a besoin de JavaScript.</p></noscript></div>
+</main>
+
+<footer>
+    <p><strong>Mon carnet</strong> — Centre d'apprentissage IT</p>
+    <p><a href="index.html">← Retour au portail</a> · <a href="revision.html">Révision du jour</a> · <a href="glossaire.html">Glossaire</a></p>
+</footer>
+
+<script src="assets/catalogue.js?v=835ec2e5"></script>
+<script src="assets/app.js?v=fabe4251"></script>
+<script src="assets/search-index.js?v=9a2b4344"></script>
+<script src="assets/carnet.js?v=69bcfe1d"></script>
+</body>
+</html>

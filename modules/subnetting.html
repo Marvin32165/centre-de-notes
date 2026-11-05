@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module Réseau & Subnetting : binaire, masques et CIDR, découpage par block size, calcul mental, VLSM pas à pas et exercices corrigés avec corrections masquées.">
+    <title>Réseau &amp; Subnetting — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a></p>
+        <h1 class="hero__title">Réseau &amp;<br><em>Subnetting</em></h1>
+        <p class="hero__lead">Le module qui fait enfin « cliquer » les sous-réseaux. On démonte le binaire, le masque et le CIDR, puis on apprend à découper un réseau <em>de tête</em> avec la méthode du « block size », avant d'attaquer le VLSM et une série d'exercices corrigés.</p>
+        <div class="hero__meta">
+            <span class="chip">Binaire</span><span class="chip">Masque</span><span class="chip">CIDR</span><span class="chip">Block size</span><span class="chip">VLSM</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n1"><b>Niveau</b> Débutant</span>
+            <span class="fact"><b>Durée</b> ≈ 2 h 30</span>
+            <span class="fact"><b>Chapitres</b> 10</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> <a href="reseau-bases.html">Réseau : les bases</a></span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">Subnetting</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#pourquoi"><span>01</span> Pourquoi découper</a></li>
+            <li><a class="toc__link" href="#binaire"><span>02</span> Le binaire sans douleur</a></li>
+            <li><a class="toc__link" href="#masque"><span>03</span> Masque &amp; CIDR</a></li>
+            <li><a class="toc__link" href="#decouper"><span>04</span> Découper un réseau</a></li>
+            <li><a class="toc__link" href="#mental"><span>05</span> Calcul mental rapide</a></li>
+            <li><a class="toc__link" href="#vlsm"><span>06</span> VLSM pas à pas</a></li>
+            <li><a class="toc__link" href="#exos"><span>07</span> Exercices corrigés</a></li>
+            <li><a class="toc__link" href="#wildcard"><span>08</span> Masques génériques</a></li>
+            <li><a class="toc__link" href="#ipv6-decoupe"><span>09</span> Découpage IPv6</a></li>
+            <li><a class="toc__link" href="#entrainement"><span>10</span> Entraînement illimité</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Convertir entre binaire et décimal dans les deux sens, sans poser d'opération.</li>
+                <li>Passer d'un masque décimal à une notation <code>/n</code>, et en déduire le nombre d'hôtes et de sous-réseaux.</li>
+                <li>Découper un réseau en sous-réseaux de taille égale avec la méthode du <strong>block size</strong>.</li>
+                <li>Situer une adresse — réseau, broadcast, plage utilisable — de tête, en moins de 30 secondes.</li>
+                <li>Construire un plan VLSM complet, sans chevauchement ni gaspillage d'adresses.</li>
+                <li>Calculer un masque générique pour OSPF ou une ACL, et découper un préfixe IPv6 en réseaux /64.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> <a href="reseau-bases.html">Réseau : les bases</a> — au moins les chapitres sur IPv4 et le routage.</p>
+            <p class="brief__foot">C'est le prérequis direct des modules <a href="ccna-reseau.html">CCNA — Réseau Cisco</a> et <a href="cisco-securite.html">Cisco IOS — sécurité</a>, où ces plans d'adressage se posent sur de vrais équipements — et les masques génériques des ACL s'en déduisent.</p>
+        </section>
+
+        <!-- 01 -->
+        <section class="chapter" id="pourquoi">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">Pourquoi découper un réseau</h2>
+            <p class="chapter__intro">Une adresse IPv4 fait 32 bits, écrits en 4 octets décimaux (ex. <code>192.168.1.10</code>). Elle se coupe en deux parties : une partie <strong>réseau</strong> (commune à tous les hôtes du segment) et une partie <strong>hôte</strong> (unique par machine). Le subnetting, c'est déplacer la frontière entre les deux.</p>
+
+            <h3>À quoi ça sert concrètement</h3>
+            <ul>
+                <li><strong>Segmenter</strong> — séparer serveurs, postes, Wi-Fi invité, VoIP… chacun son sous-réseau.</li>
+                <li><strong>Sécuriser</strong> — un pare-feu ou des ACL filtrent entre sous-réseaux (cf. module <a href="ccna-reseau.html">CCNA</a>).</li>
+                <li><strong>Réduire le bruit</strong> — un domaine de broadcast plus petit = moins de trafic parasite.</li>
+                <li><strong>Économiser les adresses</strong> — donner juste ce qu'il faut à chaque segment (VLSM).</li>
+            </ul>
+
+            <h3>Les classes, un vieux repère</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Classe</th><th>1er octet</th><th>Masque « par défaut »</th><th>Plages privées (RFC 1918)</th></tr></thead>
+                    <tbody>
+                        <tr><td>A</td><td>1 – 126 (0 et 127 réservés)</td><td>/8 (255.0.0.0)</td><td>10.0.0.0 – 10.255.255.255</td></tr>
+                        <tr><td>B</td><td>128 – 191</td><td>/16 (255.255.0.0)</td><td>172.16.0.0 – 172.31.255.255</td></tr>
+                        <tr><td>C</td><td>192 – 223</td><td>/24 (255.255.255.0)</td><td>192.168.0.0 – 192.168.255.255</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="note">Les classes ne servent plus qu'à situer une adresse : depuis le <strong>CIDR</strong>, le masque est libre et découplé de la classe.</p>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Une IPv4 = <strong>32 bits</strong> = partie <strong>réseau</strong> + partie <strong>hôte</strong>. Subnetter, c'est allonger la partie réseau pour créer plusieurs sous-réseaux plus petits.</p>
+            </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="chapter" id="binaire">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Le binaire sans douleur</h2>
+            <p class="chapter__intro">Tout le subnetting tient dans un octet de 8 bits et ses puissances de 2. Apprends cette ligne par cœur, et 90 % du travail est fait.</p>
+
+            <h3>La ligne magique (valeurs des bits d'un octet)</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Bit</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr></thead>
+                    <tbody>
+                        <tr><td>Valeur</td><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td>1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>Un octet = la somme des valeurs dont le bit vaut 1. Chaque bit à 1 « allume » sa valeur :</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Conversion binaire → décimal</span></div>
+                <pre class="terminal__code"><span class="c"># 11000000  →  128 + 64                    = 192</span>
+<span class="c"># 10101000  →  128 +      32 +      8       = 168</span>
+<span class="c"># 11111111  →  128+64+32+16+8+4+2+1         = 255</span>
+<span class="c"># Donc 11000000.10101000.00000001.00001010 = 192.168.1.10</span></pre>
+            </div>
+
+            <h3>Décimal → binaire : la méthode « je soustrais »</h3>
+            <p>Pour convertir <code>200</code> : je prends les valeurs de gauche à droite. 128 ≤ 200 → bit 1, reste 72. 64 ≤ 72 → bit 1, reste 8. 32,16 &gt; 8 → bits 0. 8 ≤ 8 → bit 1, reste 0. Le reste à 0 → tout le reste est 0. Résultat : <code>11001000</code>.</p>
+
+            <div class="subgen" data-mode="binaire">
+                <p class="subgen__label">Entraînement — conversions</p>
+                <p>Un octet à convertir dans chaque sens. Écris le binaire sur 8 chiffres (les espaces sont acceptés). Vise dix bonnes réponses d'affilée avant de passer au chapitre suivant.</p>
+                <noscript><p>Ce générateur a besoin de JavaScript.</p></noscript>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><strong>128-64-32-16-8-4-2-1</strong> : la seule chose à connaître par cœur. Un octet plein (<code>11111111</code>) = 255. Sache convertir dans les deux sens et tu tiens le subnetting.</p>
+            </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="chapter" id="masque">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">Le masque de sous-réseau &amp; le CIDR</h2>
+            <p class="chapter__intro">Le masque dit où s'arrête le réseau et où commence l'hôte : les bits à <strong>1</strong> = réseau, les bits à <strong>0</strong> = hôte. La notation CIDR <code>/n</code> compte simplement le nombre de bits à 1.</p>
+
+            <h3>Masque décimal ⇄ CIDR</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>CIDR</th><th>Masque décimal</th><th>Bits hôte</th><th>Hôtes utilisables</th><th>Block size</th></tr></thead>
+                    <tbody>
+                        <tr><td>/24</td><td>255.255.255.0</td><td>8</td><td>254</td><td>256</td></tr>
+                        <tr><td>/25</td><td>255.255.255.128</td><td>7</td><td>126</td><td>128</td></tr>
+                        <tr><td>/26</td><td>255.255.255.192</td><td>6</td><td>62</td><td>64</td></tr>
+                        <tr><td>/27</td><td>255.255.255.224</td><td>5</td><td>30</td><td>32</td></tr>
+                        <tr><td>/28</td><td>255.255.255.240</td><td>4</td><td>14</td><td>16</td></tr>
+                        <tr><td>/29</td><td>255.255.255.248</td><td>3</td><td>6</td><td>8</td></tr>
+                        <tr><td>/30</td><td>255.255.255.252</td><td>2</td><td>2</td><td>4</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Les deux formules qui gouvernent tout</h3>
+            <div class="cards">
+                <div class="card">
+                    <h4>Nombre d'hôtes</h4>
+                    <ul>
+                        <li><strong>2<sup>(bits hôte)</sup> − 2</strong></li>
+                        <li>Le « −2 » = adresse réseau + broadcast, non attribuables</li>
+                        <li>Ex. /26 → 2<sup>6</sup> − 2 = <strong>62</strong> hôtes</li>
+                        <li>Exceptions : un <strong>/31</strong> donne 2 adresses utilisables sur un lien point à point (RFC 3021), un <strong>/32</strong> désigne une seule machine</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Nombre de sous-réseaux</h4>
+                    <ul>
+                        <li><strong>2<sup>(bits empruntés)</sup></strong></li>
+                        <li>Bits « empruntés » à la partie hôte pour agrandir le réseau</li>
+                        <li>Ex. d'un /24 vers /26 → 2 bits → <strong>4</strong> sous-réseaux</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Masque = 1 pour le réseau, 0 pour l'hôte. Hôtes = <strong>2<sup>h</sup> − 2</strong> ; sous-réseaux = <strong>2<sup>bits empruntés</sup></strong>. La colonne « block size » (256 − dernier octet du masque) est ton meilleur ami au chapitre suivant.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Combien d'adresses d'hôtes <strong>utilisables</strong> dans un <code>/27</code> ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>30</button>
+                        <button class="scenario__opt" data-why="32 est le nombre total d&#x27;adresses : il faut retirer l&#x27;adresse réseau et le broadcast.">32</button>
+                        <button class="scenario__opt" data-why="Le préfixe compte les bits du réseau, pas les hôtes. Il reste 32 − 27 = 5 bits pour les hôtes.">27</button>
+                    </div>
+                    <div class="scenario__why"><p>32 − 27 = 5 bits d'hôte → 2<sup>5</sup> = 32 adresses, moins le réseau et le broadcast = <strong>30</strong>.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04 -->
+        <section class="chapter" id="decouper">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">Découper un réseau, étape par étape</h2>
+            <p class="chapter__intro">Prenons un cas concret : on nous donne <code>192.168.10.0/24</code> et on veut <strong>4 sous-réseaux</strong>. Voici la démarche complète, réutilisable à chaque fois.</p>
+
+            <ul class="steps">
+                <li class="step"><div class="step__num">01</div><div class="step__body"><strong>Combien de bits emprunter ?</strong>4 sous-réseaux → 2<sup>2</sup> = 4, donc j'emprunte <strong>2 bits</strong>. Le /24 devient <strong>/26</strong> (24 + 2).</div></li>
+                <li class="step"><div class="step__num">02</div><div class="step__body"><strong>Nouveau masque &amp; block size</strong>/26 = 255.255.255.<strong>192</strong>. Block size = 256 − 192 = <strong>64</strong>. Les sous-réseaux avancent donc de 64 en 64.</div></li>
+                <li class="step"><div class="step__num">03</div><div class="step__body"><strong>Lister les sous-réseaux</strong>On part de 0 et on ajoute le block size : <code>.0</code>, <code>.64</code>, <code>.128</code>, <code>.192</code>. Ce sont les 4 adresses <em>réseau</em>.</div></li>
+                <li class="step"><div class="step__num">04</div><div class="step__body"><strong>Broadcast &amp; plage utilisable</strong>Le broadcast d'un sous-réseau = l'adresse juste avant le suivant. La plage utilisable = entre réseau+1 et broadcast−1.</div></li>
+            </ul>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Sous-réseau</th><th>Réseau</th><th>1ᵉʳ hôte</th><th>Dernier hôte</th><th>Broadcast</th></tr></thead>
+                    <tbody>
+                        <tr><td>#1</td><td>192.168.10.0</td><td>.1</td><td>.62</td><td>192.168.10.63</td></tr>
+                        <tr><td>#2</td><td>192.168.10.64</td><td>.65</td><td>.126</td><td>192.168.10.127</td></tr>
+                        <tr><td>#3</td><td>192.168.10.128</td><td>.129</td><td>.190</td><td>192.168.10.191</td></tr>
+                        <tr><td>#4</td><td>192.168.10.192</td><td>.193</td><td>.254</td><td>192.168.10.255</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="subgen" data-mode="decoupe">
+                <p class="subgen__label">Entraînement — découper un /24</p>
+                <p>Applique la recette ci-dessus : bits empruntés, nouveau préfixe, block size, puis compte de block size en block size.</p>
+                <noscript><p>Ce générateur a besoin de JavaScript.</p></noscript>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>La recette : <strong>bits empruntés → nouveau masque → block size (256 − octet) → on avance de block size en block size</strong>. Le broadcast, c'est toujours « l'adresse juste avant le sous-réseau suivant ».</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Dans <code>192.168.10.0/24</code> découpé en quatre <code>/26</code> comme ci-dessus, à quel sous-réseau appartient <code>192.168.10.130</code> ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Au 3<sup>e</sup>, 192.168.10.128/26</button>
+                        <button class="scenario__opt" data-why="Le 2e s&#x27;arrête à .127 (son broadcast).">Au 2<sup>e</sup>, 192.168.10.64/26</button>
+                        <button class="scenario__opt" data-why="Le 4e commence à .192 : 130 est en dessous.">Au 4<sup>e</sup>, 192.168.10.192/26</button>
+                    </div>
+                    <div class="scenario__why"><p>Block size 64 : les sous-réseaux commencent à 0, 64, <strong>128</strong>, 192. Le multiple de 64 juste en dessous de 130 est 128.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="chapter" id="mental">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Le calcul mental rapide</h2>
+            <p class="chapter__intro">La question type d'exam : « À quel sous-réseau appartient <code>172.16.20.170/27</code> ? » On répond en 15 secondes, sans binaire, grâce au block size.</p>
+
+            <ul class="steps">
+                <li class="step"><div class="step__num">01</div><div class="step__body"><strong>Block size</strong>/27 → masque 255.255.255.<strong>224</strong>. Block size = 256 − 224 = <strong>32</strong>.</div></li>
+                <li class="step"><div class="step__num">02</div><div class="step__body"><strong>Multiples du block size</strong>Dans l'octet concerné (le 4ᵉ ici) : 0, 32, 64, 96, 128, 160, <strong>192</strong>… Je cherche le multiple juste ≤ 170.</div></li>
+                <li class="step"><div class="step__num">03</div><div class="step__body"><strong>Encadrer l'adresse</strong>160 ≤ 170 &lt; 192. Donc réseau = <code>172.16.20.160</code>, broadcast = <code>172.16.20.191</code> (juste avant 192).</div></li>
+                <li class="step"><div class="step__num">04</div><div class="step__body"><strong>Réponse</strong>Sous-réseau <code>172.16.20.160/27</code> · hôtes utilisables <code>.161 → .190</code>. L'adresse .170 est bien un hôte valide.</div></li>
+            </ul>
+
+            <h3>Quand le découpage tombe dans le 3<sup>e</sup> octet</h3>
+            <p>Même méthode, un octet plus à gauche. Pour <code>172.16.45.10/20</code> : masque <code>255.255.<strong>240</strong>.0</code>, l'octet « intéressant » est le 3<sup>e</sup>, block size = 256 − 240 = <strong>16</strong>. Multiples : 0, 16, <strong>32</strong>, 48… On encadre 45 : 32 ≤ 45 &lt; 48. Réseau <code>172.16.32.0/20</code>, broadcast <code>172.16.47.255</code>, hôtes <code>172.16.32.1 → 172.16.47.254</code>. Le 4<sup>e</sup> octet vaut 0 au réseau et 255 au broadcast.</p>
+            <div class="tip">
+                <p class="tip__label">Le réflexe « block size »</p>
+                <p><strong>256 − dernier octet non-nul du masque = block size.</strong> Les sous-réseaux tombent sur les multiples de ce nombre. C'est la clé pour tout faire de tête, sans jamais poser une conversion binaire.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Pour situer une IP : trouve le block size, liste ses multiples, encadre l'adresse entre deux multiples. Le multiple du bas = le réseau, le suivant − 1 = le broadcast.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Un poste a l'adresse <code>10.20.77.200/21</code>. Quelle est l'adresse de son réseau ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok><code>10.20.72.0</code></button>
+                        <button class="scenario__opt" data-why="C&#x27;est le réflexe du /24. Ici le masque est 255.255.248.0 : on cherche dans le 3e octet, de 8 en 8."><code>10.20.77.0</code></button>
+                        <button class="scenario__opt" data-why="64 est bien un multiple de 8, mais pas le plus proche : 72 ≤ 77 &lt; 80."><code>10.20.64.0</code></button>
+                    </div>
+                    <div class="scenario__why"><p>/21 → <code>255.255.248.0</code> → block size 256 − 248 = <strong>8</strong> dans le 3<sup>e</sup> octet. Multiples : …64, <strong>72</strong>, 80. Réseau <code>10.20.72.0/21</code>, broadcast <code>10.20.79.255</code>.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 06 -->
+        <section class="chapter" id="vlsm">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">VLSM — des sous-réseaux sur mesure</h2>
+            <p class="chapter__intro">Le VLSM (Variable Length Subnet Mask) utilise des masques <em>différents</em> selon les besoins. Au lieu de gaspiller un /24 entier pour une liaison à 2 hôtes, on donne à chaque segment juste ce qu'il lui faut. Règle d'or : <strong>servir les plus gros besoins d'abord</strong>.</p>
+
+            <h3>Cas d'école — bloc 192.168.1.0/24</h3>
+            <p>Besoins : <strong>Ventes</strong> 50 hôtes · <strong>IT</strong> 25 hôtes · <strong>Wi-Fi</strong> 10 hôtes · <strong>Liaison</strong> WAN 2 hôtes. On classe du plus grand au plus petit, puis on choisit le plus petit masque qui contient chaque besoin.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Segment</th><th>Besoin</th><th>Masque choisi</th><th>Capacité</th><th>Bloc alloué</th></tr></thead>
+                    <tbody>
+                        <tr><td>Ventes</td><td>50</td><td>/26</td><td>62</td><td>192.168.1.0 → .63</td></tr>
+                        <tr><td>IT</td><td>25</td><td>/27</td><td>30</td><td>192.168.1.64 → .95</td></tr>
+                        <tr><td>Wi-Fi</td><td>10</td><td>/28</td><td>14</td><td>192.168.1.96 → .111</td></tr>
+                        <tr><td>Liaison WAN</td><td>2</td><td>/30</td><td>2</td><td>192.168.1.112 → .115</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="note">Chaque bloc commence là où le précédent s'arrête. Il reste <code>.116 → .255</code> de libre pour la croissance future : c'est tout l'intérêt du VLSM, le minimum de gaspillage (il en reste un peu dans chaque bloc : Ventes utilise 50 adresses sur 62).</p>
+
+            <div class="walk">
+                <p class="walk__label">Pas à pas</p>
+                <p class="walk__title">Construire le plan VLSM de 192.168.1.0/24, bloc par bloc</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · trier les besoins</p>
+                        <p class="walk__head">Du plus grand au plus petit</p>
+                        <p>Ventes 50 → IT 25 → Wi-Fi 10 → Liaison WAN 2. On ne regarde pas encore les adresses : seulement les tailles.</p>
+                        <p class="walk__change">Le tri vient <b>avant</b> tout calcul : c'est lui qui garantit des blocs alignés sans trou.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · Ventes, 50 hôtes</p>
+                        <p class="walk__head">Le plus petit masque qui contient 50 hôtes</p>
+                        <p>/27 = 2<sup>5</sup> − 2 = 30 : trop petit. /26 = 2<sup>6</sup> − 2 = 62 : suffisant. Block size 64. Première adresse libre : <code>.0</code>, multiple de 64. → <code>192.168.1.0/26</code>, hôtes <code>.1 → .62</code>, broadcast <code>.63</code>.</p>
+                        <p class="walk__change">On choisit le <b>plus petit</b> préfixe tel que 2<sup>h</sup> − 2 ≥ besoin.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · IT, 25 hôtes</p>
+                        <p class="walk__head">On repart juste après le bloc précédent</p>
+                        <p>25 hôtes → /27 (30). Block size 32. Prochaine adresse libre : <code>.64</code>, multiple de 32. → <code>192.168.1.64/27</code>, hôtes <code>.65 → .94</code>, broadcast <code>.95</code>.</p>
+                        <p class="walk__change">Contrôle d'<b>alignement</b> : l'adresse de départ doit être un multiple du block size.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · Wi-Fi, 10 hôtes</p>
+                        <p class="walk__head">Un /28</p>
+                        <p>10 hôtes → /28 (14). Block size 16. <code>.96</code> est un multiple de 16. → <code>192.168.1.96/28</code>, hôtes <code>.97 → .110</code>, broadcast <code>.111</code>.</p>
+                        <p class="walk__change">Comme les blocs diminuent, chaque départ tombe <b>naturellement aligné</b>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 5</b> · Liaison WAN, 2 hôtes</p>
+                        <p class="walk__head">Un /30 pour deux routeurs</p>
+                        <p>2 hôtes → /30 (2). Block size 4. <code>.112</code> est un multiple de 4. → <code>192.168.1.112/30</code> : <code>.113</code> pour un routeur, <code>.114</code> pour l'autre, broadcast <code>.115</code>.</p>
+                        <p class="walk__change">Le /30 est le bloc classique d'un <b>lien point à point</b>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 6</b> · contrôle final</p>
+                        <p class="walk__head">Aucun chevauchement, et ce qui reste</p>
+                        <p>Les blocs se suivent : .0–.63, .64–.95, .96–.111, .112–.115. Il reste <code>.116 → .255</code>, découpable plus tard en blocs alignés : <code>.116/30</code>, <code>.120/29</code>, puis <code>.128/25</code>.</p>
+                        <p class="walk__change">Un plan juste se relit en vérifiant <b>départ multiple du block size</b> et <b>broadcast = départ suivant − 1</b>.</p>
+                    </li>
+                </ol>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>VLSM = un masque par besoin. <strong>Trie du plus grand au plus petit</strong>, prends le plus petit masque qui couvre le besoin (2<sup>h</sup> − 2 ≥ besoin), et empile les blocs sans trou. Une liaison point-à-point = un <strong>/30</strong> en règle générale (un <strong>/31</strong> est possible si les deux extrémités le supportent, RFC 3021).</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Dans <code>192.168.1.0/24</code>, un collègue a déjà posé le segment Ventes en <code>192.168.1.0/26</code>. Il faut maintenant un <strong>/25</strong> pour 100 postes. Où le places-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>En <code>192.168.1.128/25</code></button>
+                        <button class="scenario__opt" data-why="Un /25 doit commencer sur un multiple de 128 : .64 n&#x27;en est pas un. Ce bloc serait en réalité 192.168.1.0/25 et chevaucherait Ventes.">En <code>192.168.1.64/25</code>, juste après Ventes</button>
+                        <button class="scenario__opt" data-why="Le /25 du haut (.128 → .255) est encore libre et bien aligné : il tient.">Nulle part : il faut tout replanifier</button>
+                    </div>
+                    <div class="scenario__why"><p>Un bloc de taille 128 commence sur <code>.0</code> ou <code>.128</code>. Le premier est occupé par Ventes, reste <strong>.128/25</strong>. Les adresses <code>.64 → .127</code> restent libres pour des blocs plus petits (/27, /28, /30). Si Ventes avait été posé en <code>.64/26</code>, il ne resterait que <code>.128/25</code> : un seul petit bloc posé dedans, et plus aucun /25 ne tiendrait. D'où la règle « du plus grand au plus petit ».</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="chapter" id="exos">
+            <p class="chapter__num">07</p>
+            <h2 class="chapter__title">Exercices corrigés</h2>
+            <p class="chapter__intro">Cinq exercices, du plus simple au plus complet. Les corrections sont <strong>repliées</strong> : réponds d'abord sur un papier, puis déplie pour vérifier. L'objectif est de répondre de tête en moins de 30 secondes — refais-les jusqu'à ce que ce soit le cas.</p>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 1 — situer une adresse</p>
+                <p>Pour <code>10.0.0.201/26</code>, donne l'adresse réseau, le broadcast et la plage d'hôtes utilisables.</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>/26 → masque <code>.192</code> → block size = 256 − 192 = <strong>64</strong>. Multiples : 0, 64, 128, <strong>192</strong>, 256. Comme 192 ≤ 201 &lt; 256 → réseau <code>10.0.0.192</code>, broadcast <code>10.0.0.255</code>, hôtes <code>.193 → .254</code>.</p></div>
+                </details>
+            </div>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 2 — compter sous-réseaux et hôtes</p>
+                <p>On découpe <code>172.16.0.0/16</code> en /24. Combien de sous-réseaux obtient-on ? Combien d'hôtes chacun ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>Bits empruntés = 24 − 16 = 8 → 2<sup>8</sup> = <strong>256 sous-réseaux</strong>. Bits hôte = 32 − 24 = 8 → 2<sup>8</sup> − 2 = <strong>254 hôtes</strong> par sous-réseau.</p></div>
+                </details>
+            </div>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 3 — VLSM express</p>
+                <p>Sur <code>192.168.50.0/24</code>, alloue un segment de 100 hôtes, un de 50, puis une liaison point-à-point.</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>100 → <strong>/25</strong> (126 hôtes) : <code>.0 → .127</code>. 50 → <strong>/26</strong> (62 hôtes) : <code>.128 → .191</code>. Liaison → <strong>/30</strong> : <code>.192 → .195</code>. Il reste <code>.196 → .255</code> pour la croissance.</p></div>
+                </details>
+            </div>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 4 — deux adresses se parlent-elles ?</p>
+                <p><code>192.168.4.130/25</code> et <code>192.168.4.90/25</code> sont-elles sur le même sous-réseau ? Peuvent-elles communiquer sans routeur ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>Block size d'un /25 = 256 − 128 = <strong>128</strong> → sous-réseaux <code>.0</code> et <code>.128</code>. L'adresse <code>.90</code> tombe dans <code>192.168.4.0/25</code>, l'adresse <code>.130</code> dans <code>192.168.4.128/25</code>. Ce sont <strong>deux sous-réseaux différents</strong> : il leur faut un routeur, même si les adresses « se ressemblent ».</p></div>
+                </details>
+            </div>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 5 — plan complet</p>
+                <p>Depuis <code>172.20.0.0/22</code>, prépare un plan pour quatre VLAN : Postes 400 hôtes, Serveurs 120, Wi-Fi 200, Management 25. Donne le masque et le bloc de chacun.</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>On sert du plus gros au plus petit. <strong>Postes 400</strong> → /23 (510 hôtes) : <code>172.20.0.0 → 172.20.1.255</code>. <strong>Wi-Fi 200</strong> → /24 (254) : <code>172.20.2.0 → .2.255</code>. <strong>Serveurs 120</strong> → /25 (126) : <code>172.20.3.0 → .3.127</code>. <strong>Management 25</strong> → /27 (30) : <code>172.20.3.128 → .3.159</code>. Il reste <code>172.20.3.160 → .3.255</code> de libre. Pourquoi du plus gros au plus petit ? Un bloc doit <strong>commencer sur un multiple de sa taille</strong> (un /23 démarre sur .0.0, .2.0, .4.0…). En servant les gros d'abord, chaque bloc suivant tombe naturellement aligné, sans trou. En commençant par Management (<code>172.20.0.0/27</code>), le /23 des Postes ne pourrait plus démarrer qu'en <code>172.20.2.0</code> : ça tient encore ici en recasant les autres dans les trous, mais le /23 n'a plus qu'un seul emplacement possible : un seul petit bloc posé dans <code>172.20.2.0/23</code>, et les Postes ne rentrent plus.</p></div>
+                </details>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">Pour aller plus loin</p>
+                <p>La référence vidéo sur ce sujet : la <a href="https://www.youtube.com/watch?v=5WfiTHiU4x8&list=PLIhvC56v63IKrRHh3gvZZBAGvsvOhwrRF" target="_blank" rel="noopener">playlist Subnetting de NetworkChuck</a>. Enchaîne ensuite avec le module <a href="ccna-reseau.html">CCNA</a> pour appliquer ces plans d'adressage sur de vrais équipements Cisco.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Le subnetting se maîtrise par la <strong>répétition</strong> : block size pour situer, 2<sup>h</sup> − 2 pour compter, VLSM du plus grand au plus petit. Fais-en 5 par jour pendant une semaine et ça devient automatique.</p>
+            </div>
+        </section>
+
+        <!-- Test de fin de module — rendu par assets/quiz.js -->
+        <!-- 08 -->
+        <section class="chapter" id="wildcard">
+            <p class="chapter__num">08</p>
+            <h2 class="chapter__title">Les masques génériques (wildcard)</h2>
+            <p class="chapter__intro">OSPF et les ACL Cisco n'utilisent pas le masque, mais son <strong>inverse</strong> : le masque générique. Un bit à 0 veut dire « ce bit doit correspondre », un bit à 1 « peu importe ».</p>
+
+            <h3>Le calcul : 255 moins chaque octet</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Préfixe</th><th>Masque</th><th>Masque générique</th><th>Usage typique</th></tr></thead>
+                    <tbody>
+                        <tr><td>/32</td><td>255.255.255.255</td><td><code>0.0.0.0</code></td><td>Une seule adresse (<code>host 10.0.0.5</code>)</td></tr>
+                        <tr><td>/30</td><td>255.255.255.252</td><td><code>0.0.0.3</code></td><td>Un lien point à point</td></tr>
+                        <tr><td>/24</td><td>255.255.255.0</td><td><code>0.0.0.255</code></td><td>Un réseau de postes</td></tr>
+                        <tr><td>/21</td><td>255.255.248.0</td><td><code>0.0.7.255</code></td><td>Le VLAN Management du labo CCNA</td></tr>
+                        <tr><td>/16</td><td>255.255.0.0</td><td><code>0.0.255.255</code></td><td>Tout un plan d'adressage</td></tr>
+                        <tr><td>/0</td><td>0.0.0.0</td><td><code>255.255.255.255</code></td><td>N'importe quelle adresse (<code>any</code>)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Cisco IOS — les mêmes masques génériques, deux usages</span></div>
+                <pre class="terminal__code"><span class="k">router</span> ospf 1
+ <span class="k">network</span> 10.2.104.0 0.0.7.255 area 0<span class="c">                 ! le /21 du VLAN 99</span>
+<span class="k">ip</span> access-list extended ACL-EXEMPLE
+ <span class="k">permit</span> tcp 10.2.104.0 0.0.7.255 any eq 22<span class="c">           ! SSH depuis ce même /21</span></pre>
+            </div>
+            <div class="tip">
+                <p class="tip__label">Le piège</p>
+                <p>Un masque générique se calcule depuis le <strong>masque</strong>, pas depuis le préfixe tapé « au jugé » : <code>/21</code> → <code>255.255.248.0</code> → <code>0.0.7.255</code>. Écrire <code>0.0.0.255</code> pour un /21 ne couvrirait qu'un huitième du réseau.</p>
+            </div>
+            <div class="subgen" data-mode="wildcard">
+                <p class="subgen__label">Entraînement — masques génériques</p>
+                <p>Un préfixe au hasard : donne son masque générique. Autant de questions que tu veux.</p>
+                <noscript><p>Ce générateur a besoin de JavaScript.</p></noscript>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Masque générique = 255 − chaque octet du masque. <code>0</code> = doit correspondre, <code>255</code> = peu importe. <code>0.0.0.0</code> vise une adresse (<code>host</code>), <code>255.255.255.255</code> toutes (<code>any</code>).</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Dans une ACL, tu veux viser tout le réseau <code>192.168.5.32/27</code>. Quel couple adresse + masque générique écris-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok><code>192.168.5.32 0.0.0.31</code></button>
+                        <button class="scenario__opt" data-why="C&#x27;est le masque de sous-réseau. Une ACL attend son inverse : 255 − 224 = 31."><code>192.168.5.32 255.255.255.224</code></button>
+                        <button class="scenario__opt" data-why="32 est le block size. Le masque générique vaut block size − 1 : 31 (bits 00011111)."><code>192.168.5.32 0.0.0.32</code></button>
+                    </div>
+                    <div class="scenario__why"><p>/27 = <code>255.255.255.224</code> → 255 − 224 = <strong>31</strong>. Astuce : masque générique = block size − 1 dans l'octet intéressant. <code>0.0.0.31</code> laisse libres les 5 bits d'hôte.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 09 -->
+        <section class="chapter" id="ipv6-decoupe">
+            <p class="chapter__num">09</p>
+            <h2 class="chapter__title">Découper en IPv6</h2>
+            <p class="chapter__intro">En IPv6, on ne compte plus les hôtes : un réseau local fait <strong>/64</strong> (l'autoconfiguration SLAAC l'exige), ce qui laisse 2<sup>64</sup> adresses. Le découpage porte sur le nombre de <strong>réseaux</strong>, et se fait en hexadécimal, de préférence par tranches de 4 bits.</p>
+
+            <h3>Ce qu'on reçoit, ce qu'on distribue</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Préfixe</th><th>Typiquement attribué à</th><th>Nombre de /64 dedans</th></tr></thead>
+                    <tbody>
+                        <tr><td>/32</td><td>Un fournisseur d'accès</td><td>4 294 967 296</td></tr>
+                        <tr><td>/48</td><td>Un site d'entreprise (ancien défaut, RFC 3177)</td><td>65 536</td></tr>
+                        <tr><td>/56</td><td>Un abonné particulier ou une petite agence (défaut conseillé par RFC 6177)</td><td>256</td></tr>
+                        <tr><td>/64</td><td>Un réseau local (un VLAN)</td><td>1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3>La méthode : compter les bits entre le préfixe reçu et /64</h3>
+            <p>Avec <code>2001:db8:abcd::/48</code>, il reste 64 − 48 = <strong>16 bits</strong> pour numéroter les réseaux : le 4<sup>e</sup> groupe tout entier. Les réseaux s'écrivent donc <code>2001:db8:abcd:0000::/64</code>, <code>2001:db8:abcd:0001::/64</code>… jusqu'à <code>2001:db8:abcd:ffff::/64</code>.</p>
+            <p>Astuce lisible : <strong>reprendre le numéro de VLAN</strong> dans ce groupe. VLAN 10 → <code>2001:db8:abcd:10::/64</code>, VLAN 30 → <code>2001:db8:abcd:30::/64</code> (le labo CCNA fait exactement ça avec <code>2001:db8:cafe:30::/64</code>). Ces nombres s'écrivent en hexadécimal mais se lisent comme des numéros : c'est voulu.</p>
+            <p>Découper en restant sur des frontières de <strong>4 bits</strong> (un chiffre hexadécimal : /48, /52, /56, /60, /64) garde les adresses lisibles. Un /52 par bâtiment dans un /48 : 16 bâtiments (<code>…:0000::/52</code>, <code>…:1000::/52</code>, <code>…:2000::/52</code>…), chacun avec 4 096 réseaux /64.</p>
+            <div class="exo">
+                <p class="exo__label">Exercice — un plan IPv6</p>
+                <p>Ton site a reçu <code>2001:db8:42::/48</code>. Donne le /64 des VLAN 20 et 99 avec la convention « numéro de VLAN », puis l'adresse de la passerelle en <code>::1</code>. Combien de /56 tient ce /48 ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>VLAN 20 : <code>2001:db8:42:20::/64</code>, passerelle <code>2001:db8:42:20::1</code>. VLAN 99 : <code>2001:db8:42:99::/64</code>, passerelle <code>2001:db8:42:99::1</code>. Un /48 contient 2<sup>56−48</sup> = <strong>256</strong> /56.</p></div>
+                </details>
+            </div>
+            <div class="cmdex" data-accept="2001:db8:cafe:70::/64;;2001:0db8:cafe:0070::/64;;2001:db8:cafe:70:0:0:0:0/64">
+                <p class="cmdex__label">À toi d'écrire</p>
+                <p>Écris le /64 du VLAN 70 dans le préfixe <code>2001:db8:cafe::/48</code>, avec la convention du labo.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>2001:db8:cafe:70::/64</code> — le numéro de VLAN dans le 4<sup>e</sup> groupe, le reste à zéro abrégé en <code>::</code>.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>En IPv6 : chaque réseau local en <strong>/64</strong>, un site en /48 (65 536 réseaux), et on découpe par tranches de 4 bits pour rester lisible. Mettre le numéro de VLAN dans le 4<sup>e</sup> groupe rend le plan évident.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Ta box reçoit le préfixe <code>2001:db8:1234:ab00::/56</code>. Combien de réseaux /64 peux-tu y créer, et quel est le premier ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>256, à commencer par <code>2001:db8:1234:ab00::/64</code></button>
+                        <button class="scenario__opt" data-why="Un réseau local est un /64. Entre /56 et /64, il reste 8 bits pour numéroter des réseaux.">Un seul : un /56 est déjà un réseau local</button>
+                        <button class="scenario__opt" data-why="65 536 est le nombre de /64 dans un /48. Et le premier réseau garde le préfixe reçu, ab00 compris.">65 536, à commencer par <code>2001:db8:1234::/64</code></button>
+                    </div>
+                    <div class="scenario__why"><p>64 − 56 = <strong>8 bits</strong> → 2<sup>8</sup> = 256 réseaux, de <code>…:ab00::/64</code> à <code>…:abff::/64</code> : seuls les deux derniers chiffres hexadécimaux du 4<sup>e</sup> groupe changent.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10 -->
+        <section class="chapter" id="entrainement">
+            <p class="chapter__num">10</p>
+            <h2 class="chapter__title">Entraînement illimité</h2>
+            <p class="chapter__intro">Le subnetting est un réflexe, et un réflexe se travaille. Ces générateurs tirent une nouvelle question à chaque fois et corrigent en expliquant le raisonnement. Objectif : cinq bonnes réponses d'affilée, en moins de 30 secondes chacune.</p>
+
+            <div class="subgen" data-mode="situer">
+                <p class="subgen__label">Situer une adresse</p>
+                <p>Donne le réseau, le broadcast, la plage utilisable et le nombre d'hôtes. Utilise la méthode du block size (chapitre 05).</p>
+                <noscript><p>Ce générateur a besoin de JavaScript.</p></noscript>
+            </div>
+            <div class="subgen" data-mode="taille">
+                <p class="subgen__label">Dimensionner un réseau</p>
+                <p>Combien d'hôtes faut-il ? Trouve le plus petit préfixe qui convient.</p>
+                <noscript><p>Ce générateur a besoin de JavaScript.</p></noscript>
+            </div>
+            <div class="subgen" data-mode="decoupe">
+                <p class="subgen__label">Découper un réseau</p>
+                <p>N sous-réseaux égaux dans un /24 : préfixe, taille, adresse du n<sup>e</sup>.</p>
+                <noscript><p>Ce générateur a besoin de JavaScript.</p></noscript>
+            </div>
+            <div class="subgen" data-mode="binaire">
+                <p class="subgen__label">Conversions binaire</p>
+                <p>Pour garder le réflexe 128-64-32-16-8-4-2-1.</p>
+                <noscript><p>Ce générateur a besoin de JavaScript.</p></noscript>
+            </div>
+            <div class="tool" data-tool="ipcalc"><noscript><p>Cet outil a besoin de JavaScript.</p></noscript></div>
+            <div class="tool" data-tool="convert"><noscript><p>Cet outil a besoin de JavaScript.</p></noscript></div>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Contrôler un calcul sur une machine Linux.</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash</span></div>
+                <pre class="terminal__code"><span class="k">ipcalc</span> 192.168.1.130/26<span class="c">            # paquet ipcalc</span></pre>
+            </div>
+                <p class="verify__sub">Sortie attendue</p>
+            <pre class="verify__out">Address:   192.168.1.130        11000000.10101000.00000001.10 000010
+Netmask:   255.255.255.192 = 26 11111111.11111111.11111111.11 000000
+Wildcard:  0.0.0.63             00000000.00000000.00000000.00 111111
+=&gt;
+Network:   192.168.1.128/26     11000000.10101000.00000001.10 000000
+HostMin:   192.168.1.129        11000000.10101000.00000001.10 000001
+HostMax:   192.168.1.190        11000000.10101000.00000001.10 111110
+Broadcast: 192.168.1.191        11000000.10101000.00000001.10 111111
+Hosts/Net: 62                    Class C, Private Internet</pre>
+                <p class="verify__fail"><code>ipcalc</code> n'est pas installé par défaut : <code>sudo apt install ipcalc</code>. Sous Windows, aucun équivalent intégré : la calculette du cours Cisco est dans le dépôt (outil <em>Subnetting — calculateur</em> du portail).</p>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Cinq bonnes réponses d'affilée, en moins de 30 secondes chacune, sur chaque générateur : c'est le niveau attendu pour la suite (CCNA, labs Windows, examens).</p>
+            </div>
+        </section>
+
+        <section class="test" id="test" data-test="subnetting">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#fondations">examen du Parcours 01 · Fondations</a>, qui le croise avec les autres modules du parcours, puis par l'<a href="../examens.html#final">examen final</a> sur les vingt-sept modules.</p>
+        </section>
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+                <details class="sources__verif">
+                    <summary>Sources officielles relues pour la vérification des faits du 08/10/2026 (6)</summary>
+                    <ul>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/networking/core-network-guide/Core-Network-Guide.md" rel="noopener">Microsoft Learn — Core Network Guide : plages privées et masques par classe</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/SupportArticles-docs/blob/main/support/windows-client/networking/tcpip-addressing-and-subnetting.md" rel="noopener">Microsoft Learn — Dépannage TCP/IP : classes, première et dernière adresse non attribuables</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/firewall/snat-private-range.md" rel="noopener">Microsoft Learn — Azure Firewall : plages privées IANA RFC 1918</a></li>
+                    <li><a href="https://github.com/iproute2/iproute2/blob/main/man/man8/ip-address.8.in" rel="noopener">iproute2 — ip-address(8) : préfixe de 64 bits, autoconfiguration sans état</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/networking/design-guide/ip-planning.md" rel="noopener">Microsoft Learn — Azure : sous-réseaux IPv6 exactement /64</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/virtual-network/ip-services/ipv6-overview.md" rel="noopener">Microsoft Learn — Azure : IPv6, sous-réseaux /64 pour le routage</a></li>
+                    </ul>
+                    <p class="sources__note">Liens vers les dépôts publics de la documentation (le texte source des pages officielles).</p>
+                </details>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>Réseau &amp; Subnetting</strong> — Module du centre d'apprentissage IT</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · Pour approfondir : <a href="https://www.youtube.com/watch?v=5WfiTHiU4x8&list=PLIhvC56v63IKrRHh3gvZZBAGvsvOhwrRF" target="_blank" rel="noopener">Subnetting — NetworkChuck</a></p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/subnetting.js?v=4de16b88"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+<script src="../assets/atelier.js?v=c35298a6"></script>
+</body>
+</html>

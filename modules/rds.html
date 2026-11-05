@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module RDS — rôles des services Bureau à distance, déploiement session-based sur le lab Orion, collections et RemoteApp, licences et période de grâce, certificat créé, affecté et approuvé, passerelle RD, avec vérifications PowerShell.">
+    <title>Bureau à distance (RDS) — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a></p>
+        <h1 class="hero__title">Bureau à<br><em>distance</em></h1>
+        <p class="hero__lead">Un seul point d'accès, des applications qui tournent sur le serveur : le déploiement RDS du cours, transposé sur le lab Orion, et complété par ce qui le rend utilisable plus de 120 jours — les licences, un certificat vraiment affecté et approuvé, et une passerelle pour l'extérieur.</p>
+        <div class="hero__meta">
+            <span class="chip">RDSH</span><span class="chip">Broker</span><span class="chip">RemoteApp</span><span class="chip">Licences</span><span class="chip">Certificat</span><span class="chip">Gateway</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n2"><b>Niveau</b> Intermédiaire</span>
+            <span class="fact"><b>Durée</b> ≈ 2 h 30</span>
+            <span class="fact"><b>Chapitres</b> 7</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> <a href="windows-server.html">Windows Server</a></span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">Bureau à distance</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#concepts"><span>01</span> Concepts & rôles</a></li>
+            <li><a class="toc__link" href="#labo"><span>02</span> Le lab</a></li>
+            <li><a class="toc__link" href="#deploiement"><span>03</span> Déploiement</a></li>
+            <li><a class="toc__link" href="#collections"><span>04</span> Collections & RemoteApp</a></li>
+            <li><a class="toc__link" href="#licences"><span>05</span> Licences</a></li>
+            <li><a class="toc__link" href="#certif"><span>06</span> Certificat</a></li>
+            <li><a class="toc__link" href="#gateway"><span>07</span> Passerelle</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Nommer chaque service de rôle RDS et dire ce qu'il fait, et choisir entre session-based et VDI.</li>
+                <li>Déployer un RDS session-based sur quatre serveurs, depuis le Server Manager ou en PowerShell, et le vérifier.</li>
+                <li>Créer une collection, y publier des RemoteApp et voir qui est connecté où.</li>
+                <li>Configurer les licences avant la fin des 120 jours de grâce.</li>
+                <li>Créer, affecter et faire approuver le certificat du déploiement, et expliquer le rôle de la passerelle.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> <a href="windows-server.html">Windows Server</a> (le domaine Orion). La partie certificats se comprend mieux après <a href="exchange-securite.html">Exchange &amp; PKI</a>.</p>
+            <p class="brief__foot">Le plan des machines est celui du <a href="../labo.html">lab Orion</a>.</p>
+        </section>
+
+        <!-- 01 -->
+        <section class="chapter" id="concepts">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">Les rôles RDS</h2>
+            <p class="chapter__intro">RDS (<em>Remote Desktop Services</em>) déporte l'exécution sur le serveur : le poste client n'affiche qu'une image. Le rôle se découpe en <strong>services de rôle</strong>, chacun sur sa machine dans un déploiement propre.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Service de rôle</th><th>Sigle</th><th>Ce qu'il fait</th></tr></thead>
+                    <tbody>
+                        <tr><td>Session Host</td><td>RDSH</td><td>Exécute réellement les sessions et les applications des utilisateurs</td></tr>
+                        <tr><td>Connection Broker</td><td>RDCB</td><td>Répartit les connexions entre hôtes, reconnecte un utilisateur à sa session, porte la configuration du déploiement</td></tr>
+                        <tr><td>Web Access</td><td>RDWA</td><td>Portail web (<code>/RDWeb</code>) qui liste les bureaux et RemoteApp publiés</td></tr>
+                        <tr><td>Gateway</td><td>RDG</td><td>Fait passer RDP dans HTTPS (443) pour un accès depuis Internet, sans VPN</td></tr>
+                        <tr><td>Licensing</td><td>RDL</td><td>Délivre les licences d'accès client (RDS CAL) — obligatoires après 120 jours</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <h3>Session-based (RDSH)</h3>
+                    <p>Plusieurs utilisateurs partagent un même serveur Windows Server. Léger, économique : le modèle le plus courant, et celui du lab.</p>
+                </div>
+                <div class="card">
+                    <h3>VDI</h3>
+                    <p>Une VM Windows complète par utilisateur. Isolation maximale, coûteux en ressources ; pour des postes très personnalisés.</p>
+                </div>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>RDSH exécute, RDCB répartit et retient, RDWA publie, la Gateway ouvre l'accès externe, le Licensing délivre les CAL. En session-based, plusieurs utilisateurs partagent un serveur.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le Wi-Fi d&#x27;une utilisatrice coupe en pleine saisie. Elle se reconnecte et retrouve sa session ouverte, sur le même hôte que tout à l&#x27;heure, alors qu&#x27;il y en a deux. Quel service de rôle a fait ça ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Le Connection Broker (RDCB)</button>
+                        <button class="scenario__opt" data-why="RD Web Access affiche la liste des ressources publiées ; il ne sait pas sur quel hôte tourne une session.">Le Web Access (RDWA)</button>
+                        <button class="scenario__opt" data-why="La passerelle fait entrer le trafic RDP depuis l&#x27;extérieur ; elle ne suit pas les sessions ouvertes sur les hôtes.">La passerelle (RDG)</button>
+                    </div>
+                    <div class="scenario__why"><p>Le <strong>broker</strong> garde la trace de chaque session : à la reconnexion, il renvoie l'utilisatrice vers l'hôte qui détient sa session déconnectée, au lieu d'en ouvrir une nouvelle ailleurs. <code>Get-RDUserSession</code> l'interroge.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="chapter" id="labo">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Le déploiement sur le lab Orion</h2>
+            <p class="chapter__intro">Le TP du cours monte un déploiement standard : un contrôleur de domaine qui orchestre, deux hôtes de session pour la redondance, un broker et un accès web. Transposé sur le <a href="../labo.html">lab Orion</a> :</p>
+
+            <div class="net">
+                <div class="node"><b>SRV-AD01</b><span class="ip">172.16.50.10</span><span>Contrôleur de domaine + DNS — on y pilote le déploiement depuis le Server Manager</span></div>
+                <div class="node"><b>SRV-RDSH1</b><span class="ip">172.16.50.51</span><span>Hôte de session n° 1</span></div>
+                <div class="node"><b>SRV-RDSH2</b><span class="ip">172.16.50.52</span><span>Hôte de session n° 2 (redondance, répartition)</span></div>
+                <div class="node"><b>SRV-RDCB</b><span class="ip">172.16.50.53</span><span>Connection Broker (et serveur de licences dans le lab)</span></div>
+                <div class="node"><b>SRV-RDWA</b><span class="ip">172.16.50.54</span><span>Web Access — portail <code>https://rdwa.orion.local/RDWeb</code></span></div>
+                <div class="node"><b>CLIENT-WIN11</b><span class="ip">DHCP</span><span>Poste de test</span></div>
+            </div>
+            <p>Les quatre serveurs RDS sont membres du domaine, et leur DNS pointe vers les DC. Le nom <code>rdwa.orion.local</code> est un alias (CNAME) vers <code>srv-rdwa.orion.local</code> : c'est ce nom-là que les utilisateurs taperont, et celui que devra porter le certificat (chapitre 06).</p>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un rôle par machine, deux hôtes de session parce que c'est là que la panne se voit. Le broker est le point de passage de toutes les connexions : c'est la machine à surveiller (et à doubler en production).</p>
+            </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="chapter" id="deploiement">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">Déployer en session-based</h2>
+            <p class="chapter__intro">Le déploiement se pilote depuis un seul serveur, qui installe les rôles sur les autres en une passe. Dans le TP, c'est le Server Manager de SRV-AD01 ; la même chose existe en PowerShell.</p>
+
+            <div class="steps">
+                <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Ajouter les serveurs au pool</strong><p>Sur SRV-AD01 : <em>Manage → Add Servers</em>, ajouter SRV-RDSH1, SRV-RDSH2, SRV-RDCB et SRV-RDWA.</p></div></div>
+                <div class="step"><div class="step__num">2</div><div class="step__body"><strong>Lancer l'installation RDS</strong><p><em>Manage → Add Roles and Features → Remote Desktop Services installation → Standard deployment → Session-based desktop deployment</em>.</p></div></div>
+                <div class="step"><div class="step__num">3</div><div class="step__body"><strong>Affecter les rôles</strong><p>RD Connection Broker = SRV-RDCB, RD Web Access = SRV-RDWA, RD Session Host = SRV-RDSH1 et SRV-RDSH2. Cocher <em>Restart the destination server automatically if required</em>, puis <em>Deploy</em>.</p></div></div>
+                <div class="step"><div class="step__num">4</div><div class="step__body"><strong>Contrôler</strong><p><em>Remote Desktop Services → Overview</em> : le schéma montre les rôles installés.</p></div></div>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — le même déploiement (sur SRV-AD01, module RemoteDesktop)</span></div>
+                <pre class="terminal__code"><span class="k">New-RDSessionDeployment</span> <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local `
+<span class="p">-WebAccessServer</span> srv-rdwa.orion.local `
+<span class="p">-SessionHost</span> srv-rdsh1.orion.local, srv-rdsh2.orion.local</pre>
+            </div>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Quels serveurs portent quels rôles ?</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell</span></div>
+                <pre class="terminal__code"><span class="k">Get-RDServer</span> <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local</pre>
+            </div>
+                <p class="verify__fail">Le déploiement échoue sur un serveur : il n'est pas joignable par WinRM depuis SRV-AD01, ou pas dans le pool. Les serveurs doivent être membres du domaine et visibles dans le Server Manager <strong>avant</strong> de lancer l'assistant.</p>
+            </div>
+            <div class="cmdex" data-accept="New-RDSessionDeployment(?= )(?!.* -(?!(?:ConnectionBroker|WebAccessServer|SessionHost)(?: |$))\w+)(?=.*-ConnectionBroker ['&quot;]?srv-rdcb\.orion\.local['&quot;]?(?![\w.-]))(?=.*-WebAccessServer ['&quot;]?srv-rdwa\.orion\.local['&quot;]?(?![\w.-]))(?=.*-SessionHost (?:@\( ?(?:['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-])|['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-])) ?\)|(?:['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-])|['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-])))).*;;New-RDSessionDeployment ['&quot;]?srv-rdcb\.orion\.local['&quot;]?(?![\w.-]) (?:@\( ?(?:['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-])|['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-])) ?\)|(?:['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-])|['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]))) ['&quot;]?srv-rdwa\.orion\.local['&quot;]?(?![\w.-])" data-hint="-ConnectionBroker, -WebAccessServer et -SessionHost. Une virgule sépare deux hôtes de session.">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Écris la commande qui déploie le RDS session-based du lab, <strong>en une seule ligne</strong> : broker <strong>srv-rdcb.orion.local</strong>, Web Access <strong>srv-rdwa.orion.local</strong>, hôtes de session <strong>srv-rdsh1.orion.local</strong> et <strong>srv-rdsh2.orion.local</strong>. Les noms complets (FQDN) sont exigés.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>New-RDSessionDeployment -ConnectionBroker srv-rdcb.orion.local -WebAccessServer srv-rdwa.orion.local -SessionHost srv-rdsh1.orion.local,srv-rdsh2.orion.local</code>. Les trois paramètres sont nommés : ils peuvent venir dans n'importe quel ordre. Sans noms, les valeurs se lisent par position : broker, hôtes de session, Web Access. Les trois attendent des noms complets (FQDN) ; <code>-SessionHost</code> accepte une liste, séparée par des virgules ou écrite <code>@("…","…")</code>.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un seul point de pilotage, quatre rôles sur quatre serveurs, et <code>Get-RDServer</code> pour vérifier qui fait quoi. La plupart des commandes <code>*-RD*</code> visent le broker (<code>-ConnectionBroker</code>) : c'est lui qui détient la configuration.</p>
+            </div>
+        </section>
+
+        <!-- 04 -->
+        <section class="chapter" id="collections">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">Collections et RemoteApp</h2>
+            <p class="chapter__intro">Une <strong>collection</strong> regroupe des hôtes de session et dit qui y a accès. On y publie soit des bureaux complets, soit des <strong>RemoteApp</strong> : des applications isolées qui s'ouvrent comme des fenêtres locales.</p>
+
+            <div class="steps">
+                <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Créer la collection</strong><p><em>Remote Desktop Services → Collections → Tasks → Create Session Collection</em> : nom <code>Collection1</code>, les deux hôtes de session, les groupes d'utilisateurs autorisés. Saisir l'emplacement du partage créé pour les <em>User Profile Disks</em>.</p></div></div>
+                <div class="step"><div class="step__num">2</div><div class="step__body"><strong>Publier des RemoteApp</strong><p>Dans la collection, section <em>RemoteApp Programs</em> : <em>Publish RemoteApp programs</em>, cocher les applications.</p></div></div>
+                <div class="step"><div class="step__num">3</div><div class="step__body"><strong>Tester</strong><p>Depuis le client : <code>https://rdwa.orion.local/RDWeb</code>, s'authentifier, lancer la RemoteApp.</p></div></div>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — la collection et une RemoteApp</span></div>
+                <pre class="terminal__code"><span class="k">New-RDSessionCollection</span> <span class="p">-CollectionName</span> <span class="s">"Collection1"</span> `
+    <span class="p">-SessionHost</span> srv-rdsh1.orion.local, srv-rdsh2.orion.local <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local
+<span class="k">New-RDRemoteApp</span> <span class="p">-CollectionName</span> <span class="s">"Collection1"</span> <span class="p">-DisplayName</span> <span class="s">"Bloc-notes"</span> `
+    <span class="p">-FilePath</span> <span class="s">"C:\Windows\System32\notepad.exe"</span> <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local</pre>
+            </div>
+            <div class="tip">
+                <p class="tip__label">WordPad n'existe plus</p>
+                <p>Les supports de cours publient souvent WordPad en exemple. Il a été <strong>retiré de Windows Server 2025</strong> (et de Windows 11 24H2) : sur un hôte de session 2025, publier le Bloc-notes, la calculatrice ou une vraie application métier.</p>
+            </div>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Qui est connecté, et où ?</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell</span></div>
+                <pre class="terminal__code"><span class="k">Get-RDUserSession</span> <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local</pre>
+            </div>
+                <p class="verify__fail">Un utilisateur ne voit rien dans le portail : il n'est pas dans le groupe autorisé de la collection. Une RemoteApp ne s'ouvre pas : le programme n'existe pas au même chemin sur <strong>tous</strong> les hôtes de la collection.</p>
+            </div>
+            <div class="cmdex" data-accept="New-RDSessionCollection(?= )(?!.* -(?!(?:CollectionName|SessionHost|ConnectionBroker)(?: |$))\w+)(?=.*-CollectionName ['&quot;]?Collection1['&quot;]?(?![\w.-]))(?=.*-SessionHost (?:@\( ?(?:['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-])|['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-])) ?\)|(?:['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-])|['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]))))(?=.*-ConnectionBroker ['&quot;]?srv-rdcb\.orion\.local['&quot;]?(?![\w.-])).*;;New-RDSessionCollection ['&quot;]?Collection1['&quot;]?(?![\w.-])(?=.*-SessionHost (?:@\( ?(?:['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-])|['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-])) ?\)|(?:['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-])|['&quot;]?srv-rdsh2\.orion\.local['&quot;]?(?![\w.-]) ?, ?['&quot;]?srv-rdsh1\.orion\.local['&quot;]?(?![\w.-]))))(?=.*-ConnectionBroker ['&quot;]?srv-rdcb\.orion\.local['&quot;]?(?![\w.-])).*" data-hint="-CollectionName, -SessionHost et -ConnectionBroker. Le nom peut aussi venir juste après New-RDSessionCollection, sans -CollectionName.">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Écris la commande qui crée la collection <strong>Collection1</strong>, <strong>en une seule ligne</strong>, avec les hôtes de session <strong>srv-rdsh1.orion.local</strong> et <strong>srv-rdsh2.orion.local</strong>, et le broker <strong>srv-rdcb.orion.local</strong>.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>New-RDSessionCollection -CollectionName "Collection1" -SessionHost srv-rdsh1.orion.local,srv-rdsh2.orion.local -ConnectionBroker srv-rdcb.orion.local</code>. <code>-SessionHost</code> n'a pas de position : il se nomme toujours. Le nom de la collection, lui, est le premier paramètre positionnel : <code>New-RDSessionCollection "Collection1" -SessionHost …</code> est donc équivalent.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>La collection est l'unité de publication et de contrôle d'accès. Une RemoteApp doit être installée à l'identique sur tous les hôtes de session de sa collection.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">La RemoteApp « Compta » s&#x27;ouvre pour certains utilisateurs et affiche une erreur pour d&#x27;autres. <code>Get-RDUserSession</code> montre que les erreurs viennent toutes de SRV-RDSH2. Cause probable ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>L&#x27;application n&#x27;est installée que sur SRV-RDSH1</button>
+                        <button class="scenario__opt" data-why="Sans droit sur la collection, ils ne verraient même pas la RemoteApp dans le portail.">Ces utilisateurs ne sont pas dans le groupe de la collection</button>
+                        <button class="scenario__opt" data-why="La fin de la grâce bloquerait les connexions sur tous les hôtes, pas seulement sur SRV-RDSH2.">La période de grâce des licences est terminée</button>
+                    </div>
+                    <div class="scenario__why"><p>Le broker répartit les utilisateurs entre les hôtes de la collection : une RemoteApp doit exister au <strong>même chemin</strong> sur chacun. Installer l'application sur SRV-RDSH2 (en mode installation : <code>change user /install</code>, puis <code>change user /execute</code>), ou la retirer de la collection en attendant.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="chapter" id="licences">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Les licences RDS</h2>
+            <p class="chapter__intro">Un déploiement RDS fonctionne sans licence… pendant <strong>120 jours</strong>. C'est la période de grâce : ensuite, les connexions sont refusées tant qu'un serveur de licences activé ne délivre pas de CAL (<em>Client Access License</em>).</p>
+
+            <p class="theory"><b>Complément au TP</b> — le TP du cours s'arrête avant les licences ; ce chapitre suit la documentation Microsoft. Dans un lab, la période de grâce suffit, mais il faut savoir que le compteur tourne.</p>
+            <div class="cards">
+                <div class="card">
+                    <h3>Par utilisateur (Per User)</h3>
+                    <p>Une CAL par personne, quel que soit le nombre d'appareils. Le bon choix quand chacun se connecte depuis plusieurs postes, ou depuis chez lui. Demande un domaine AD ; le serveur de licences compte les CAL attribuées mais ne bloque pas : rester en règle est ta responsabilité.</p>
+                </div>
+                <div class="card">
+                    <h3>Par périphérique (Per Device)</h3>
+                    <p>Une CAL par appareil, quel que soit le nombre de personnes. Pour des postes partagés en équipes (accueil, atelier). À la première connexion, l'appareil reçoit une CAL temporaire de 90 jours, remplacée par une permanente s'il en reste ; ce mode-là est réellement contrôlé.</p>
+                </div>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — ajouter le rôle de licences et régler le mode</span></div>
+                <pre class="terminal__code"><span class="k">Add-RDServer</span> <span class="p">-Server</span> srv-rdcb.orion.local <span class="p">-Role</span> RDS-LICENSING <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local
+<span class="k">Set-RDLicenseConfiguration</span> <span class="p">-LicenseServer</span> srv-rdcb.orion.local <span class="p">-Mode</span> PerUser <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local
+<span class="c"># puis : activer le serveur de licences et installer les CAL (console RD Licensing Manager)</span></pre>
+            </div>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Combien de jours de grâce reste-t-il ?</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell (administrateur) — sur un hôte de session</span></div>
+                <pre class="terminal__code">$<span class="k">ts</span> = Get-CimInstance <span class="p">-Namespace</span> root/CIMV2/TerminalServices <span class="p">-ClassName</span> Win32_TerminalServiceSetting
+<span class="k">Invoke-CimMethod</span> <span class="p">-InputObject</span> <span class="p">$ts</span> <span class="p">-MethodName</span> GetGracePeriodDays</pre>
+            </div>
+                <p class="verify__fail">Le Server Manager affiche « <em>The licensing mode for the Remote Desktop Session Host server is not configured</em> » : le mode et le serveur de licences ne sont pas réglés (<code>Set-RDLicenseConfiguration</code>).</p>
+            </div>
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Piège : la version des CAL</p>
+                <p>Une CAL donne accès aux hôtes de sa version ou d'une version <strong>antérieure</strong> : des hôtes de session Windows Server 2025 demandent des CAL RDS <strong>2025</strong>. Et le serveur de licences doit être de la même version que les CAL qu'il délivre, ou plus récent. On met donc à jour le serveur de licences avant les hôtes. Pour administrer un serveur sans le rôle RDSH, aucune CAL n'est nécessaire : Windows Server accepte deux connexions d'administration simultanées.</p>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>120 jours de grâce, puis plus de connexion sans CAL. Choisir Per User ou Per Device selon l'usage, désigner le serveur de licences, et l'activer. Dans un lab, on note la date de fin de grâce.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Un atelier a 3 postes partagés par 30 ouvriers en trois équipes, qui n&#x27;utilisent jamais d&#x27;autre appareil. Quelles CAL achètes-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>3 CAL par périphérique</button>
+                        <button class="scenario__opt" data-why="C&#x27;est en règle, mais dix fois plus cher : ici, ce sont les appareils qui sont peu nombreux, pas les personnes.">30 CAL par utilisateur</button>
+                        <button class="scenario__opt" data-why="La grâce ne dure que 120 jours : ensuite, plus aucune connexion sans serveur de licences ni CAL.">Aucune, la période de grâce suffit</button>
+                    </div>
+                    <div class="scenario__why"><p>On compte ce qui est le moins nombreux : 3 appareils contre 30 personnes. Mode <code>PerDevice</code> : <code>Set-RDLicenseConfiguration -Mode PerDevice -LicenseServer srv-rdcb.orion.local -ConnectionBroker srv-rdcb.orion.local</code>. Le jour où les ouvriers se connectent de chez eux, le calcul s'inverse.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 06 -->
+        <section class="chapter" id="certif">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">Le certificat : le créer, l'affecter, le faire accepter</h2>
+            <p class="chapter__intro">Le portail Web Access et les connexions RDP sont chiffrés en TLS : il leur faut un certificat au nom que tapent les utilisateurs. Le TP en crée un auto-signé. Il reste deux étapes que l'on oublie : l'<strong>affecter</strong> au déploiement, et le faire <strong>reconnaître</strong> par les clients.</p>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — sur SRV-RDCB : créer (TP du cours), exporter, affecter</span></div>
+                <pre class="terminal__code">$<span class="k">cert</span> = New-SelfSignedCertificate <span class="p">-DnsName</span> <span class="s">"rdwa.orion.local"</span> <span class="p">-CertStoreLocation</span> <span class="s">"Cert:\LocalMachine\My"</span> `
+    <span class="p">-NotAfter</span> (Get-Date).AddYears(2) <span class="p">-KeyLength</span> 4096 <span class="p">-KeyExportPolicy</span> Exportable <span class="p">-FriendlyName</span> <span class="s">"RDS"</span>
+$<span class="k">mdp</span> = Read-Host <span class="p">-AsSecureString</span> <span class="s">"Mot de passe du PFX"</span>
+<span class="k">Export-PfxCertificate</span> <span class="p">-Cert</span> <span class="p">$cert</span> <span class="p">-FilePath</span> <span class="s">"C:\Lab\rds.pfx"</span> <span class="p">-Password</span> <span class="p">$mdp</span>
+<span class="k">Export-Certificate</span> <span class="p">-Cert</span> <span class="p">$cert</span> <span class="p">-FilePath</span> <span class="s">"C:\Lab\rds.cer"</span><span class="c">   # partie publique, pour les clients</span>
+<span class="k">foreach</span> ($role in <span class="s">"RDWebAccess"</span>, <span class="s">"RDPublishing"</span>, <span class="s">"RDRedirector"</span>) {
+    <span class="k">Set-RDCertificate</span> <span class="p">-Role</span> <span class="p">$role</span> <span class="p">-ImportPath</span> <span class="s">"C:\Lab\rds.pfx"</span> <span class="p">-Password</span> <span class="p">$mdp</span> <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local <span class="p">-Force</span>
+<span class="k">}</span></pre>
+            </div>
+            <p>Le même réglage existe dans l'interface : <em>Overview → Tasks → Edit Deployment Properties → Certificates</em>, un rôle à la fois. Tant que cette étape n'est pas faite, le portail continue de présenter son certificat par défaut, même si le nouveau est dans le magasin.</p>
+            <h3>Que le client fasse confiance</h3>
+            <p>Un certificat auto-signé n'est garanti par personne : le client affiche une alerte. Pour un lab, on importe le certificat public (<code>.cer</code>) dans les <strong>Autorités de certification racines de confiance</strong> des postes, à la main (<code>Import-Certificate -FilePath rds.cer -CertStoreLocation Cert:\LocalMachine\Root</code>) ou mieux par GPO (<em>Computer Configuration → Policies → Windows Settings → Security Settings → Public Key Policies → Trusted Root Certification Authorities</em>). En production, on demande le certificat à l'autorité de certification d'entreprise (module <a href="exchange-securite.html">Exchange &amp; PKI</a>).</p>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Le portail présente-t-il le bon certificat ?</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell</span></div>
+                <pre class="terminal__code"><span class="k">Get-RDCertificate</span> <span class="p">-ConnectionBroker</span> srv-rdcb.orion.local</pre>
+            </div>
+                <p><em>Untrusted</em> est normal ici : c'est le niveau que Microsoft attribue à un certificat <strong>auto-signé</strong>. Avec un certificat de la CA d'entreprise ou d'une autorité publique, la colonne affiche <em>Trusted</em>. <em>NotConfigured</em> : aucun certificat valide pour ce rôle.</p>
+                <p class="verify__fail">Un rôle toujours en <em>NotConfigured</em> : <code>Set-RDCertificate</code> n'a pas été passé pour lui. Alerte « le nom ne correspond pas » : l'utilisateur tape un nom qui n'est pas dans le certificat (<code>srv-rdwa</code> au lieu de <code>rdwa</code>). Alerte « non approuvé » : le certificat n'est pas dans les racines de confiance du poste.</p>
+            </div>
+            <div class="tip">
+                <p class="tip__label">Un certificat, plusieurs noms</p>
+                <p>Les rôles <code>RDRedirector</code> et <code>RDPublishing</code> sont portés par le broker : le client y voit le nom <code>srv-rdcb.orion.local</code>. Un certificat qui ne porte que <code>rdwa.orion.local</code> peut donc encore déclencher une alerte de nom à la connexion. Plus propre : un certificat qui porte les deux noms, par exemple <code>New-SelfSignedCertificate -DnsName "rdwa.orion.local", "srv-rdcb.orion.local" …</code></p>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un certificat RDS se <strong>crée</strong> au bon nom, s'<strong>affecte</strong> aux rôles (<code>Set-RDCertificate</code>) et doit être <strong>reconnu</strong> par les clients (racine de confiance par GPO, ou CA d'entreprise). Sans les deux dernières étapes, l'alerte reste.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le certificat est affecté et approuvé par GPO. Pourtant, un utilisateur qui ouvre <code>https://srv-rdwa.orion.local/RDWeb</code> reçoit une alerte. Pourquoi ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Le nom tapé n&#x27;est pas dans le certificat</button>
+                        <button class="scenario__opt" data-why="La GPO l&#x27;y a placé : l&#x27;alerte « non approuvé » aurait disparu. Ici, c&#x27;est le nom qui ne correspond pas.">Le certificat n&#x27;est pas dans les racines de confiance</button>
+                        <button class="scenario__opt" data-why="Le certificat est déjà affecté ; le réaffecter ne change pas les noms qu&#x27;il porte.">Il faut relancer Set-RDCertificate</button>
+                    </div>
+                    <div class="scenario__why"><p>Le certificat ne porte que <code>rdwa.orion.local</code>. Le navigateur compare le nom tapé à ceux du certificat : <code>srv-rdwa</code> n'y est pas. Donner aux utilisateurs l'adresse <code>https://rdwa.orion.local/RDWeb</code> (un raccourci, un favori par GPO), ou ajouter le nom au certificat.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="chapter" id="gateway">
+            <p class="chapter__num">07</p>
+            <h2 class="chapter__title">Accéder de l'extérieur : la passerelle</h2>
+            <p class="chapter__intro">Ouvrir le port 3389 sur Internet est l'une des premières causes de compromission : les robots le scannent en permanence. La <strong>passerelle RD</strong> fait passer RDP dans HTTPS, sur le port 443, avec une authentification avant même d'atteindre un serveur.</p>
+
+            <p class="theory"><b>Complément au TP</b> — non déployé en séance ; principes issus de la documentation Microsoft.</p>
+            <div class="steps">
+                <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Le rôle</strong><p><code>Add-RDServer -Server srv-rdwa.orion.local -Role RDS-GATEWAY -ConnectionBroker srv-rdcb.orion.local -GatewayExternalFqdn rds.exemple.be</code> : souvent sur le même serveur que le Web Access, en DMZ.</p></div></div>
+                <div class="step"><div class="step__num">2</div><div class="step__body"><strong>Les stratégies</strong><p><strong>CAP</strong> (<em>Connection Authorization Policy</em>) : qui a le droit de passer. <strong>RAP</strong> (<em>Resource Authorization Policy</em>) : vers quels serveurs.</p></div></div>
+                <div class="step"><div class="step__num">3</div><div class="step__body"><strong>Le certificat</strong><p>Public cette fois (nom externe, autorité reconnue par tous les clients), affecté au rôle <code>RDGateway</code>.</p></div></div>
+                <div class="step"><div class="step__num">4</div><div class="step__body"><strong>L'exposition</strong><p>La VM passerelle doit être joignable depuis Internet sur <strong>443</strong> (TCP, HTTPS) et sur <strong>3391</strong> (UDP, RDP sur UDP). 3389 n'est jamais ouvert sur Internet.</p></div></div>
+            </div>
+            <div class="walk">
+                <p class="walk__label">Pas à pas</p>
+                <p class="walk__title">De l'URL RDWeb à la RemoteApp à l'écran</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · Navigateur → SRV-RDWA (HTTPS, 443)</p>
+                        <p class="walk__head">Le portail</p>
+                        <p>L'utilisateur ouvre <code>https://rdwa.orion.local/RDWeb</code> et s'authentifie avec son compte du domaine. Le serveur présente le certificat du rôle <code>RDWebAccess</code>.</p>
+                        <p class="walk__change">Première vérification du <strong>certificat</strong> : nom et confiance.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · SRV-RDWA → SRV-RDCB</p>
+                        <p class="walk__head">La liste des ressources</p>
+                        <p>Le Web Access demande au broker les bureaux et RemoteApp publiés dans les collections auxquelles l'utilisateur a droit (par ses groupes), et les affiche.</p>
+                        <p class="walk__change">Une ressource absente ici = un problème de <strong>groupe autorisé</strong> sur la collection.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · SRV-RDWA → navigateur</p>
+                        <p class="walk__head">Le fichier .rdp</p>
+                        <p>Un clic télécharge un petit fichier <code>.rdp</code>. Le client Bureau à distance (<code>mstsc</code>) l'ouvre.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · mstsc → passerelle (HTTPS 443, UDP 3391)</p>
+                        <p class="walk__head">Depuis l'extérieur seulement : la passerelle</p>
+                        <p>Le client ouvre un tunnel HTTPS vers la passerelle, s'y authentifie ; la passerelle vérifie la <strong>CAP</strong> (cet utilisateur peut-il passer ?) puis la <strong>RAP</strong> (vers ce serveur ?). Sur le réseau interne, le client saute cette étape.</p>
+                        <p class="walk__change"><strong>443</strong> (TCP) et <strong>3391</strong> (UDP) sont ouverts ; le tunnel HTTPS passe par 443.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 5</b> · mstsc → SRV-RDCB (RDP, 3389)</p>
+                        <p class="walk__head">Le broker choisit l'hôte</p>
+                        <p>Le broker regarde si l'utilisateur a déjà une session déconnectée dans la collection : si oui, il le renvoie vers cet hôte ; sinon, il répartit la charge entre les hôtes de la collection. Le client est <strong>redirigé</strong> (rôle <code>RDRedirector</code>).</p>
+                        <p class="walk__change">Reconnexion et <strong>répartition de charge</strong> se décident ici.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 6</b> · mstsc → SRV-RDSH1 (RDP, 3389) ; SRV-RDSH1 → serveur de licences</p>
+                        <p class="walk__head">La session s'ouvre</p>
+                        <p>L'hôte de session ouvre la session de l'utilisateur et s'adresse au serveur de licences : CAL par périphérique délivrée (ou temporaire), ou CAL par utilisateur comptée. Tant que court la période de grâce, l'absence de serveur de licences n'empêche pas la connexion.</p>
+                        <p class="walk__change">Après 120 jours sans serveur de licences configuré, c'est ici que la connexion est <strong>refusée</strong>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 7</b> · SRV-RDSH1 → poste</p>
+                        <p class="walk__head">La RemoteApp à l'écran</p>
+                        <p>L'application tourne sur SRV-RDSH1 ; le poste n'affiche que sa fenêtre, comme une application locale. Fermer la dernière RemoteApp ne ferme pas la session : elle est <em>déconnectée</em> au bout de 20 secondes et reste sur l'hôte. Une coupure réseau la laisse aussi <em>déconnectée</em> sur l'hôte, prête à être reprise à l'étape 5.</p>
+                        <p class="walk__change">Le calcul est sur le <strong>serveur</strong>, l'affichage sur le poste.</p>
+                    </li>
+                </ol>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Jamais de 3389 ouvert sur Internet : la passerelle RD encapsule RDP dans HTTPS (443), filtre par CAP et RAP, et présente un certificat public. Ajouter une MFA sur la passerelle est la mesure suivante.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le directeur veut ouvrir sa RemoteApp depuis chez lui. Un collègue propose de rediriger le port 3389 du pare-feu vers SRV-RDCB, avec un mot de passe solide. Que réponds-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Non : passerelle RD, avec 443 et 3391 publiés</button>
+                        <button class="scenario__opt" data-why="Le verrouillage transforme les robots qui scannent 3389 en déni de service sur le compte, et RDP reste exposé à ses propres failles.">D&#x27;accord, si le compte est verrouillé après 5 échecs</button>
+                        <button class="scenario__opt" data-why="Un port changé est retrouvé en quelques minutes par un scan : c&#x27;est masquer, pas protéger.">D&#x27;accord, en changeant 3389 pour un autre port</button>
+                    </div>
+                    <div class="scenario__why"><p>Exposer RDP directement, même sur un autre port, laisse n'importe qui sur Internet tenter sa chance. La <strong>passerelle RD</strong> passe par 443 (HTTPS) et 3391 (UDP), authentifie avant d'atteindre un serveur, filtre par CAP et RAP, et peut recevoir une MFA.</p></div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="test" id="test" data-test="rds">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#windows">examen du Parcours 02 · Infrastructure Windows</a>, qui le croise avec les autres modules du parcours, puis par l'<a href="../examens.html#final">examen final</a>. Ses questions reviennent aussi dans la <a href="../revision.html">révision du jour</a>.</p>
+        </section>
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+            <ul>
+                <li><a href="https://learn.microsoft.com/fr-fr/windows-server/remote/remote-desktop-services/rds-client-access-license" rel="noopener">Microsoft Learn — licences RDS (CAL) : période de grâce et modes</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/powershell/module/remotedesktop/" rel="noopener">Microsoft Learn — module PowerShell RemoteDesktop</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/troubleshoot/windows-server/remote/remote-desktop-licensing-mode-not-configured-warning" rel="noopener">Microsoft Learn — avertissement « licensing mode not configured »</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/troubleshoot/windows-server/remote/ports-used-by-rds" rel="noopener">Microsoft Learn — ports utilisés par RDS (dont la passerelle, 443 et 3391)</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/powershell/module/remotedesktop/get-rdcertificate" rel="noopener">Microsoft Learn — Get-RDCertificate (niveaux Trusted / Untrusted / NotConfigured)</a></li>
+                <li><a href="https://www.it-connect.fr/windows-server-2019-installer-un-serveur-rds-avec-powershell/" rel="noopener">IT-Connect — installer un serveur RDS avec PowerShell (tutoriel en français)</a></li>
+            </ul>
+                        <details class="sources__verif">
+                    <summary>Sources officielles relues pour la vérification des faits du 08/10/2026 (26)</summary>
+                    <ul>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/remote/remote-desktop-services/overview.md" rel="noopener">Microsoft Learn — Vue d&#x27;ensemble RDS : rôles et modèles</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/remote/remote-desktop-services/rds-roles.md" rel="noopener">Microsoft Learn — Rôles RDS : broker, CAP/RAP, certificats</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/remote/remote-desktop-services/rds-deploy-infrastructure.md" rel="noopener">Microsoft Learn — Déploiement dans le Server Manager</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/remote/remote-desktop-services/rds-prepare-vms.md" rel="noopener">Microsoft Learn — Préparer les VM : domaine, gestion à distance</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/remote/remote-desktop-services/rds-create-collection.md" rel="noopener">Microsoft Learn — Créer une collection, publier des RemoteApp</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/remote/remote-desktop-services/rds-client-access-license.md" rel="noopener">Microsoft Learn — Licences RDS : grâce, Per User, Per Device, versions</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/remote/remote-desktop-services/remote-desktop-services-certificates.md" rel="noopener">Microsoft Learn — Certificats RDS : Edit Deployment Properties</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/remote/remote-desktop-services/remote-desktop-gateway-role.md" rel="noopener">Microsoft Learn — Passerelle RD : accès sans VPN</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/SupportArticles-docs/blob/main/support/windows-server/remote/ports-used-by-rds.md" rel="noopener">Microsoft Learn — Ports RDS : TCP 443, UDP 3391</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/SupportArticles-docs/blob/main/support/windows-server/remote/troubleshoot-rds-licensing-guidance.md" rel="noopener">Microsoft Learn — Lire la grâce restante (Win32_TerminalServiceSetting)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/SupportArticles-docs/blob/main/support/windows-server/remote/remote-desktop-licensing-mode-not-configured-warning.md" rel="noopener">Microsoft Learn — Grâce de 120 jours par défaut</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/SupportArticles-docs/blob/main/support/windows-server/remote/troubleshoot-remote-desktop-disconnected-errors.md" rel="noopener">Microsoft Learn — Deux connexions d&#x27;administration sans CAL</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/administration/windows-commands/change-user.md" rel="noopener">Microsoft Learn — Commande change user /install et /execute</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/identity/ad-cs/distribute-certificates-group-policy.md" rel="noopener">Microsoft Learn — Distribuer les certificats par GPO</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/New-RDSessionDeployment.md" rel="noopener">Microsoft Learn — Syntaxe New-RDSessionDeployment</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/Get-RDServer.md" rel="noopener">Microsoft Learn — Get-RDServer et rôles RDS-*</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/New-RDSessionCollection.md" rel="noopener">Microsoft Learn — Syntaxe New-RDSessionCollection</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/New-RDRemoteApp.md" rel="noopener">Microsoft Learn — Syntaxe New-RDRemoteApp</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/Get-RDUserSession.md" rel="noopener">Microsoft Learn — Syntaxe Get-RDUserSession</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/Add-RDServer.md" rel="noopener">Microsoft Learn — Add-RDServer : RDS-LICENSING, RDS-GATEWAY</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/Set-RDLicenseConfiguration.md" rel="noopener">Microsoft Learn — Set-RDLicenseConfiguration : modes PerUser / PerDevice</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/Get-RDCertificate.md" rel="noopener">Microsoft Learn — Get-RDCertificate : rôles et niveaux</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/RemoteDesktop/Set-RDCertificate.md" rel="noopener">Microsoft Learn — Set-RDCertificate : rôles et paramètres</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/pki/New-SelfSignedCertificate.md" rel="noopener">Microsoft Learn — New-SelfSignedCertificate : paramètres</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/pki/Export-PfxCertificate.md" rel="noopener">Microsoft Learn — Export-PfxCertificate : -Password</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/pki/Export-Certificate.md" rel="noopener">Microsoft Learn — Export-Certificate : -FilePath</a></li>
+                    </ul>
+                    <p class="sources__note">Liens vers les dépôts publics de la documentation (le texte source des pages officielles).</p>
+                </details>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>Bureau à distance (RDS)</strong> — Module du centre d'apprentissage IT</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · <a href="../revision.html">Révision du jour</a></p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/rds.js?v=ff83ba72"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+</body>
+</html>

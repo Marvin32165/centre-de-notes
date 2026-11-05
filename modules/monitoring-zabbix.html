@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module supervision avec Zabbix : monitoring d'un parc, architecture serveur/base/agents/proxies, installation sur Ubuntu avec MySQL et Nginx, agent Windows en mode passif et actif, templates et hôtes, puis auto-remédiation par triggers, scripts et actions.">
+    <title>Supervision — Zabbix — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a> · Parcours 05 · Cloud, supervision &amp; méthode · 1 / 7</p>
+        <h1 class="hero__title">Supervision<br>avec <em>Zabbix</em></h1>
+        <p class="hero__lead">Arrêter de découvrir les pannes par l'utilisateur qui appelle. Monter un serveur Zabbix de zéro sur Ubuntu, y raccorder un serveur Windows par agent, lire ce qui remonte — puis laisser Zabbix corriger tout seul ce qu'il détecte.</p>
+        <div class="hero__meta">
+            <span class="chip">Monitoring</span><span class="chip">Zabbix 7.4</span><span class="chip">Agent</span><span class="chip">Templates</span><span class="chip">Triggers</span><span class="chip">Auto-remédiation</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n2"><b>Niveau</b> Intermédiaire</span>
+            <span class="fact"><b>Durée</b> ≈ 3 h</span>
+            <span class="fact"><b>Chapitres</b> 10</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> <a href="linux-debian.html">Linux Debian</a> · <a href="hyperv.html">Hyper-V</a> · <a href="windows-server.html">Windows Server</a></span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">Zabbix</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#pourquoi"><span>01</span> Pourquoi superviser</a></li>
+            <li><a class="toc__link" href="#archi"><span>02</span> Architecture de Zabbix</a></li>
+            <li><a class="toc__link" href="#reseau"><span>03</span> Le réseau NAT du labo</a></li>
+            <li><a class="toc__link" href="#ubuntu"><span>04</span> Ubuntu &amp; MySQL</a></li>
+            <li><a class="toc__link" href="#install"><span>05</span> Installer Zabbix</a></li>
+            <li><a class="toc__link" href="#agent"><span>06</span> L'agent Windows</a></li>
+            <li><a class="toc__link" href="#hote"><span>07</span> Déclarer l'hôte</a></li>
+            <li><a class="toc__link" href="#exploitation"><span>08</span> Exploiter au quotidien</a></li>
+            <li><a class="toc__link" href="#auto"><span>09</span> Un parc qui se répare seul</a></li>
+            <li><a class="toc__link" href="#pratique"><span>10</span> S'entraîner</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Expliquer ce qu'apporte la supervision à la gestion d'un parc, et nommer ses trois objectifs.</li>
+                <li>Situer chaque brique de Zabbix : serveur, base de données, interface web, agents, proxies.</li>
+                <li>Monter un réseau NAT sous Hyper-V et y installer Ubuntu Server avec une adresse fixe.</li>
+                <li>Installer MySQL puis Zabbix (serveur, frontend, agent) et terminer l'assistant web.</li>
+                <li>Poser l'agent sur un Windows Server, le déclarer comme hôte et vérifier que les données remontent.</li>
+                <li>Distinguer <em>active checks</em> et <em>passive checks</em>, et dépanner une pastille ZBX rouge.</li>
+                <li>Faire redémarrer automatiquement un service arrêté avec un trigger, un script et une action.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> <a href="linux-debian.html">Linux Debian</a> (APT, systemd, SSH), <a href="hyperv.html">Hyper-V</a> (VM et commutateurs virtuels), <a href="windows-server.html">Windows Server</a> (services, pare-feu).</p>
+            <p class="brief__foot">La suite du parcours est <a href="azure.html">Azure — AZ-900</a>, où l'on retrouve exactement les mêmes notions sous d'autres noms : métriques, logs, alertes, groupes d'action.</p>
+        </section>
+
+        <!-- 01 -->
+        <section class="chapter" id="pourquoi">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">Pourquoi superviser</h2>
+            <p class="chapter__intro">Le <strong>monitoring</strong> (ou <strong>supervision</strong>) consiste à surveiller l'<strong>état</strong> et l'<strong>utilisation</strong> des machines du parc : serveurs, bases de données, équipements réseau. À cette surveillance s'ajoute la mise en place d'<strong>alertes</strong>, pour être prévenu automatiquement quand une valeur sort des clous.</p>
+
+            <h3>Les trois objectifs</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Objectif</th><th>Ce que ça veut dire</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Surveiller</strong></td><td>Connaître en continu l'état réel des machines</td></tr>
+                        <tr><td><strong>Être alerté</strong></td><td>Ne pas découvrir le problème par l'utilisateur qui appelle</td></tr>
+                        <tr><td><strong>Anticiper</strong></td><td>Être <em>proactif</em> plutôt que réactif : agir avant la panne</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Ce que ça apporte concrètement</h3>
+            <ul>
+                <li><strong>Détecter les problèmes potentiels</strong> — un disque qui sature se voit des semaines avant de bloquer un service.</li>
+                <li><strong>Réduire les temps d'arrêt</strong> — prévenir <em>avant</em> la coupure plutôt que réparer après.</li>
+                <li><strong>Optimiser les performances</strong> — une RAM constamment à ~90 % signale un sous-dimensionnement, une fuite mémoire ou une machine compromise.</li>
+                <li><strong>Mieux gérer les ressources</strong> — repérer le trop comme le trop peu, donc arbitrer les achats sur des chiffres.</li>
+                <li><strong>Améliorer la sécurité</strong> — suivi des comptes, des connexions, des services qui démarrent.</li>
+                <li><strong>Rassurer les utilisateurs</strong> — savoir que quelqu'un surveille change la perception du service.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>La supervision ne sert pas à faire de jolis graphes : elle sert à <strong>déplacer le moment où on apprend le problème</strong>. Réactif, on l'apprend par l'utilisateur ; proactif, on l'apprend avant lui. Le troisième objectif — <em>anticiper</em> — est celui qui justifie tout le chapitre 09 de ce module.</p>
+            </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="chapter" id="archi">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Architecture de Zabbix</h2>
+            <p class="chapter__intro"><strong>Zabbix</strong> est un logiciel de monitoring <strong>open source et gratuit</strong> : une interface web en PHP, installée généralement sous Linux, avec les données stockées dans une base, et un <strong>agent</strong> déposé sur les machines à surveiller.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Élément</th><th>Rôle</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Zabbix Server</strong></td><td>Le cœur : collecte, évalue les conditions de déclenchement, lance les actions. Écoute sur le port <strong>10051/TCP</strong> (agents actifs, proxies)</td></tr>
+                        <tr><td><strong>Zabbix Database</strong></td><td>Stocke la configuration <em>et</em> les données collectées (mots de passe des utilisateurs hachés)</td></tr>
+                        <tr><td><strong>Zabbix Web interface</strong></td><td>La console d'administration en PHP, servie par Nginx ou Apache (HTTP par défaut, HTTPS à configurer), avec des permissions par groupe d'utilisateurs</td></tr>
+                        <tr><td><strong>Zabbix Agents</strong></td><td>Installés sur les machines surveillées, ils remontent les données. Écoutent sur le port <strong>10050/TCP</strong> (vérifications passives)</td></tr>
+                        <tr><td><strong>Zabbix Proxies</strong></td><td>Collectent pour le compte du serveur et lui transmettent les données par lots : sites distants, montée en charge. Un proxy n'évalue pas les triggers, c'est toujours le serveur qui décide</td></tr>
+                        <tr><td><strong>Commandline utilities</strong></td><td><code>zabbix_get</code> (interroger un agent), <code>zabbix_sender</code> (envoyer une valeur au serveur)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Le tableau de bord</h3>
+            <p>Le <em>dashboard</em> réunit sur une même page :</p>
+            <ul>
+                <li>une <strong>carte du réseau</strong> où chaque hôte porte son état (vert = OK, rouge = en problème) ;</li>
+                <li>les <strong>problèmes par sévérité</strong> — <em>Disaster</em>, <em>High</em>, <em>Average</em>, <em>Warning</em>, <em>Information</em>, <em>Not classified</em> — regroupés par groupe d'hôtes ;</li>
+                <li>des <strong>graphiques de métriques</strong> dans le temps, avec le détail au survol.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Quatre briques à ne pas confondre : le <strong>serveur</strong> décide, la <strong>base</strong> conserve, le <strong>frontend</strong> affiche, l'<strong>agent</strong> mesure. Le <strong>proxy</strong> n'apparaît que lorsqu'on supervise un site distant ou qu'un seul serveur ne suffit plus. Toute la suite du module installe ces briques dans cet ordre.</p>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">L'entreprise ouvre une agence de 40 serveurs, reliée au siège par un VPN parfois coupé. On veut la superviser sans perdre de données pendant les coupures. Que places-tu sur le site distant ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Un proxy Zabbix, qui collecte localement et renvoie au serveur</button>
+                        <button class="scenario__opt" data-why="Deux serveurs indépendants feraient deux supervisions séparées, avec deux interfaces et deux configurations à tenir.">Un second serveur Zabbix complet, avec sa base</button>
+                        <button class="scenario__opt" data-why="Les agents interrogés depuis le siège ne répondraient plus pendant les coupures : les valeurs seraient perdues.">Rien : les agents suffisent, le serveur du siège les interroge</button>
+                    </div>
+                    <div class="scenario__why"><p>Le <strong>proxy</strong> collecte sur place et garde les valeurs dans sa propre base locale le temps de la coupure, puis les transmet au serveur. Les triggers, eux, restent évalués par le serveur central : une seule console, une seule configuration.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="chapter" id="reseau">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">Le réseau NAT du labo</h2>
+            <p class="chapter__intro">Objectif : donner aux VM un réseau privé qui sort vers Internet <strong>à travers la machine hôte</strong>. C'est la machine hôte qui joue la passerelle NAT. Le TP avait son propre plan d'adressage ; on le transpose ici sur le <a href="../labo.html">lab Orion</a> : réseau <code>172.16.50.0/24</code>, commutateur <code>LABOPS</code>.</p>
+
+            <div class="net">
+                <div class="node"><b>Hôte Hyper-V</b><span class="ip">172.16.50.1</span><span>Passerelle NAT — carte du commutateur interne <code>LABOPS</code></span></div>
+                <div class="node"><b>SRV-ZBX01</b><span class="ip">172.16.50.40</span><span>Ubuntu Server — serveur Zabbix : base, frontend, agent</span></div>
+                <div class="node"><b>SRV-FILE01</b><span class="ip">172.16.50.20</span><span>Windows Server 2025 supervisé par agent</span></div>
+            </div>
+
+            <ol class="steps">
+                <li class="step"><div class="step__num">01</div><div class="step__body"><strong>Créer un commutateur interne</strong>Sur l'hôte Hyper-V, nommé <code>LABOPS</code>.</div></li>
+                <li class="step"><div class="step__num">02</div><div class="step__body"><strong>Créer le NAT</strong>En PowerShell administrateur sur l'hôte (voir la commande ci-dessous).</div></li>
+                <li class="step"><div class="step__num">03</div><div class="step__body"><strong>Adresser la carte de l'hôte</strong><code>172.16.50.1/24</code>, <strong>sans passerelle ni DNS</strong> — c'est elle, la passerelle.</div></li>
+                <li class="step"><div class="step__num">04</div><div class="step__body"><strong>Rattacher la VM</strong>Assigner le commutateur <code>LABOPS</code> à la machine virtuelle.</div></li>
+                <li class="step"><div class="step__num">05</div><div class="step__body"><strong>Adresser la VM</strong><code>172.16.50.40/24</code>, passerelle <code>172.16.50.1</code>, DNS <code>172.16.50.10</code> (SRV-AD01) — ou un résolveur public tant que le domaine n'existe pas.</div></li>
+            </ol>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — sur la machine hôte, en administrateur</span></div>
+                <pre class="terminal__code"><span class="k">New-NetNat</span> <span class="p">-Name</span> <span class="s">"LABOPS-NAT"</span> <span class="p">-InternalIPInterfaceAddressPrefix</span> 172.16.50.0/24
+
+<span class="c"># Le NAT est créé côté hôte,</span>
+<span class="c"># il reste à adresser la carte vEthernet (LABOPS) en 172.16.50.1/24.</span></pre>
+            </div>
+
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Sur l'hôte, le NAT existe ; depuis la VM, la passerelle puis Internet répondent.</p>
+                <div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — hôte, puis bash — SRV-ZBX01</span></div>
+                    <pre class="terminal__code"><span class="k">Get-NetNat</span> | <span class="k">Select-Object</span> Name, InternalIPInterfaceAddressPrefix   <span class="c"># sur l'hôte</span>
+<span class="k">ping</span> <span class="p">-c</span> 2 172.16.50.1      <span class="c"># sur la VM : la passerelle</span>
+<span class="k">ping</span> <span class="p">-c</span> 2 1.1.1.1          <span class="c"># sur la VM : Internet, par le NAT</span></pre>
+                </div>
+                <p class="verify__sub">Sortie attendue (hôte)</p>
+                <pre class="verify__out">Name        InternalIPInterfaceAddressPrefix
+----        --------------------------------
+LABOPS-NAT  172.16.50.0/24</pre>
+                <p class="verify__fail">La passerelle répond mais pas Internet : le NAT manque ou couvre un autre préfixe (Windows n'accepte qu'un seul NAT de ce type : <code>Get-NetNat</code>, puis <code>Remove-NetNat</code> de l'ancien). La passerelle ne répond pas : la carte <code>vEthernet (LABOPS)</code> n'a pas son adresse <code>.1</code>, ou la VM n'est pas sur ce commutateur.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un commutateur <strong>interne</strong> ne sort nulle part tout seul : c'est <code>New-NetNat</code> sur l'hôte, plus l'adresse <code>.1</code> posée sur sa carte, qui en font une passerelle. Si les VM se pinguent entre elles mais n'atteignent pas Internet, c'est presque toujours l'un de ces deux gestes qui manque — pas la configuration de la VM.</p>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">SRV-ZBX01 pingue 172.16.50.1, mais <code>apt update</code> échoue : aucun dépôt joignable, même par adresse IP. Que vérifies-tu en premier ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Le NAT sur l'hôte : <code>Get-NetNat</code> doit montrer 172.16.50.0/24 actif</button>
+                        <button class="scenario__opt" data-why="Le DNS sert à traduire les noms ; ici même une adresse IP ne répond pas, le problème est en dessous.">Le serveur DNS configuré dans la VM</button>
+                        <button class="scenario__opt" data-why="La passerelle répond : la VM est bien sur le commutateur et dans le bon réseau.">Le commutateur virtuel rattaché à la VM</button>
+                    </div>
+                    <div class="scenario__why"><p>La passerelle répond, donc la VM, le commutateur et l'adresse <code>.1</code> de l'hôte sont bons. Si même une IP publique est injoignable, c'est la traduction d'adresses qui manque : <code>New-NetNat</code> absent, ou créé sur un autre préfixe.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04 -->
+        <section class="chapter" id="ubuntu">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">Ubuntu Server et MySQL</h2>
+            <p class="chapter__intro">La VM Linux porte tout : la base, le serveur Zabbix et le frontend. Le dimensionnement se choisit selon les besoins réels — ici <strong>2 vCPU et 8 Go de RAM</strong>, mémoire dynamique décochée, génération 2 avec <em>Secure Boot</em> désactivé.</p>
+
+            <div class="tip">
+                <p class="tip__label">Précision : installation par paquets</p>
+                <p>Ce chapitre installe MySQL sur Ubuntu 26.04, par paquets : la doc Zabbix 7.4 propose ces paquets pour une base MySQL ou PostgreSQL. Le TP a fait autrement : Ubuntu 24.04.5 LTS, et Zabbix en conteneurs Docker avec PostgreSQL 16.</p>
+            </div>
+
+            <h3>À l'installation d'Ubuntu</h3>
+            <ul>
+                <li><strong>Configuration réseau manuelle</strong> sur l'interface : adresse <code>172.16.50.40/24</code>, passerelle <code>172.16.50.1</code>, DNS <code>172.16.50.10</code>.</li>
+                <li><strong>Stockage</strong> : <em>Use an entire disk</em>, valeurs par défaut. En mode UEFI, une partition <strong>ESP</strong> est créée et montée sur <code>/boot/efi</code> ; LVM reste une option à cocher.</li>
+                <li><strong>Cocher <em>Install OpenSSH server</em></strong> : c'est ce qui permet de quitter la console Hyper-V et de travailler en SSH dès le premier redémarrage.</li>
+            </ul>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — sur la VM Ubuntu</span></div>
+                <pre class="terminal__code"><span class="c"># Rafraîchir le catalogue PUIS appliquer : l'un ne sert à rien sans l'autre</span>
+<span class="k">sudo</span> apt update <span class="p">&amp;&amp;</span> <span class="k">sudo</span> apt upgrade <span class="p">-y</span>
+
+<span class="c"># Base de données : Zabbix y stocke sa configuration et ses métriques</span>
+<span class="k">sudo</span> apt install mysql-server <span class="p">-y</span>
+<span class="k">sudo</span> systemctl start mysql     <span class="c"># démarre maintenant</span>
+<span class="k">sudo</span> systemctl enable mysql    <span class="c"># fera repartir au prochain boot</span>
+<span class="k">sudo</span> systemctl status mysql    <span class="c"># q pour quitter l'affichage</span></pre>
+            </div>
+
+            <h3>Lire la sortie de <code>systemctl status</code></h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Ligne</th><th>Ce qu'on veut voir</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>Loaded</code></td><td><strong>enabled</strong> — le service démarrera tout seul au boot</td></tr>
+                        <tr><td><code>Active</code></td><td><strong>active (running)</strong> en vert — le service tourne</td></tr>
+                        <tr><td><code>Active</code></td><td><code>active (running)</code> ; le port 10051 en écoute se vérifie avec <code>ss -tlnp</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">Pour systemctl, aucune sortie = succès ; l'absence de sortie d'une autre commande ne prouve rien</p>
+                <p>Sous Linux, une commande qui réussit est généralement silencieuse. <code>systemctl start</code> qui ne dit rien a fonctionné ; c'est <code>status</code> qu'on interroge pour en avoir la preuve.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>start</code> agit <strong>maintenant</strong>, <code>enable</code> agit <strong>au prochain démarrage</strong>. Les deux sont nécessaires pour un service d'infrastructure — un serveur de supervision qui ne repart pas après un redémarrage est exactement l'inverse de ce qu'on cherche à construire.</p>
+            </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="chapter" id="install">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Installer Zabbix</h2>
+            <p class="chapter__intro">La page <em>zabbix.com/download</em> génère les commandes d'installation à partir de six choix. <strong>Changer une seule valeur change l'URL du dépôt et la liste des paquets</strong> — d'où l'importance de noter la combinaison retenue.</p>
+
+            <div class="tip">
+                <p class="tip__label">Précision : les paquets, pas le TP</p>
+                <p>Les commandes ci-dessous installent par paquets, avec MySQL et Ubuntu 26.04. Le TP a utilisé les images officielles Zabbix 7.4 et PostgreSQL 16 en conteneurs Docker, sur Ubuntu 24.04.5 LTS : même version de Zabbix, autre base, autre mode d'installation.</p>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Choix</th><th>Valeur du labo</th></tr></thead>
+                    <tbody>
+                        <tr><td>Zabbix version</td><td><strong>7.4</strong></td></tr>
+                        <tr><td>OS distribution / version</td><td><strong>Ubuntu</strong> 26.04</td></tr>
+                        <tr><td>Zabbix component</td><td><strong>Server, Frontend, Agent</strong></td></tr>
+                        <tr><td>Database</td><td><strong>MySQL</strong></td></tr>
+                        <tr><td>Web server</td><td><strong>Nginx</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — dépôt et paquets</span></div>
+                <pre class="terminal__code"><span class="k">sudo</span> <span class="p">-s</span>
+
+<span class="c"># Le paquet de dépôt correspond EXACTEMENT à la version et à la distribution choisies</span>
+<span class="k">wget</span> https://repo.zabbix.com/zabbix/7.4/release/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.4+ubuntu26.04_all.deb
+<span class="k">dpkg</span> <span class="p">-i</span> zabbix-release_latest_7.4+ubuntu26.04_all.deb
+<span class="k">apt</span> update
+
+<span class="k">apt</span> install zabbix-server-mysql zabbix-frontend-php zabbix-nginx-conf zabbix-sql-scripts zabbix-agent</pre>
+            </div>
+
+            <h3>Créer la base, puis importer le schéma</h3>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">MySQL — création de la base et de l'utilisateur</span></div>
+                <pre class="terminal__code"><span class="c">-- mysql -uroot -p</span>
+<span class="k">create database</span> zabbix <span class="k">character set</span> utf8mb4 <span class="k">collate</span> utf8mb4_bin;
+<span class="k">create user</span> zabbix@localhost <span class="k">identified by</span> <span class="s">'&lt;mot de passe de l&apos;utilisateur zabbix&gt;'</span>;
+<span class="k">grant all privileges on</span> zabbix.* <span class="k">to</span> zabbix@localhost;
+
+<span class="c">-- Autorisation TEMPORAIRE, nécessaire uniquement à l'import qui suit</span>
+<span class="k">set global</span> log_bin_trust_function_creators = 1;
+<span class="k">quit</span>;</pre>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — import du schéma, puis retour en arrière</span></div>
+                <pre class="terminal__code"><span class="c"># Le mot de passe demandé est celui de l'utilisateur zabbix, pas celui de root</span>
+<span class="k">zcat</span> /usr/share/zabbix/sql-scripts/mysql/server.sql.gz | <span class="k">mysql</span> <span class="p">--default-character-set=</span>utf8mb4 <span class="p">-uzabbix</span> <span class="p">-p</span> zabbix
+
+<span class="c"># Puis, dans mysql -uroot -p : set global log_bin_trust_function_creators = 0;</span></pre>
+            </div>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">L'étape qu'on saute</p>
+                <p>Sans l'import du schéma, la base reste <strong>vide</strong> et <code>zabbix-server</code> refuse de démarrer — sans dire clairement pourquoi. C'est aussi la seule raison d'être du <code>log_bin_trust_function_creators = 1</code> (utile seulement si le journal binaire est activé et que le compte n'a pas de privilège superutilisateur), qu'on <strong>remet à 0</strong> aussitôt après : une autorisation posée pour une opération se retire quand l'opération est finie.</p>
+            </div>
+
+            <h3>Brancher le serveur et le frontend</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Fichier</th><th>Ligne à poser</th><th>Pourquoi</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>/etc/zabbix/zabbix_server.conf</code></td><td><code>DBPassword=…</code></td><td>Doit être <strong>identique</strong> au mot de passe de l'utilisateur <code>zabbix</code> — sinon le serveur reste en vie sans jamais se connecter à la base : il réessaie toutes les 10 secondes, et son journal le dit</td></tr>
+                        <tr><td><code>/etc/zabbix/nginx.conf</code></td><td><code>listen 8080;</code> et <code>server_name …;</code> (décommentés)</td><td>C'est ce <code>listen</code> qui fixe le port de l'interface web</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — démarrer et activer</span></div>
+                <pre class="terminal__code"><span class="k">systemctl</span> restart zabbix-server zabbix-agent nginx php8.5-fpm
+<span class="k">systemctl</span> enable  zabbix-server zabbix-agent nginx php8.5-fpm</pre>
+            </div>
+            <p>Le nom du service PHP suit la version de PHP fournie par la distribution : <code>php8.5-fpm</code> sur Ubuntu 26.04, <code>php8.3-fpm</code> sur Ubuntu 24.04. En cas de doute, <code>systemctl list-units 'php*-fpm*'</code>.</p>
+
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Le serveur tourne et écoute pour les agents ; Nginx sert l'interface.</p>
+                <div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash — SRV-ZBX01</span></div>
+                    <pre class="terminal__code"><span class="k">systemctl</span> is-active zabbix-server nginx   <span class="c"># active, deux fois</span>
+<span class="k">sudo</span> ss <span class="p">-tlnp</span> | <span class="k">grep</span> <span class="p">-E</span> <span class="s">':10051|:8080'</span></pre>
+                </div>
+                <p class="verify__sub">Sortie attendue (extrait)</p>
+                <pre class="verify__out">active
+active
+LISTEN 0  4096   0.0.0.0:10051  0.0.0.0:*  users:(("zabbix_server",…))
+LISTEN 0  511    0.0.0.0:8080   0.0.0.0:*  users:(("nginx",…))</pre>
+                <p class="verify__fail">Pas de 10051 : le serveur n'est pas prêt. Avec un <code>DBPassword</code> faux, il peut rester <em>active (running)</em> à réessayer la base toutes les 10 secondes ; avec un schéma non importé, il s'arrête. Dans les deux cas, lire <code>/var/log/zabbix/zabbix_server.log</code>, qui dit pourquoi. Pas de 8080 : la ligne <code>listen</code> de <code>/etc/zabbix/nginx.conf</code> est restée commentée.</p>
+            </div>
+
+            <h3>Terminer dans le navigateur</h3>
+            <p>Sur <code>http://172.16.50.40:8080/</code>, l'assistant déroule : <em>Welcome</em> → <em>Check of pre-requisites</em> → <em>Configure DB connection</em> (mot de passe de l'utilisateur <code>zabbix</code>) → <em>Settings</em> (nom du serveur Zabbix) → récapitulatif → <em>Install</em>.</p>
+            <p>La première connexion se fait avec le compte par défaut <code>Admin</code> / <code>zabbix</code>, qu'on <strong>change immédiatement</strong> dans <em>User settings → Profile → Change password</em>. Le <em>Global view</em> confirme alors l'installation : <em>Zabbix server is running : Yes</em>, un hôte disponible — le serveur lui-même, qui se supervise via son propre agent — et aucun problème en cours.</p>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Trois valeurs doivent coïncider ou rien ne fonctionne : le mot de passe donné à <code>create user</code>, celui écrit dans <code>DBPassword</code>, et celui saisi dans l'assistant web. Et le compte <code>Admin</code> / <code>zabbix</code> par défaut est public : le changer fait partie de l'installation, pas du durcissement optionnel.</p>
+            </div>
+        </section>
+
+        <!-- 06 -->
+        <section class="chapter" id="agent">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">L'agent sur Windows Server</h2>
+            <p class="chapter__intro">L'agent se télécharge sur <em>zabbix.com/download_agents</em> en <strong>MSI</strong>, pour Windows Server 2003+ (agent 1) ou 2016+ (agent 2), amd64, chiffrement OpenSSL. Sa version suit celle du serveur installé au chapitre précédent — ici <strong>7.4</strong>.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Champ de l'installeur</th><th>Valeur</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Host name</strong></td><td><code>SRV-FILE01</code></td></tr>
+                        <tr><td><strong>Zabbix server IP/DNS</strong></td><td><code>172.16.50.40</code></td></tr>
+                        <tr><td><strong>Agent listen port</strong></td><td><code>10050</code> par défaut</td></tr>
+                        <tr><td><strong>Server or Proxy for active checks</strong></td><td><code>172.16.50.40</code></td></tr>
+                        <tr><td><strong>Add agent location to the PATH</strong></td><td>coché</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Les valeurs saisies se retrouvent dans <code>C:\Program Files\Zabbix Agent\zabbix_agentd.conf</code> : <code>Server=172.16.50.40</code> (section <em>Passive checks</em>), <code>ServerActive=172.16.50.40</code> et <code>Hostname=SRV-FILE01</code> (section <em>Active checks</em>).</p>
+
+            <h3>Passif et actif : qui appelle qui</h3>
+            <div class="cards">
+                <div class="card">
+                    <h4>Passive checks</h4>
+                    <ul>
+                        <li>C'est le <strong>serveur</strong> qui vient interroger l'agent.</li>
+                        <li>Sur le port <strong>10050/TCP</strong>, entrant sur la machine supervisée.</li>
+                        <li>Réglé par <code>Server=</code>.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Active checks</h4>
+                    <ul>
+                        <li>C'est l'<strong>agent</strong> qui contacte le serveur.</li>
+                        <li>Il récupère la liste des éléments à collecter, puis envoie les valeurs au port <strong>10051/TCP</strong> du serveur (sortant pour l'agent).</li>
+                        <li>Réglé par <code>ServerActive=</code> et <code>Hostname=</code>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Agent 1 ou agent 2</h3>
+            <p>Zabbix propose <strong>deux agents</strong>. Un seul suffit par machine, et le serveur ne fait pas la différence : même protocole, même port <code>10050</code>, mêmes modes passif et actif, mêmes <code>UserParameter</code>. Le TP a installé l'<strong>agent 2</strong> sur les trois serveurs Windows ; ce chapitre et les exercices suivants suivent l'<strong>agent 1</strong> (service <em>Zabbix Agent</em>, <code>zabbix_agentd.conf</code>). Avec l'agent 2, le service s'appelle <em>Zabbix Agent 2</em> et le fichier <code>zabbix_agent2.conf</code>.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th><span class="sr-only">Critère</span></th><th>Agent 1 — <code>zabbix_agentd</code></th><th>Agent 2 — <code>zabbix_agent2</code></th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Langage</strong></td><td>C</td><td>Go (reprend une partie du code C)</td></tr>
+                        <tr><td><strong>Plateformes</strong></td><td>Linux, Windows et les Unix (AIX, BSD, Solaris, macOS…)</td><td><strong>Linux et Windows</strong> seulement</td></tr>
+                        <tr><td><strong>Extension</strong></td><td><code>UserParameter</code>, modules chargeables en C</td><td><code>UserParameter</code>, <strong>plugins Go</strong> — pas de modules C</td></tr>
+                        <tr><td><strong>Supervision intégrée</strong></td><td>Le système : CPU, mémoire, disques, réseau, journaux, services Windows</td><td>Idem <strong>+</strong> systemd (Linux), Docker, MySQL, Redis, certificats TLS, S.M.A.R.T.… ; PostgreSQL en plugin chargeable, à installer à part</td></tr>
+                        <tr><td><strong>Exécution</strong></td><td>Plusieurs processus, vérifications actives <strong>en série</strong></td><td>Un seul processus, vérifications <strong>en parallèle</strong> entre plugins</td></tr>
+                        <tr><td><strong>Tampon des valeurs</strong></td><td>En mémoire, perdu à l'arrêt</td><td>En mémoire, ou <strong>persistant sur disque</strong></td></tr>
+                        <tr><td><strong>Paquet Linux / service Windows</strong></td><td><code>zabbix-agent</code> / <em>Zabbix Agent</em></td><td><code>zabbix-agent2</code> / <em>Zabbix Agent 2</em></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tip">
+                <p class="tip__label">Lequel choisir</p>
+                <p><strong>Agent 2</strong> par défaut sur un Linux ou un Windows récent : il sait tout ce que fait l'agent 1 et supervise en plus les applications sans script maison. <strong>Agent 1</strong> sur une plateforme que l'agent 2 ne couvre pas, ou quand on dépend d'un module en C. Les templates propres à l'agent 2 portent « agent 2 » dans leur nom : attachés à un hôte en agent 1, leurs items à clé propre à l'agent 2 passent en <em>Not supported</em>.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>La distinction n'est pas théorique, elle décide du <strong>sens des flux à ouvrir</strong>. En passif, le pare-feu de la machine supervisée doit accepter le <strong>10050 entrant</strong> ; en actif, c'est l'agent qui sort, et c'est le <code>Hostname=</code> qui l'identifie auprès du serveur.</p>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Un hôte n'utilise que des items <em>Zabbix agent (active)</em>. Quel flux le pare-feu doit-il laisser passer ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>De l'agent vers le serveur, sur le port 10051/TCP</button>
+                        <button class="scenario__opt" data-why="C&#x27;est le flux des vérifications passives : en actif seul, le serveur n&#x27;appelle jamais l&#x27;agent.">Du serveur vers l'agent, sur le port 10050/TCP</button>
+                        <button class="scenario__opt" data-why="10050 est le port d&#x27;écoute de l&#x27;agent ; en actif, l&#x27;agent se connecte au port 10051 du serveur.">De l'agent vers le serveur, sur le port 10050/TCP</button>
+                    </div>
+                    <div class="scenario__why"><p>En actif, c'est l'agent qui ouvre la connexion, vers le port d'écoute du <strong>serveur</strong> (10051, ou celui d'un proxy). Le 10050 entrant sur l'agent ne sert qu'aux vérifications passives — et à <code>zabbix_get</code>.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="chapter" id="hote">
+            <p class="chapter__num">07</p>
+            <h2 class="chapter__title">Déclarer l'hôte et vérifier</h2>
+            <p class="chapter__intro">Installer l'agent ne suffit pas : tant que l'hôte n'existe pas dans l'interface, personne ne lui demande rien. <em>Data collection → Hosts → Create host</em>.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Champ</th><th>Valeur</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Host name</strong></td><td><code>SRV-FILE01</code></td></tr>
+                        <tr><td><strong>Templates</strong></td><td>Groupe <em>Operating systems</em> → <strong>Windows by Zabbix agent</strong></td></tr>
+                        <tr><td><strong>Host groups</strong></td><td><code>Virtual machines</code></td></tr>
+                        <tr><td><strong>Interfaces</strong></td><td><em>Add</em> → <strong>Agent</strong>, IP <code>172.16.50.20</code>, port <code>10050</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Le piège</p>
+                <p>Le <strong>Host name</strong> doit être <strong>strictement identique</strong> au <code>Hostname=</code> du fichier de configuration de l'agent, <strong>casse comprise</strong>. Sinon les <em>active checks</em> sont refusés par le serveur — et on cherche longtemps du côté du réseau un problème qui est une différence de majuscule.</p>
+            </div>
+
+            <h3>Vérifier que les informations remontent</h3>
+            <ul>
+                <li><em>Data collection → Hosts</em> : la pastille <strong>ZBX</strong> passe au vert quand l'agent répond (gris = pas encore contacté, rouge = erreur, cause affichée au survol).</li>
+                <li><em>Monitoring → Latest data</em>, filtré sur l'hôte : des valeurs arrivent — CPU, mémoire, disques, services.</li>
+                <li><em>Dashboards → Global view</em> : le nombre d'hôtes disponibles passe de 1 à 2 dès que l'agent répond.</li>
+            </ul>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 1 — la pastille reste rouge</p>
+                <p>L'agent est installé, l'hôte est créé avec le template Windows, mais la pastille ZBX reste rouge. Dans quel ordre vérifies-tu, et pourquoi cet ordre ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body">
+                        <ol>
+                            <li><strong>Le <code>ping</code> entre les deux VM</strong> — inutile de chercher plus haut si la couche réseau ne passe pas. Les deux sont sur <code>LABOPS</code>, donc ça doit répondre (si le pare-feu Windows autorise l'ICMP).</li>
+                            <li><strong>Le service et le pare-feu Windows sur le port 10050/TCP</strong> — le serveur interroge l'agent en passif ; si le service est arrêté ou le port filtré, le serveur n'obtient rien et affiche l'erreur au survol de la pastille. Depuis SRV-ZBX01, <code>zabbix_get -s 172.16.50.20 -k agent.ping</code> tranche.</li>
+                            <li><strong><code>Server=172.16.50.40</code> dans <code>zabbix_agentd.conf</code></strong> — l'agent refuse les requêtes d'une adresse qui n'y figure pas.</li>
+                            <li><strong>La correspondance exacte du <code>Hostname</code></strong> — dernier point parce qu'il ne casse que les <em>active checks</em>, pas la disponibilité passive.</li>
+                        </ol>
+                        <p>Le principe est le même que partout : on remonte les couches du bas vers le haut, du câble vers l'application. Et on lit le message d'erreur au survol avant de deviner.</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un <strong>template</strong> est ce qui transforme un hôte vide en hôte supervisé : il apporte d'un coup les éléments à collecter, les graphes et les conditions de déclenchement. On ne crée presque jamais d'item à la main — on attache le bon template, et on l'adapte.</p>
+            </div>
+
+            <div class="cmdex" data-accept="^zabbix_get -s 172\.16\.50\.20( -p 10050)? -k &quot;?agent\.ping&quot;?$;;^zabbix_get -k &quot;?agent\.ping&quot;? -s 172\.16\.50\.20$" data-hint="L&#x27;outil s&#x27;appelle zabbix_get : -s pour l&#x27;hôte, -k pour la clé.">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Depuis SRV-ZBX01, demande à l'agent de SRV-FILE01 (172.16.50.20) la clé <code>agent.ping</code>, comme le ferait une vérification passive.</p>
+                <details class="reveal"><summary>Voir la réponse</summary><div class="reveal__body"><p><code>zabbix_get -s 172.16.50.20 -k agent.ping</code> — la réponse <code>1</code> prouve que le réseau, le pare-feu, le service et la ligne <code>Server=</code> sont bons d'un coup. Le paquet <code>zabbix-get</code> s'installe à part s'il manque (<code>apt install zabbix-get</code>).</p></div></details>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Tu crées l'hôte <code>SRV-FILE01</code> avec son interface agent, mais sans lier de template. La pastille ZBX passe au vert. Que vois-tu dans <em>Latest data</em> ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Rien : sans template ni item, aucune donnée n'est demandée à l'agent</button>
+                        <button class="scenario__opt" data-why="L&#x27;agent ne pousse rien de lui-même : il répond aux items que le serveur lui demande.">Les métriques de base que l'agent envoie tout seul</button>
+                        <button class="scenario__opt" data-why="Une pastille verte dit seulement que l&#x27;agent répond ; elle ne crée aucun item.">Les métriques du template Windows, appliqué par défaut</button>
+                    </div>
+                    <div class="scenario__why"><p>La disponibilité (pastille) et la collecte sont deux choses. C'est le <strong>template</strong> qui apporte les items, donc les valeurs, puis les triggers qui les évaluent.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="chapter" id="exploitation">
+            <p class="chapter__num">08</p>
+            <h2 class="chapter__title">Exploiter Zabbix au quotidien</h2>
+            <p class="chapter__intro">Une fois les hôtes supervisés, l'usage courant tient en deux réflexes : regarder les courbes, et déléguer les comptes à l'annuaire plutôt que de les gérer dans Zabbix.</p>
+
+            <h3>Lire les données</h3>
+            <ul>
+                <li><strong>Graphes</strong> : depuis le tableau de bord ou la liste des hôtes, clic sur la machine → <em>Graphs</em>. Zabbix affiche les graphes fournis par le template — CPU, mémoire, disques, réseau — avec le détail des valeurs au survol.</li>
+                <li><strong>Valeurs brutes</strong> : <em>Monitoring → Latest data</em>, filtré sur l'hôte, quand on veut le chiffre exact plutôt que la courbe.</li>
+            </ul>
+
+            <h3>Authentification LDAP</h3>
+            <p>Zabbix peut déléguer la connexion à l'<strong>Active Directory</strong> au lieu de gérer ses propres comptes : <em>Users → Authentication → LDAP settings</em>, puis connexion avec un compte AD.</p>
+
+            <div class="tip">
+                <p class="tip__label">Récupérer les groupes, pas les comptes</p>
+                <p>Mieux vaut mapper les <strong>groupes AD</strong> que les utilisateurs un par un : les droits se gèrent alors une seule fois par groupe, et un nouvel arrivant ajouté au bon groupe AD obtient automatiquement son accès à Zabbix. Cela suppose d'activer le <strong>provisionnement JIT</strong> (<em>Enable JIT provisioning</em>, depuis Zabbix 6.4) avec un mappage groupe AD → groupe d'utilisateurs Zabbix ; sans lui, l'utilisateur doit déjà exister dans Zabbix pour que sa connexion LDAP soit acceptée. C'est exactement la logique des droits par groupe du module <a href="windows-server.html">Windows Server</a>.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Un outil de supervision qui gère ses propres comptes devient vite un annuaire parallèle : comptes d'anciens collègues toujours actifs, mots de passe jamais changés. <strong>Déléguer à l'annuaire</strong> et raisonner par groupe fait disparaître le problème à la source.</p>
+            </div>
+        </section>
+
+        <!-- 09 -->
+        <section class="chapter" id="auto">
+            <p class="chapter__num">09</p>
+            <h2 class="chapter__title">Un parc qui se répare seul</h2>
+            <p class="chapter__intro">L'énoncé de l'exercice : <strong>tous</strong> les services Windows supervisés doivent <strong>redémarrer seuls</strong> quand ils s'arrêtent, et en bonus Zabbix doit nettoyer les fichiers temporaires de la machine. Zabbix ne se contente plus d'alerter — il agit.</p>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">La chaîne complète</span></div>
+                <pre class="terminal__code">service arrêté ──► trigger (tag type=WinService) ──► action ──► script sur l'agent
+                                                                 net start &lt;service&gt;</pre>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Brique</th><th>Rôle ici</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Discovery (LLD)</strong></td><td>Le template <em>Windows by Zabbix agent</em> découvre <strong>chaque service</strong> et crée pour lui un trigger « is not running »</td></tr>
+                        <tr><td><strong>Trigger</strong></td><td>Se déclenche quand un service est arrêté ; son <strong>tag</strong> permet de le repérer, sa <strong>description</strong> transporte le nom du service</td></tr>
+                        <tr><td><strong>Script</strong></td><td>La commande à exécuter sur la machine (<code>net start …</code>)</td></tr>
+                        <tr><td><strong>Action</strong></td><td>La règle « si un problème porte ce tag → lancer ce script »</td></tr>
+                        <tr><td><strong>Agent</strong></td><td>Exécute réellement la commande — à condition d'y être autorisé</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="walk">
+                <p class="walk__label">Pas à pas</p>
+                <p class="walk__title">Le chemin d'une alerte, de la mesure à la notification</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · agent → serveur</p>
+                        <p class="walk__head">La collecte</p>
+                        <p>Sur SRV-FILE01, l'item <code>vfs.fs.size[C:,pfree]</code> (pourcentage d'espace libre du lecteur C:, passé comme paramètre <em>fs</em>) est relevé à son intervalle. En passif, le serveur le demande sur le port 10050 de l'agent ; en actif, l'agent l'envoie au port 10051 du serveur.</p>
+                        <p class="walk__change">Une <b>clé</b>, un <b>intervalle</b>, un <b>sens de connexion</b> : rien n'est mesuré sans item.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · serveur → base</p>
+                        <p class="walk__head">L'item stocke la valeur</p>
+                        <p>Le serveur applique l'éventuel prétraitement, puis écrit la valeur dans l'<strong>historique</strong> de la base. Elle apparaît dans <em>Monitoring → Latest data</em> et dans les graphes.</p>
+                        <p class="walk__change">Une valeur = une ligne d'<b>historique</b>, horodatée, rattachée à un item.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · serveur</p>
+                        <p class="walk__head">Le trigger est réévalué</p>
+                        <p>Chaque nouvelle valeur fait recalculer les triggers qui utilisent l'item. Syntaxe actuelle (depuis Zabbix 5.4) : <code>fonction(/hôte/clé,paramètres)</code>, par exemple <code>last(/SRV-FILE01/vfs.fs.size[C:,pfree])&lt;10</code>. Dans un template, l'hôte est remplacé par le nom du template, et le seuil par une macro <code>{$…}</code> modifiable par hôte.</p>
+                        <p class="walk__change">Le <b>trigger</b> est une <b>expression</b> vraie ou fausse, évaluée par le <b>serveur</b> — jamais par l'agent.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · serveur</p>
+                        <p class="walk__head">Le problème s'ouvre</p>
+                        <p>L'expression devient vraie : le trigger passe de <em>OK</em> à <em>PROBLEM</em> et génère un <strong>événement</strong>. Le problème s'affiche dans <em>Monitoring → Problems</em> et sur le tableau de bord, avec sa <strong>sévérité</strong> et ses <strong>tags</strong>.</p>
+                        <p class="walk__change">Changement d'état = <b>événement</b> ; un événement de problème = une ligne dans <b>Problems</b>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 5</b> · serveur</p>
+                        <p class="walk__head">Une action correspond</p>
+                        <p>Le serveur compare l'événement aux <em>Trigger actions</em> (<em>Alerts → Actions</em>) : groupe d'hôtes, sévérité, nom ou valeur de tag. Si aucune condition ne correspond, il ne se passe rien d'autre — le problème reste seulement affiché.</p>
+                        <p class="walk__change">L'<b>action</b> est un filtre : <b>conditions</b> vraies → <b>opérations</b> lancées.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 6</b> · serveur → destinataire ou agent</p>
+                        <p class="walk__head">Les opérations s'exécutent</p>
+                        <p>Envoyer un message à un utilisateur ou à un groupe par un <strong>type de média</strong> (e-mail, SMS, script ou webhook ; Teams passe par un webhook), ou lancer un <strong>script</strong> sur l'agent ou le serveur. Les macros comme <code>{HOST.NAME}</code> ou <code>{EVENT.NAME}</code> (le nom du problème) sont remplacées par leurs valeurs. <code>{TRIGGER.NAME}</code> est l'ancien nom : les modèles de message par défaut utilisent <code>{EVENT.NAME}</code>. Le résultat se lit dans <em>Reports → Action log</em>.</p>
+                        <p class="walk__change">Une notification n'arrive que si l'utilisateur a un <b>média</b> configuré et les <b>droits</b> sur l'hôte.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 7</b> · serveur</p>
+                        <p class="walk__head">Le retour à la normale</p>
+                        <p>Après nettoyage, l'espace libre repasse au-dessus du seuil : l'expression redevient fausse, un événement <em>OK</em> ferme le problème, et les <strong>opérations de rétablissement</strong> de l'action (par exemple « Resolved: … ») partent.</p>
+                        <p class="walk__change">Un problème se ferme <b>tout seul</b> quand la condition disparaît ; l'<b>acquittement</b> (<em>Acknowledge</em>) sert seulement à dire « je m'en occupe ».</p>
+                    </li>
+                </ol>
+            </div>
+
+            <ol class="steps">
+                <li class="step"><div class="step__num">01</div><div class="step__body"><strong>Autoriser les commandes distantes sur l'agent</strong>Ajouter <code>AllowKey=system.run[*]</code> dans <code>zabbix_agentd.conf</code>, puis redémarrer le service Zabbix Agent. Par défaut l'agent <strong>refuse</strong> toute commande <code>system.run</code>.</div></li>
+                <li class="step"><div class="step__num">02</div><div class="step__body"><strong>Cloner le trigger prototype</strong><em>Data collection → Hosts → SRV-FILE01 → Discovery → Windows services discovery → Trigger prototypes</em>, sélectionner celui qui dit <code>… is not running</code> et le cloner.</div></li>
+                <li class="step"><div class="step__num">03</div><div class="step__body"><strong>Adapter le clone</strong><em>Description</em> : <code>{#SERVICE.NAME}</code> et <strong>rien d'autre</strong>. <em>Tags</em> : tag <code>type</code>, valeur <code>WinService</code>.</div></li>
+                <li class="step"><div class="step__num">04</div><div class="step__body"><strong>Créer le script</strong><em>Alerts → Scripts → Create script</em> : scope <em>Action operation</em>, type <em>Script</em>, <em>Execute on</em> <strong>Zabbix agent</strong>, commande <code>net start "{TRIGGER.DESCRIPTION}"</code>.</div></li>
+                <li class="step"><div class="step__num">05</div><div class="step__body"><strong>Créer l'action</strong><em>Alerts → Actions → Trigger actions</em> : condition <em>Tag value</em> <code>type</code> <em>equals</em> <code>WinService</code> ; opération = le script, sur le groupe d'hôtes <code>Virtual machines</code>.</div></li>
+            </ol>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Deux pièges, toujours les mêmes</p>
+                <p>La <strong>description du trigger</strong> doit contenir le nom court du service et <em>rien d'autre</em> : c'est elle que le script récupère via <code>{TRIGGER.DESCRIPTION}</code> pour former une commande valide — d'où les guillemets, qui sauvent les noms de service contenant des espaces. Et la <strong>valeur du tag</strong> doit être écrite <strong>à l'identique</strong> dans le trigger et dans la condition de l'action : <code>WinService</code> d'un côté et <code>winservice</code> de l'autre, et l'action ne se déclenche jamais.</p>
+            </div>
+
+            <h3>Bonus — nettoyer les fichiers temporaires</h3>
+            <p>Un fichier <code>C:\Scripts\cleanup_temp.bat</code> créé <strong>au Bloc-notes</strong> (le passer par un <em>here-string</em> PowerShell depuis <code>cmd</code> ne fonctionne pas) :</p>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">cleanup_temp.bat</span></div>
+                <pre class="terminal__code"><span class="k">del</span> <span class="p">/q /f /s</span> <span class="s">"%TEMP%\*"</span>
+<span class="k">del</span> <span class="p">/q /f /s</span> <span class="s">"C:\Windows\Temp\*"</span>
+
+<span class="c">rem /q pas de confirmation · /f force les fichiers en lecture seule · /s sous-dossiers</span></pre>
+            </div>
+
+            <p>Puis un item planifié sur l'hôte — <em>Items → Create item</em> — de type <em>Zabbix agent</em>, clé <code>system.run[C:\Scripts\cleanup_temp.bat,nowait]</code>, type d'information <em>Text</em>, <strong>update interval <code>0</code></strong> et un intervalle personnalisé <em>Scheduling</em> <code>h3</code> (tous les jours à 3 h 00).</p>
+
+            <div class="exo">
+                <p class="exo__label">Exercice 2 — pourquoi <code>0</code> et <code>nowait</code> ?</p>
+                <p>L'item est réglé avec un <em>update interval</em> à <code>0</code> et la clé se termine par <code>,nowait</code>. Que se passerait-il sans l'un et sans l'autre ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body">
+                        <p><strong>Sans <code>0</code></strong> : l'item garderait son interrogation régulière (une minute par défaut) <em>en plus</em> de la planification. Le nettoyage tournerait donc toutes les minutes au lieu d'une fois par nuit. Mettre l'intervalle à <code>0</code> <strong>désactive</strong> la collecte périodique, à condition qu'un intervalle personnalisé non nul existe : l'item ne s'exécute plus que selon le <em>Scheduling</em> <code>h3</code>.</p>
+                        <p><strong>Sans <code>nowait</code></strong> : l'agent attendrait la fin du script avant de rendre la main. Un nettoyage un peu long dépasserait le délai d'attente et l'item passerait en erreur — alors que le script, lui, aurait bien tourné. <code>nowait</code> lance la commande et rend la main immédiatement.</p>
+                        <p>Dans les deux cas l'item dépend aussi de <code>AllowKey=system.run[*]</code> posé à l'étape 01 : sans lui, l'agent refuse, quel que soit le réglage.</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>AllowKey=system.run[*]</code> autorise <strong>toutes</strong> les commandes : pratique en labo, à restreindre en production (<code>AllowKey=system.run[net start *]</code>). Un serveur de supervision qui peut exécuter n'importe quoi sur tout le parc est une cible de choix — l'auto-remédiation se paie en surface d'attaque, et se limite donc à ce dont elle a besoin.</p>
+            </div>
+
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le service Spooler s'arrête : le problème apparaît bien dans <em>Problems</em>, mais le service ne redémarre pas et <em>Reports → Action log</em> est vide. Où regardes-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>La condition de l'action : le tag du trigger ne correspond pas à celui attendu</button>
+                        <button class="scenario__opt" data-why="Si l&#x27;agent refusait la commande, l&#x27;action aurait été lancée et l&#x27;échec figurerait dans l&#x27;Action log.">La ligne <code>AllowKey=system.run[*]</code> de l'agent</button>
+                        <button class="scenario__opt" data-why="Le problème est affiché : la collecte et le trigger fonctionnent déjà.">L'intervalle de collecte de l'item du service</button>
+                    </div>
+                    <div class="scenario__why"><p>Un <em>Action log</em> vide veut dire qu'<strong>aucune action</strong> n'a correspondu à l'événement : l'étape 5 du pas à pas a échoué. Compare le tag du trigger (<code>type</code> = <code>WinService</code>) et la condition de l'action, au caractère près. Un refus de l'agent, lui, laisserait une ligne en échec dans le journal.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="gloss">
+            <div class="gl"><b>Item</b><span>Un élément collecté sur un hôte : CPU, mémoire, état d'un service, sortie d'un script.</span></div>
+            <div class="gl"><b>Trigger</b><span>Condition évaluée sur un item ; quand elle est vraie, un problème s'ouvre.</span></div>
+            <div class="gl"><b>Template</b><span>Jeu prêt à l'emploi d'items, graphes et triggers, attaché à un hôte.</span></div>
+            <div class="gl"><b>LLD</b><span>Low-Level Discovery — découverte automatique d'entités (services, disques) et création des items associés.</span></div>
+            <div class="gl"><b>Action</b><span>Règle qui relie un problème à une opération : notifier, ou exécuter un script.</span></div>
+            <div class="gl"><b>Active / passive check</b><span>L'agent contacte le serveur / le serveur interroge l'agent sur le port 10050.</span></div>
+            <div class="gl"><b>Proxy</b><span>Collecteur intermédiaire pour un site distant ou pour soulager le serveur.</span></div>
+            <div class="gl"><b>Sévérité</b><span>Niveau d'un problème : Disaster, High, Average, Warning, Information, Not classified.</span></div>
+        </div>
+
+        <!-- Test de fin de module — rendu par assets/quiz.js -->
+        <!-- 10 -->
+        <section class="chapter" id="pratique">
+            <p class="chapter__num">10</p>
+            <h2 class="chapter__title">S'entraîner : la pastille ZBX et l'agent</h2>
+            <p class="chapter__intro">Neuf fois sur dix, une supervision qui ne remonte rien vient de la relation entre l'agent et le serveur : qui parle à qui, sur quel port, sous quel nom. Ce chapitre en fait un réflexe.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Mode</th><th>Qui ouvre la connexion</th><th>Port</th><th>Réglage de l'agent qui doit concorder</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Passif</strong></td><td>Le serveur interroge l'agent</td><td>TCP 10050 (sur l'agent)</td><td><code>Server=</code> doit contenir l'adresse du serveur</td></tr>
+                        <tr><td><strong>Actif</strong></td><td>L'agent envoie au serveur</td><td>TCP 10051 (sur le serveur)</td><td><code>ServerActive=</code> = le serveur, et <code>Hostname=</code> = le nom de l'hôte <strong>exactement</strong> comme dans l'interface</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Le serveur obtient-il une réponse de l'agent ?</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash — sur le serveur Zabbix</span></div>
+                <pre class="terminal__code"><span class="k">zabbix_get</span> <span class="p">-s</span> 172.16.50.20 <span class="p">-k</span> agent.ping</pre>
+            </div>
+                <p class="verify__sub">Sortie attendue</p>
+            <pre class="verify__out">1</pre>
+                <p class="verify__fail"><code>Connection refused</code> : l'agent n'écoute pas (service arrêté). La commande attend puis échoue sur un délai dépassé : le pare-feu de l'hôte bloque 10050. <em>connection from "…" rejected, allowed hosts: "…"</em> (journal de l'agent) : l'agent refuse la connexion, l'adresse du serveur n'est pas dans <code>Server=</code>. Ça marche ici mais la pastille reste rouge : l'interface de l'hôte dans Zabbix pointe vers une autre adresse.</p>
+            </div>
+            <div class="cmdex" data-accept="^Restart-Service (-Name )?&quot;Zabbix Agent&quot;$;;^Restart-Service (-Name )?&#x27;Zabbix Agent&#x27;$;;^net stop &quot;Zabbix Agent&quot; ?(&amp;&amp;|;) ?net start &quot;Zabbix Agent&quot;$" data-hint="Une cmdlet PowerShell qui redémarre un service ; le nom du service contient une espace.">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Sur SRV-FILE01, redémarre l'agent Zabbix installé dans ce module (l'agent 1, service <em>Zabbix Agent</em>) après une modification de sa configuration.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>Restart-Service "Zabbix Agent"</code> — guillemets obligatoires, le nom contient une espace. Une modification de <code>zabbix_agentd.conf</code> (comme <code>AllowKey</code>) n'est lue qu'au démarrage ; un <code>UserParameter</code> ou un <code>Include</code> se relit à chaud avec <code>zabbix_agentd -R userparameter_reload</code>. Avec l'agent 2, le service s'appelle <em>Zabbix Agent 2</em> et le fichier <code>zabbix_agent2.conf</code>.</p></div>
+                </details>
+            </div>
+            <div class="scenario">
+                <p class="scenario__label">Scénario de panne</p>
+                <p class="scenario__title">Les données « actives » n'arrivent pas</p>
+                <p>Un nouveau serveur est déclaré dans Zabbix sous le nom <code>SRV-FILE01</code>. Les éléments passifs remontent, mais tous les éléments en vérification active restent vides.</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Qu'est-ce que ce symptôme élimine ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Le réseau entre serveur et agent : le passif marche, l'agent est joignable</button>
+                        <button class="scenario__opt" data-why="Justement non : le nom ne compte que pour les vérifications actives.">Le nom de l'hôte</button>
+                        <button class="scenario__opt" data-why="Une partie de sa configuration sert seulement en actif.">La configuration de l'agent</button>
+                    </div>
+                    <div class="scenario__why"><p>Reste ce qui ne concerne que l'actif : <code>ServerActive=</code> et <code>Hostname=</code>.</p></div>
+                </div>
+                <div class="scenario__step">
+                    <p class="scenario__q">Le journal de l'agent dit : <em>host [srv-file01] not found</em>. La cause ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok><code>Hostname=</code> ne correspond pas exactement au nom de l'hôte dans Zabbix (la casse compte)</button>
+                        <button class="scenario__opt" data-why="Le 10050 sert au passif, qui fonctionne.">Le port 10050 est fermé</button>
+                        <button class="scenario__opt" data-why="Sans modèle, il n&#x27;y aurait aucun élément du tout.">Le modèle n'est pas lié</button>
+                    </div>
+                    <div class="scenario__why"><p>L'agent annonce <code>srv-file01</code>, le serveur attend <code>SRV-FILE01</code> : pour lui, cet hôte n'existe pas.</p></div>
+                </div>
+                <div class="scenario__end"><strong>Correction :</strong> <code>Hostname=SRV-FILE01</code> dans la configuration de l'agent, puis redémarrer l'agent. Les données actives arrivent dès que l'agent a rechargé sa liste de vérifications actives.</div>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Passif : serveur → agent:10050, autorisé par <code>Server=</code>. Actif : agent → serveur:10051, identifié par <code>Hostname=</code> au caractère près. <code>zabbix_get</code> depuis le serveur tranche en une commande.</p>
+            </div>
+        </section>
+
+        <section class="test" id="test" data-test="monitoring-zabbix">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#cloud">examen du Parcours 05 · Cloud, supervision &amp; méthode</a>, puis par l'<a href="../examens.html#final">examen final</a>.</p>
+        </section>
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+                <details class="sources__verif">
+                    <summary>Sources officielles relues pour la vérification des faits du 08/10/2026 (19)</summary>
+                    <ul>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/conf/zabbix_agentd.conf" rel="noopener">Zabbix — Agent 7.4 : Server, ServerActive, Hostname (casse), DenyKey system.run</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/conf/zabbix_server.conf" rel="noopener">Zabbix — Serveur 7.4 : ListenPort 10051, DBName, DBPassword</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/conf/zabbix_agentd.win.conf" rel="noopener">Zabbix — Agent Windows 7.4 : sections passif et actif</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/src/go/conf/zabbix_agent2.conf" rel="noopener">Zabbix — Agent 2 7.4 : EnablePersistentBuffer, UserParameter, DenyKey</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/src/go/conf/zabbix_agent2.d/plugins.d/docker.conf" rel="noopener">Zabbix — Plugin Docker de l&#x27;agent 2</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/conf/zabbix_proxy.conf" rel="noopener">Zabbix — Proxy 7.4 : ProxyOfflineBuffer</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/templates/os/windows_agent/README.md" rel="noopener">Zabbix — Template Windows by Zabbix agent : agent.ping = 1, découverte des services</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/templates/os/windows_agent/template_os_windows_agent.yaml" rel="noopener">Zabbix — Template Windows : groupe, trigger prototype, macros</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/templates/app/certificate_agent2/README.md" rel="noopener">Zabbix — Certificats TLS via l&#x27;agent 2</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/templates/app/certificate_agent2/template_app_certificate_agent2.yaml" rel="noopener">Zabbix — Nommage « by Zabbix agent 2 »</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix/blob/release/7.4/ChangeLog" rel="noopener">Zabbix — Journal 7.4 : zabbix_get, system.run nowait, syntaxe 5.4, JIT 6.4, TRIGGER.DESCRIPTION</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix-docker/blob/7.4/compose_databases.yaml" rel="noopener">Zabbix — Compose : collation utf8mb4_bin, log_bin_trust_function_creators=1</a></li>
+                    <li><a href="https://github.com/zabbix/zabbix-docker/blob/7.4/README.md" rel="noopener">Zabbix — Images Zabbix : frontend Nginx et Apache</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/NetNat/New-NetNat.md" rel="noopener">Microsoft Learn — New-NetNat -Name, -InternalIPInterfaceAddressPrefix</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/Virtualization-Documentation/blob/main/virtualization/windowscontainers/container-networking/network-drivers-topologies.md" rel="noopener">Microsoft Learn — WinNAT : un seul préfixe NAT interne</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/Virtualization-Documentation/blob/main/virtualization/windowscontainers/kubernetes/common-problems.md" rel="noopener">Microsoft Learn — Nommage vEthernet (…)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Management/Restart-Service.md" rel="noopener">Microsoft Learn — Restart-Service -Name</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/administration/windows-commands/del.md" rel="noopener">Microsoft Learn — del /f /s /q</a></li>
+                    <li><a href="https://github.com/Debian/apt/blob/main/doc/apt-get.8.xml" rel="noopener">Debian APT — apt-get --assume-yes</a></li>
+                    </ul>
+                    <p class="sources__note">Liens vers les dépôts publics de la documentation (le texte source des pages officielles).</p>
+                </details>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>Supervision — Zabbix</strong> — Module du centre d'apprentissage IT</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · Synthèse du labo monitoring</p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/monitoring-zabbix.js?v=ffe3b1fe"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+</body>
+</html>

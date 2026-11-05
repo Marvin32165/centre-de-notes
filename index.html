@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <title>Centre d'apprentissage IT — Portail</title>
+    <meta name="description" content="Portail personnel d'auto-apprentissage IT : réseau (TCP/IP, dépannage, CCNA, subnetting), virtualisation (Proxmox, Hyper-V), Windows Server, PowerShell, IIS, réseau/CCNA, subnetting, cybersécurité, Linux, supervision Zabbix, System Center (DPM, Zabbix à la place de SCOM, Redmine à la place de SCSM), Azure AZ-900, Agile &amp; Scrum, entretien de recrutement. Docker, Cisco IOS et sécurité réseau. 27 modules organisés en 5 parcours reliés entre eux, avec objectifs, labs guidés sur un lab de référence, exercices à taper, scénarios de panne, tests, examens, révision espacée et carte interactive des modules.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero hero--split">
+    <div class="hero__inner">
+        <div class="hero__main">
+        <p class="eyebrow">Centre d'apprentissage IT · Tous les cours, un seul site · Réseau, systèmes et virtualisation</p>
+        <h1 class="hero__title">Mon centre d'apprentissage <em>IT</em>.</h1>
+        <p class="hero__lead">Un portail unique qui réunit tous mes cours. Chaque domaine est un module : objectifs annoncés, théorie synthétisée, labs guidés sur le <a href="labo.html">lab Orion</a>, commandes à taper et à vérifier, puis un <strong>test noté</strong> qui dit si c'est acquis — et chaque jour, la <a href="revision.html">révision</a> qui empêche d'oublier. Les modules se relient entre eux — prérequis, suites, voir aussi.</p>
+        <div class="hero__facts">
+            <span class="fact"><b>Modules</b> 27</span>
+            <span class="fact"><b>Chapitres</b> 294</span>
+            <span class="fact"><b>Parcours</b> 5</span>
+            <span class="fact"><b>Évaluations</b> 27 tests · 6 examens</span>
+            <span class="fact"><b>Questions</b> 289 au total</span>
+        </div>
+        <div class="search">
+            <input type="search" id="site-search" class="search__input" aria-label="Rechercher dans le site" name="q" placeholder="Chercher une commande, une procédure… (ex. « créer utilisateur »)" autocomplete="off">
+            <div id="site-search-results" class="search__results" hidden></div>
+        </div>
+        </div>
+        <!-- Tableau de bord — rempli par app.js : « Tu débutes ? » ou ta progression -->
+        <div class="dash" data-dash role="region" aria-label="Ta progression"></div>
+    </div>
+</header>
+
+<main id="contenu">
+
+<!-- Bandeau de reprise — rempli par app.js à partir de la progression locale -->
+<section class="resume"></section>
+
+<!-- ════════ PAR OÙ COMMENCER ════════ -->
+<section class="paths" id="parcours">
+    <div class="paths__head">
+        <p class="section-tag">Par où commencer</p>
+        <h2>Cinq parcours, dans l'ordre</h2>
+        <p>Les modules ne se lisent pas au hasard : chacun s'appuie sur ceux d'avant. Si tu débutes, déroule le parcours « Fondations » dans l'ordre — le reste devient beaucoup plus simple ensuite. Chaque module rappelle ses prérequis en tête de page, se termine par son test, puis propose le module suivant et ceux qui s'appuient sur lui.</p>
+    </div>
+
+    <div class="paths__grid">
+        <div class="path" id="parcours-fondations">
+            <p class="path__num">Parcours 01 · commence ici</p>
+            <p class="path__title">Fondations</p>
+            <p class="path__desc">Le réseau d'abord — des trames aux pages web —, un plan d'adressage qui tient debout, un labo à soi, un terminal maîtrisé et une méthode de dépannage. Le socle de tout le reste.</p>
+            <ol class="path__steps">
+                <li><a href="modules/reseau-bases.html">Réseau : les bases <em>5 h</em></a></li>
+                <li><a href="modules/subnetting.html">Réseau &amp; Subnetting <em>2 h 30</em></a></li>
+                <li><a href="modules/hyperv.html">Hyper-V &amp; labo virtuel <em>2 h</em></a></li>
+                <li><a href="modules/linux-debian.html">Linux Debian <em>6 h</em></a></li>
+                <li><a href="modules/depannage-reseau.html">Dépannage réseau <em>3 h</em></a></li>
+                <li><a href="examens.html#fondations">Examen du parcours <em>20 q.</em></a></li>
+            </ol>
+        </div>
+
+        <div class="path" id="parcours-windows">
+            <p class="path__num">Parcours 02</p>
+            <p class="path__title">Infrastructure Windows</p>
+            <p class="path__desc">De l'annuaire Active Directory aux services qui s'appuient dessus : fichiers, sessions, web, messagerie, bases et intranet — et leur sauvegarde.</p>
+            <ol class="path__steps">
+                <li><a href="modules/windows-server.html">Windows Server 2025 <em>6 h</em></a></li>
+                <li><a href="modules/powershell.html">PowerShell <em>5 h</em></a></li>
+                <li><a href="modules/storage-clustering.html">Stockage &amp; Clustering <em>3 h</em></a></li>
+                <li><a href="modules/rds.html">Bureau à distance <em>2 h 30</em></a></li>
+                <li><a href="modules/iis.html">IIS — serveur web <em>2 h</em></a></li>
+                <li><a href="modules/exchange-securite.html">Exchange &amp; PKI <em>1 h 30</em></a></li>
+                <li><a href="modules/sql-server.html">SQL Server <em>4 h</em></a></li>
+                <li><a href="modules/sharepoint.html">SharePoint Server SE <em>4 h</em></a></li>
+                <li><a href="modules/dpm.html">System Center DPM <em>2 h 30</em></a></li>
+                <li><a href="examens.html#windows">Examen du parcours <em>30 q.</em></a></li>
+            </ol>
+        </div>
+
+        <div class="path" id="parcours-reseau">
+            <p class="path__num">Parcours 03</p>
+            <p class="path__title">Réseau &amp; téléphonie</p>
+            <p class="path__desc">Après le subnetting : configurer de vrais équipements Cisco, les sécuriser, puis faire passer la voix sur ce réseau.</p>
+            <ol class="path__steps">
+                <li><a href="modules/ccna-reseau.html">CCNA — Réseau Cisco <em>8 h</em></a></li>
+                <li><a href="modules/cisco-securite.html">Cisco IOS — sécurité <em>5 h 30</em></a></li>
+                <li><a href="modules/voip.html">Téléphonie IP (VoIP / ToIP) <em>3 h</em></a></li>
+                <li><a href="examens.html#reseau">Examen du parcours <em>20 q.</em></a></li>
+            </ol>
+        </div>
+
+        <div class="path" id="parcours-virtualisation">
+            <p class="path__num">Parcours 04</p>
+            <p class="path__title">Virtualisation, homelab &amp; sécurité</p>
+            <p class="path__desc">Le prolongement personnel : son propre hyperviseur, ses conteneurs, ses services, et de quoi les défendre.</p>
+            <ol class="path__steps">
+                <li><a href="modules/proxmox.html">Proxmox &amp; Virtualisation <em>2 h 30</em></a></li>
+                <li><a href="modules/docker.html">Docker &amp; conteneurs <em>3 h</em></a></li>
+                <li><a href="modules/homelab.html">Homelab &amp; Self-hosting <em>1 h 30</em></a></li>
+                <li><a href="modules/securite.html">Cybersécurité <em>1 h 30</em></a></li>
+                <li><a href="examens.html#virtualisation">Examen du parcours <em>20 q.</em></a></li>
+            </ol>
+        </div>
+
+        <div class="path" id="parcours-cloud">
+            <p class="path__num">Parcours 05</p>
+            <p class="path__title">Cloud, supervision &amp; méthode</p>
+            <p class="path__desc">Ce qui vient après l'infrastructure : la surveiller, la porter dans le cloud, organiser le travail autour d'elle — et décrocher le poste qui va avec.</p>
+            <ol class="path__steps">
+                <li><a href="modules/monitoring-zabbix.html">Supervision — Zabbix <em>3 h</em></a></li>
+                <li><a href="modules/zabbix-windows.html">Zabbix &amp; serveurs Windows <em>2 h 30</em></a></li>
+                <li><a href="modules/azure.html">Azure — AZ-900 <em>4 h</em></a></li>
+                <li><a href="modules/scrum.html">Agile &amp; Scrum <em>3 h</em></a></li>
+                <li><a href="modules/redmine.html">Redmine — helpdesk <em>2 h 30</em></a></li>
+                <li><a href="modules/itil.html">ITIL 4 <em>1 h 30</em></a></li>
+                <li><a href="modules/entretien-recrutement.html">Entretien de recrutement <em>1 h 30</em></a></li>
+                <li><a href="examens.html#cloud">Examen du parcours <em>20 q.</em></a></li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ POUR S'ENTRAÎNER ════════ -->
+<section class="resources" id="entrainement">
+    <div class="resources__head">
+        <p class="section-tag">Pour s'entraîner</p>
+        <h2>Neuf outils, en plus des modules</h2>
+    </div>
+    <div class="res-grid">
+        <a class="res" href="revision.html"><div class="res__top"><span class="res__badge res__badge--yt">Chaque jour</span><span class="res__name">Révision du jour</span></div><p class="res__desc">Les cartes à revoir aujourd'hui, tirées de tous les tests : un quart d'heure qui fait retenir.</p></a>
+        <a class="res" href="atelier.html"><div class="res__top"><span class="res__badge res__badge--web">Outils</span><span class="res__name">Atelier</span></div><p class="res__desc">chmod et umask, crontab, calculateur IPv4, ports, binaire, regex : manipuler pour comprendre.</p></a>
+        <a class="res" href="glossaire.html"><div class="res__top"><span class="res__badge res__badge--web">A–Z</span><span class="res__name">Glossaire</span></div><p class="res__desc">Chaque terme en deux phrases, avec les chapitres qui l'expliquent.</p></a>
+        <a class="res" href="dojo.html"><div class="res__top"><span class="res__badge res__badge--yt">Se tester</span><span class="res__name">Dojo</span></div><p class="res__desc">Dix questions par séance : retrouver un terme, une définition, taper une commande. Les ratés reviennent.</p></a>
+        <a class="res" href="simulateurs.html"><div class="res__top"><span class="res__badge res__badge--web">Voir</span><span class="res__name">Simulateurs</span></div><p class="res__desc">Table MAC d'un switch, ARP, DHCP, TCP, DNS : on devine, puis on regarde ce qui se passe vraiment.</p></a>
+        <a class="res" href="plan.html"><div class="res__top"><span class="res__badge res__badge--local">Organiser</span><span class="res__name">Plan d'étude</span></div><p class="res__desc">Un calendrier jusqu'à ta date, calculé d'après ta progression, et la maîtrise de chaque module.</p></a>
+        <a class="res" href="commandes.html"><div class="res__top"><span class="res__badge res__badge--web">Index</span><span class="res__name">Commandes</span></div><p class="res__desc">Toutes les commandes des modules au même endroit : filtre par shell, copie en un clic, lien vers le chapitre.</p></a>
+        <a class="res" href="carnet.html"><div class="res__top"><span class="res__badge res__badge--local">Perso</span><span class="res__name">Mon carnet</span></div><p class="res__desc">Tes chapitres « à revoir » et tes notes, module par module, exportables en Markdown.</p></a>
+        <a class="res" href="labo.html"><div class="res__top"><span class="res__badge res__badge--local">Lab</span><span class="res__name">Lab Orion</span></div><p class="res__desc">Le réseau et les serveurs de référence sur lesquels se rejouent tous les TP Windows.</p></a>
+    </div>
+</section>
+
+<!-- ════════ CARTE DES MODULES ════════
+     Rendue par app.js à partir de assets/catalogue.js : un clic sur un
+     module montre ce qu'il faut connaître avant, ce qui s'appuie dessus
+     et les modules voisins, avec l'avancement de chacun. -->
+<section class="map-section" id="carte">
+    <div class="paths__head">
+        <p class="section-tag">Comment tout se relie</p>
+        <h2>La carte des modules</h2>
+        <p>Choisis un module : ceux qu'il faut connaître avant, ceux qui s'appuient sur lui et ses voisins d'autres parcours s'éclairent. L'avancement enregistré dans ce navigateur s'affiche sur chaque case.</p>
+    </div>
+    <div class="map" data-map>
+        <noscript><p class="note">La carte a besoin de JavaScript ; les parcours ci-dessus donnent le même ordre.</p></noscript>
+    </div>
+</section>
+
+
+
+<!-- ════════ RESSOURCES & VEILLE ════════ -->
+<section class="resources">
+    <div class="resources__head">
+        <p class="section-tag">Pour aller plus loin</p>
+        <h2>Ressources &amp; veille</h2>
+        <p>Les chaînes, pages de liens et sites que je suis pour progresser en continu. La plupart sont en anglais et touchent régulièrement à l'IA. Chaque module renvoie vers la ressource la plus pertinente pour son sujet.</p>
+    </div>
+
+    <div class="res-group">
+        <p class="res-group__title">IT · Réseau · Virtualisation</p>
+        <div class="res-grid">
+            <a class="res" href="https://www.youtube.com/@NetworkChuck" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--yt">YouTube</span><span class="res__name">NetworkChuck</span></div>
+                <p class="res__desc">Ex-instructeur CCNA. Réseau, subnetting, Linux, sécurité et homelab, avec beaucoup d'énergie. Playlists <em>Subnetting</em> et <em>CCNA</em> incontournables.</p>
+                <span class="res__url">youtube.com/@NetworkChuck</span>
+            </a>
+            <a class="res" href="https://www.youtube.com/@VirtualizationHowto" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--yt">YouTube</span><span class="res__name">Virtualization HowTo</span></div>
+                <p class="res__desc">Très orienté Proxmox, virtualisation et homelab. Tutos concrets et à jour — la référence pour le module Proxmox.</p>
+                <span class="res__url">youtube.com/@VirtualizationHowto</span>
+            </a>
+            <a class="res" href="https://www.youtube.com/@TechnoTim" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--yt">YouTube</span><span class="res__name">TechnoTim</span></div>
+                <p class="res__desc">Homelab, self-hosting, Docker, Kubernetes, reverse proxy et automatisation. Guides propres et bien expliqués.</p>
+                <span class="res__url">youtube.com/@TechnoTim</span>
+            </a>
+            <a class="res" href="https://www.youtube.com/@TechHut" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--yt">YouTube</span><span class="res__name">TechHut</span></div>
+                <p class="res__desc">Linux, self-hosting et outils du homelab. Bons sujets pour découvrir de nouveaux services à héberger.</p>
+                <span class="res__url">youtube.com/@TechHut</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="res-group">
+        <p class="res-group__title">Sécurité</p>
+        <div class="res-grid">
+            <a class="res" href="https://www.youtube.com/@zSecurity" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--yt">YouTube</span><span class="res__name">zSecurity</span></div>
+                <p class="res__desc">Hacking éthique et cybersécurité : Kali, tests d'intrusion, réseau et défense. À pratiquer uniquement en labo isolé et sur des systèmes autorisés.</p>
+                <span class="res__url">youtube.com/@zSecurity</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="res-group">
+        <p class="res-group__title">IA · Culture tech</p>
+        <div class="res-grid">
+            <a class="res" href="https://www.youtube.com/@Underscore_" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--yt">YouTube</span><span class="res__name">Underscore_</span></div>
+                <p class="res__desc">Émission tech francophone : IA, dev, hardware, actualité. Format long et débats de fond — une des rares en français.</p>
+                <span class="res__url">youtube.com/@Underscore_</span>
+            </a>
+            <a class="res" href="https://www.youtube.com/@SiliconValleyGirl" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--yt">YouTube</span><span class="res__name">Silicon Valley Girl</span></div>
+                <p class="res__desc">IA, productivité et carrière tech vue de la Silicon Valley. Bon pour la veille sur les usages de l'IA.</p>
+                <span class="res__url">youtube.com/@SiliconValleyGirl</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="res-group">
+        <p class="res-group__title">Veille &amp; liens (fourre-tout)</p>
+        <div class="res-grid">
+            <a class="res" href="https://www.youtube.com/@ITFab" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--yt">YouTube</span><span class="res__name">ITFab</span></div>
+                <p class="res__desc">Chaîne « fourre-tout » IT : un peu de tout au gré des découvertes et des tests.</p>
+                <span class="res__url">youtube.com/@ITFab</span>
+            </a>
+            <a class="res" href="https://papaly.com/c/ChFr" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--web">Liens</span><span class="res__name">Papaly — ChFr</span></div>
+                <p class="res__desc">Page de marque-pages : une collection de liens IT intéressants, classés par thème.</p>
+                <span class="res__url">papaly.com/c/ChFr</span>
+            </a>
+            <a class="res" href="https://www.bowlman.org/" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--web">Web</span><span class="res__name">bowlman.org</span></div>
+                <p class="res__desc">Site de ressources et de notes à explorer pour compléter la veille.</p>
+                <span class="res__url">bowlman.org</span>
+            </a>
+            <a class="res" href="https://guns.lol/tunisiano" target="_blank" rel="noopener">
+                <div class="res__top"><span class="res__badge res__badge--web">Profil</span><span class="res__name">guns.lol/tunisiano</span></div>
+                <p class="res__desc">Page « où me trouver » : GitHub, GitLab, Pinterest et autres liens regroupés.</p>
+                <span class="res__url">guns.lol/tunisiano</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ════════ MÉTHODE ════════ -->
+<section class="roadmap">
+    <p class="section-tag">Méthode</p>
+    <h2>Comment j'apprends chaque module en solo</h2>
+    <div class="road">
+        <div class="road__step"><div class="road__n">01</div><h3>Se fixer l'objectif</h3><p>Lire les objectifs en tête de module : savoir <em>ce qu'on doit savoir faire</em> à la fin, avant de commencer.</p></div>
+        <div class="road__step"><div class="road__n">02</div><h3>Comprendre</h3><p>La théorie synthétisée : à quoi sert la brique, où elle se place dans l'infrastructure.</p></div>
+        <div class="road__step"><div class="road__n">03</div><h3>Faire et vérifier</h3><p>Les labs guidés sur le <a href="labo.html">lab Orion</a>, les commandes à taper soi-même, et un encadré <em>Vérifier</em> après chaque étape : la commande, la sortie attendue, et quoi faire si ce n'est pas celle-là.</p></div>
+        <div class="road__step"><div class="road__n">04</div><h3>Passer le test</h3><p>Le test de fin de module, noté. Chaque erreur renvoie au chapitre à relire : on refait le test jusqu'au seuil.</p></div>
+        <div class="road__step"><div class="road__n">05</div><h3>Réviser chaque jour</h3><p>Quinze minutes de <a href="revision.html">révision du jour</a> : les questions des tests et les commandes clés reviennent juste avant d'être oubliées.</p></div>
+        <div class="road__step"><div class="road__n">06</div><h3>Croiser et prouver</h3><p>L'examen de parcours, puis la <a href="labo.html#competences">grille de compétences</a> : ce qu'on sait faire, prouvé par une commande sur le lab.</p></div>
+    </div>
+</section>
+
+</main>
+
+<footer>
+    <p><strong>Centre d'apprentissage IT</strong> — portail personnel d'auto-formation de Marvin</p>
+    <p>Administration système orientée virtualisation · Proxmox · Docker · Windows Server · Réseau · Sécurité · Linux · Homelab</p>
+    <p><a href="#carte">Carte des modules</a> · <a href="examens.html">Examens transversaux</a> · Progression et résultats enregistrés dans ce navigateur uniquement</p>
+</footer>
+
+<script src="assets/catalogue.js?v=835ec2e5"></script>
+<script src="assets/app.js?v=fabe4251"></script>
+<script src="assets/quiz-data.js?v=97bbe725"></script>
+<script src="assets/quiz.js?v=87192477"></script>
+<script src="assets/search-index.js?v=9a2b4344"></script>
+<script src="assets/search.js?v=80a32003"></script>
+</body>
+</html>

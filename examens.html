@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <title>Examens transversaux — Centre d'apprentissage IT</title>
+    <meta name="description" content="Les évaluations du centre d'apprentissage IT : cinq examens de parcours qui croisent plusieurs modules, et un examen final sur les vingt-sept modules. Correction commentée, renvoi au chapitre à relire.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="index.html">← Portail</a> · Évaluations</p>
+        <h1 class="hero__title">Les <em>examens</em> transversaux.</h1>
+        <p class="hero__lead">Un test de fin de module vérifie qu'un sujet est acquis. Un examen vérifie autre chose : que les modules d'un même parcours tiennent ensemble. Chaque examen tire ses questions au hasard dans les modules qu'il couvre, et y ajoute des questions de synthèse qui les font se rencontrer — deux passages ne se ressemblent jamais.</p>
+        <div class="hero__facts">
+            <span class="fact"><b>Examens</b> 5 de parcours + 1 final</span>
+            <span class="fact"><b>Fonds</b> 289 questions</span>
+            <span class="fact"><b>Correction</b> commentée, avec renvoi au chapitre</span>
+            <span class="fact"><b>Résultats</b> enregistrés dans ce navigateur</span>
+        </div>
+    </div>
+</header>
+
+<main id="contenu">
+
+<!-- ════════ L'EXAMEN OUVERT ════════
+     Un seul examen est monté à la fois, désigné par l'ancre de l'URL
+     (#fondations, #windows…). Le script juste avant quiz.js crée la
+     section correspondante ; sans ancre, on ne montre que l'index. -->
+<div id="exam-host"></div>
+
+<!-- ════════ CATALOGUE ════════ -->
+<section class="exams-index" id="catalogue">
+    <p class="section-tag">Le catalogue</p>
+    <h2>Cinq évaluations, dans cet ordre</h2>
+    <p>On passe l'examen d'un parcours quand ses modules ont chacun leur test validé. L'examen final se garde pour la fin : il tire dans les vingt-sept modules à la fois.</p>
+
+    <div class="exam-grid">
+
+        <a class="exam-card" href="#fondations">
+            <p class="exam-card__num">Examen 01</p>
+            <p class="exam-card__title">Parcours Fondations</p>
+            <p class="exam-card__desc">Les bases du réseau, un plan d'adressage qui tient debout, un labo à soi, un terminal maîtrisé et une méthode de dépannage. Les questions de synthèse relient la configuration d'une VM au diagnostic réseau.</p>
+            <div class="exam-card__mods"><span class="tg">Réseau</span><span class="tg">Subnetting</span><span class="tg">Hyper-V</span><span class="tg">Linux Debian</span><span class="tg">Dépannage</span></div>
+            <div class="exam-card__foot"><span>20 questions · seuil 70 %</span><span class="exam-card__score" data-score="fondations"></span></div>
+        </a>
+
+        <a class="exam-card" href="#windows">
+            <p class="exam-card__num">Examen 02</p>
+            <p class="exam-card__title">Infrastructure Windows</p>
+            <p class="exam-card__desc">Le plus large : annuaire, automatisation, stockage, sessions, web, messagerie, base de données, intranet et sauvegarde. On y vérifie surtout ce qui circule d'un module à l'autre — gMSA, PKI, droits, sauvegardes.</p>
+            <div class="exam-card__mods"><span class="tg">Windows Server</span><span class="tg">PowerShell</span><span class="tg">Stockage</span><span class="tg">RDS</span><span class="tg">IIS</span><span class="tg">Exchange</span><span class="tg">SQL Server</span><span class="tg">SharePoint</span><span class="tg">DPM</span></div>
+            <div class="exam-card__foot"><span>30 questions · seuil 70 %</span><span class="exam-card__score" data-score="windows"></span></div>
+        </a>
+
+        <a class="exam-card" href="#reseau">
+            <p class="exam-card__num">Examen 03</p>
+            <p class="exam-card__title">Réseau &amp; téléphonie</p>
+            <p class="exam-card__desc">Du plan d'adressage à la voix qui passe. Plusieurs cas de dépannage, dont le classique « ça sonne mais on n'entend rien » posé après l'ajout d'une ACL.</p>
+            <div class="exam-card__mods"><span class="tg">Subnetting</span><span class="tg">CCNA</span><span class="tg">Cisco sécurité</span><span class="tg">VoIP</span></div>
+            <div class="exam-card__foot"><span>20 questions · seuil 70 %</span><span class="exam-card__score" data-score="reseau"></span></div>
+        </a>
+
+        <a class="exam-card" href="#virtualisation">
+            <p class="exam-card__num">Examen 04</p>
+            <p class="exam-card__title">Virtualisation, homelab &amp; sécurité</p>
+            <p class="exam-card__desc">Son propre hyperviseur, ses conteneurs, ses services, et de quoi les défendre. Les questions croisées portent sur l'architecture d'hébergement et la réduction de la surface d'attaque.</p>
+            <div class="exam-card__mods"><span class="tg">Proxmox</span><span class="tg">Docker</span><span class="tg">Homelab</span><span class="tg">Cybersécurité</span></div>
+            <div class="exam-card__foot"><span>20 questions · seuil 70 %</span><span class="exam-card__score" data-score="virtualisation"></span></div>
+        </a>
+
+        <a class="exam-card" href="#cloud">
+            <p class="exam-card__num">Examen 05</p>
+            <p class="exam-card__title">Cloud, supervision &amp; méthode</p>
+            <p class="exam-card__desc">Superviser un parc, le porter dans le cloud, organiser le travail et le support autour — et le raconter en entretien. Les questions croisées portent sur la chaîne mesurer / alerter / agir jusqu'au ticket, les secrets hors du Compose, le moindre privilège, le choix Scrum ou Kanban et le recul du STARR.</p>
+            <div class="exam-card__mods"><span class="tg">Zabbix</span><span class="tg">Zabbix &amp; Windows</span><span class="tg">Azure AZ-900</span><span class="tg">Agile &amp; Scrum</span><span class="tg">Redmine</span><span class="tg">Entretien</span></div>
+            <div class="exam-card__foot"><span>20 questions · seuil 70 %</span><span class="exam-card__score" data-score="cloud"></span></div>
+        </a>
+
+        <a class="exam-card" href="#final">
+            <p class="exam-card__num">Examen final</p>
+            <p class="exam-card__title">Les vingt-sept modules</p>
+            <p class="exam-card__desc">Quarante-cinq questions tirées dans l'ensemble du centre, plus les principes qui traversent tous les parcours : la règle 3-2-1, le moindre privilège, le quorum, la chaîne de confiance, le réflexe de diagnostic.</p>
+            <div class="exam-card__mods"><span class="tg">5 parcours</span><span class="tg">27 modules</span><span class="tg">Seuil 75 %</span></div>
+            <div class="exam-card__foot"><span>45 questions · seuil 75 %</span><span class="exam-card__score" data-score="final"></span></div>
+        </a>
+
+    </div>
+</section>
+
+<!-- ════════ RÉSULTATS ════════ -->
+<section class="exams-index" id="resultats" style="padding-bottom:72px;">
+    <p class="section-tag">Suivi</p>
+    <h2>Mes résultats</h2>
+    <p>Le meilleur score de chaque évaluation, test de module et examen confondus. Tout est stocké dans ce navigateur uniquement : rien n'est envoyé nulle part, et effacer les données du site remet le compteur à zéro.</p>
+    <div class="scoreboard" data-scoreboard data-base="modules/"></div>
+</section>
+
+</main>
+
+<footer>
+    <p><strong>Évaluations</strong> — Centre d'apprentissage IT</p>
+    <p><a href="index.html">← Retour au portail</a> · Les questions renvoient au chapitre à relire</p>
+</footer>
+
+<script src="assets/catalogue.js?v=835ec2e5"></script>
+<script src="assets/app.js?v=fabe4251"></script>
+<script src="assets/quiz-data.js?v=97bbe725"></script>
+<script src="assets/quiz.js?v=87192477"></script>
+<script>
+/* Un seul examen ouvert à la fois — quarante-cinq questions à l'écran suffisent.
+   L'ancre de l'URL (#windows, #final…) désigne lequel ; en changer remonte
+   simplement un autre examen, sans recharger la page. */
+(function () {
+    var host = document.getElementById('exam-host');
+    if (!host || !window.CAI || !window.CAI.mountExam) return;
+
+    function open(scroll) {
+        var id = (location.hash || '').replace('#', '');
+        host.innerHTML = '';
+        if (!window.EXAM_BANK || !window.EXAM_BANK[id]) return;
+
+        var wrap = document.createElement('section');
+        wrap.className = 'exams-index';
+        wrap.innerHTML = '<p style="margin-bottom:16px;">' +
+            '<a class="toc__back" href="#catalogue">← Tous les examens</a></p>';
+
+        var test = document.createElement('section');
+        test.className = 'test';
+        test.setAttribute('data-base', 'modules/');
+        wrap.appendChild(test);
+        host.appendChild(wrap);
+
+        window.CAI.mountExam(test, id);
+        if (scroll) wrap.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+
+    window.addEventListener('hashchange', function () { open(true); });
+    open(false);
+})();
+</script>
+<script>
+/* Score déjà obtenu, rappelé sur chaque carte du catalogue — et tenu à
+   jour quand un examen vient d'être corrigé sur cette même page. */
+(function () {
+    if (!window.CAI) return;
+    function refresh() {
+        var all = window.CAI.scores();
+        document.querySelectorAll('[data-score]').forEach(function (slot) {
+            var rec = all['exam:' + slot.getAttribute('data-score')];
+            slot.classList.remove('is-pass', 'is-fail');
+            if (!rec) { slot.textContent = 'jamais passé'; return; }
+            slot.textContent = 'meilleur : ' + rec.best + ' %';
+            slot.classList.add(rec.passed ? 'is-pass' : 'is-fail');
+        });
+    }
+    document.addEventListener('cai:score', refresh);
+    refresh();
+})();
+</script>
+</body>
+</html>

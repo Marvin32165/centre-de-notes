@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module PowerShell — console et aide, variables et types, conditions, boucles, tableaux et objets, pipeline, fonctions et erreurs, automatisation du lab Orion (VM, comptes AD depuis un CSV), administration à distance et projets du cours corrigés.">
+    <title>PowerShell — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a></p>
+        <h1 class="hero__title">PowerShell</h1>
+        <p class="hero__lead">Le langage d'abord — variables, conditions, boucles, objets, pipeline, fonctions — à partir des exercices du cours, puis ce qu'il permet : reconstruire le lab Orion par script, créer des comptes depuis un tableur, administrer dix serveurs d'une seule commande.</p>
+        <div class="hero__meta">
+            <span class="chip">Variables</span><span class="chip">Conditions</span><span class="chip">Boucles</span><span class="chip">Pipeline</span><span class="chip">Fonctions</span><span class="chip">CSV</span><span class="chip">Invoke-Command</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n2"><b>Niveau</b> Intermédiaire</span>
+            <span class="fact"><b>Durée</b> ≈ 5 h</span>
+            <span class="fact"><b>Chapitres</b> 10</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> <a href="windows-server.html">Windows Server</a></span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">PowerShell</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#console"><span>01</span> Console & aide</a></li>
+            <li><a class="toc__link" href="#variables"><span>02</span> Variables & types</a></li>
+            <li><a class="toc__link" href="#conditions"><span>03</span> Conditions</a></li>
+            <li><a class="toc__link" href="#boucles"><span>04</span> Boucles</a></li>
+            <li><a class="toc__link" href="#objets"><span>05</span> Tableaux & objets</a></li>
+            <li><a class="toc__link" href="#pipeline"><span>06</span> Pipeline</a></li>
+            <li><a class="toc__link" href="#fonctions"><span>07</span> Fonctions & erreurs</a></li>
+            <li><a class="toc__link" href="#automatiser"><span>08</span> Automatiser le lab</a></li>
+            <li><a class="toc__link" href="#distance"><span>09</span> À distance</a></li>
+            <li><a class="toc__link" href="#projets"><span>10</span> Projets du cours</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Trouver et comprendre seul une commande inconnue avec <code>Get-Command</code>, <code>Get-Help</code> et <code>Get-Member</code>.</li>
+                <li>Écrire des scripts avec variables typées, conditions, boucles et <code>switch</code>, sans tomber dans le piège de <code>Read-Host</code>.</li>
+                <li>Manipuler des listes d'objets : tableaux, tables de hachage, CSV, et le pipeline (filtrer, trier, sélectionner, compter).</li>
+                <li>Écrire une fonction paramétrée qui gère ses erreurs et renvoie des objets.</li>
+                <li>Créer les VM du lab et les comptes du domaine par script, et administrer plusieurs serveurs à distance.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> <a href="windows-server.html">Windows Server</a> (le domaine Orion) et <a href="hyperv.html">Hyper-V</a>.</p>
+            <p class="brief__foot">Ensuite : chaque module du parcours Windows utilise ces bases — SQL Server, SharePoint et DPM les premiers.</p>
+        </section>
+
+        <!-- 01 -->
+        <section class="chapter" id="console">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">La console, l'aide et la découverte</h2>
+            <p class="chapter__intro">PowerShell n'est pas un shell de texte : chaque commande renvoie des <strong>objets</strong>. Avant d'écrire du code, il faut savoir trouver seul une commande, lire son aide et inspecter ce qu'elle renvoie.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Besoin</th><th>Commande</th></tr></thead>
+                    <tbody>
+                        <tr><td>Trouver une commande</td><td><code>Get-Command -Verb New -Noun *VM*</code> · <code>Get-Command *dns*</code></td></tr>
+                        <tr><td>Lire l'aide, avec exemples</td><td><code>Get-Help New-ADUser -Examples</code> (une fois <code>Update-Help</code> passé)</td></tr>
+                        <tr><td>Voir ce qu'un objet contient</td><td><code>Get-Service | Get-Member</code></td></tr>
+                        <tr><td>Connaître un alias</td><td><code>Get-Alias ls</code> → <code>Get-ChildItem</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>Les cmdlets suivent toutes le motif <strong>Verbe-Nom</strong> (<code>Get-</code>, <code>New-</code>, <code>Set-</code>, <code>Remove-</code>…) : connaître le verbe suffit souvent à deviner la commande. Deux versions cohabitent, et s'installent côte à côte sans se gêner :</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th><span class="sr-only">Critère</span></th><th>Windows PowerShell 5.1</th><th>PowerShell 7</th></tr></thead>
+                    <tbody>
+                        <tr><td>Livraison</td><td>Intégré à Windows 10/11 et Windows Server, soumis au cycle de support Windows</td><td>À installer (winget, MSI), versions régulières</td></tr>
+                        <tr><td>Exécutable</td><td><code>powershell.exe</code></td><td><code>pwsh.exe</code></td></tr>
+                        <tr><td>Plateformes</td><td>Windows seulement (.NET Framework)</td><td>Windows, Linux, macOS (.NET moderne)</td></tr>
+                        <tr><td>Modules Windows (AD, DHCP, Hyper-V…)</td><td>Tous</td><td>La plupart directement, les autres via la couche de compatibilité Windows PowerShell</td></tr>
+                        <tr><td>Nouveautés</td><td>—</td><td><code>ForEach-Object -Parallel</code>, opérateurs <code>??</code> et <code>?:</code>, <code>&amp;&amp;</code> / <code>||</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p><code>$PSVersionTable.PSVersion</code> dit dans laquelle tu te trouves. Les scripts de ce module tournent dans les deux.</p>
+            <div class="tip">
+                <p class="tip__label">La stratégie d'exécution</p>
+                <p>Par défaut, Windows PowerShell 5.1 refuse sur Windows 11 d'exécuter les scripts <code>.ps1</code> (<em>Restricted</em>) ; Windows Server, lui, est en <em>RemoteSigned</em>, comme PowerShell 7 sur tout Windows. Pour ses propres scripts sur un poste : <code>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code> — les scripts écrits localement tournent, ceux téléchargés d'Internet doivent être signés (ou débloqués avec <code>Unblock-File</code> après relecture). <code>Get-ExecutionPolicy -List</code> montre la stratégie de chaque portée. Ce n'est pas une barrière de sécurité, juste un garde-fou contre l'exécution accidentelle.</p>
+            </div>
+            <div class="cmdex" data-accept="Get-Help Get-ChildItem -Ex(amples)?;;help Get-ChildItem -Ex(amples)?;;Get-ChildItem -\?" data-hint="Get-Help, avec le nom de la cmdlet et un paramètre.">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Affiche les exemples d'utilisation de la cmdlet <code>Get-ChildItem</code>.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>Get-Help Get-ChildItem -Examples</code> (ou <code>help Get-ChildItem -Examples</code>). Si l'aide est vide, lancer d'abord <code>Update-Help</code> en administrateur.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Bloqué ? <code>Get-Command</code> pour trouver, <code>Get-Help -Examples</code> pour comprendre, <code>Get-Member</code> pour voir ce qu'un objet contient. Ces trois commandes répondent à presque tout sans quitter la console.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Sur ton poste Windows 11, <code>.\Test-Lab.ps1</code>, que tu viens d'écrire, répond « l'exécution de scripts est désactivée sur ce système ». Que fais-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok><code>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code></button>
+                        <button class="scenario__opt" data-why="Unrestricted pour toute la machine laisse aussi passer les scripts téléchargés, avec un simple avertissement : plus large que nécessaire.">Set-ExecutionPolicy Unrestricted -Scope LocalMachine</button>
+                        <button class="scenario__opt" data-why="Unblock-File retire la marque « téléchargé d&#x27;Internet ». Ton script écrit en local n&#x27;en a pas : la stratégie Restricted bloque tous les scripts.">Unblock-File .\Test-Lab.ps1</button>
+                    </div>
+                    <div class="scenario__why"><p>Le poste est en <em>Restricted</em> : aucun script ne passe. <em>RemoteSigned</em> pour ton seul compte suffit — tes scripts tournent, ceux venus d'Internet restent contrôlés. Pas besoin d'être administrateur avec <code>-Scope CurrentUser</code>.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="chapter" id="variables">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Variables, types et chaînes</h2>
+            <p class="chapter__intro">Le premier exercice du cours déclare des variables, les affiche, les modifie et calcule avec. Trois choses à comprendre pour ne pas se faire piéger : le <strong>type</strong>, ce que renvoie <code>Read-Host</code>, et la différence entre guillemets doubles et simples.</p>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — l'essentiel de l'exercice « variables »</span></div>
+                <pre class="terminal__code">$<span class="k">ville</span> = <span class="s">"Mons"</span><span class="c">                     # une chaîne</span>
+<span class="k">[int]$age</span> = 23<span class="c">                     # un entier : le type est forcé</span>
+$<span class="k">taille</span> = 183
+$<span class="k">taille</span> = <span class="p">$taille</span> / 100<span class="c">            # 1.83 : la division donne un décimal</span>
+$<span class="k">age</span> += 10<span class="c">                         # même chose que $age = $age + 10</span>
+$<span class="k">ville</span> += <span class="s">"ville"</span><span class="c">                  # concaténation</span>
+<span class="s">"Tu as $age ans"</span><span class="c">                   # guillemets doubles : la variable est remplacée</span>
+<span class="s">'Tu as $age ans'</span><span class="c">                   # guillemets simples : texte littéral</span>
+$<span class="k">ville.Length</span><span class="c">                      # une chaîne est un objet : propriétés…</span>
+$<span class="k">ville.ToUpper()</span><span class="c">                   # …et méthodes</span></pre>
+            </div>
+            <h3>Le piège de Read-Host</h3>
+            <p><code>Read-Host</code> renvoie <strong>toujours une chaîne</strong>. Or <code>+</code> concatène les chaînes : <code>"5" + "3"</code> donne <code>53</code>. Il faut convertir, soit en typant la variable (<code>[int]$n = Read-Host "Nombre"</code>), soit à la volée (<code>[int]$saisie + 3</code>). Règle utile : c'est le type de l'<strong>élément de gauche</strong> qui décide — <code>3 + "5"</code> donne 8, <code>"3" + 5</code> donne <code>35</code>.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Type</th><th>Exemple</th><th>Usage</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>[string]</code></td><td><code>"orion"</code></td><td>Texte</td></tr>
+                        <tr><td><code>[int]</code> / <code>[double]</code></td><td><code>42</code> / <code>1.83</code></td><td>Nombres entiers / décimaux</td></tr>
+                        <tr><td><code>[bool]</code></td><td><code>$true</code>, <code>$false</code></td><td>Résultat d'un test</td></tr>
+                        <tr><td><code>[datetime]</code></td><td><code>Get-Date</code></td><td>Dates : <code>(Get-Date).AddDays(-7)</code></td></tr>
+                        <tr><td><code>[array]</code></td><td><code>@(1, 2, 3)</code></td><td>Liste (chapitre 05)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="exo">
+                <p class="exo__label">Exercice — l'IMC du cours, corrigé</p>
+                <p>Avec <code>$poids = 63</code> (kg) et <code>$taille = 183</code> (cm), calcule l'IMC (poids ÷ taille en mètres au carré) et affiche « Ton IMC est de 18,8 » arrondi à une décimale.</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><pre class="verify__out">$taille = $taille / 100
+$imc = $poids / ($taille * $taille)
+"Ton IMC est de {0:N1}" -f $imc</pre><p>L'opérateur <code>-f</code> formate : <code>{0:N1}</code> = le premier argument, une décimale. Plus propre que d'additionner des chaînes, et la virgule suit les réglages régionaux.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Une variable a un type ; <code>Read-Host</code> renvoie du texte qu'il faut convertir. Guillemets doubles = interpolation, simples = littéral. <code>-f</code> pour formater un résultat.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q"><code>$a = Read-Host "Nombre"</code> (tu tapes 7), puis <code>$a + 3</code>. Qu'affiche PowerShell ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok><code>73</code></button>
+                        <button class="scenario__opt" data-why="10 serait le résultat avec [int]$a. Ici $a est une chaîne : + concatène.">10</button>
+                        <button class="scenario__opt" data-why="PowerShell convertit 3 en texte pour suivre le type de gauche : pas d&#x27;erreur, juste une concaténation.">Une erreur de type</button>
+                    </div>
+                    <div class="scenario__why"><p><code>Read-Host</code> renvoie une chaîne, et c'est le type de l'élément de <strong>gauche</strong> qui décide : <code>"7" + 3</code> donne <code>"73"</code>. <code>[int]$a + 3</code> ou <code>3 + $a</code> donnent 10. <code>$a.GetType().Name</code> affiche <code>String</code>.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="chapter" id="conditions">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">Comparer et décider</h2>
+            <p class="chapter__intro">Les conditions du cours (pair ou impair, majeur ou mineur, année bissextile, mention d'une note) reposent sur des <strong>opérateurs de comparaison</strong> qui ne ressemblent pas à ceux des autres langages : pas de <code>==</code> ni de <code>&gt;</code>, mais <code>-eq</code> et <code>-gt</code>.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Opérateur</th><th>Sens</th><th>Exemple</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-eq</code> / <code>-ne</code></td><td>égal / différent</td><td><code>$choix -eq 1</code></td></tr>
+                        <tr><td><code>-gt</code> / <code>-ge</code> / <code>-lt</code> / <code>-le</code></td><td>&gt; / ≥ / &lt; / ≤</td><td><code>$age -ge 18</code></td></tr>
+                        <tr><td><code>-like</code></td><td>motif avec jokers</td><td><code>$prenom -like "A*"</code></td></tr>
+                        <tr><td><code>-match</code></td><td>expression régulière</td><td><code>$ip -match "^172\.16\."</code></td></tr>
+                        <tr><td><code>-in</code> / <code>-notin</code></td><td>appartient à une liste</td><td><code>$coup -in "pierre","papier","ciseaux"</code></td></tr>
+                        <tr><td><code>-and</code> / <code>-or</code> / <code>-not</code></td><td>et / ou / non</td><td><code>($n % 2 -eq 0) -and ($n -gt 10)</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tip">
+                <p class="tip__label">Insensible à la casse</p>
+                <p>Par défaut, <code>-eq</code>, <code>-like</code> et <code>-match</code> ignorent majuscules et minuscules : <code>"Pierre" -eq "pierre"</code> vaut <code>$true</code>. Pour tenir compte de la casse : <code>-ceq</code>, <code>-clike</code>, <code>-cmatch</code>.</p>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — if, elseif, else, puis switch</span></div>
+                <pre class="terminal__code"><span class="k">[int]$note</span> = Read-Host <span class="s">"Note sur 20"</span>
+<span class="k">if</span> ($note <span class="p">-ge</span> 16)     { <span class="s">"A"</span> }
+<span class="k">elseif</span> ($note <span class="p">-ge</span> 14) { <span class="s">"B"</span> }
+<span class="k">elseif</span> ($note <span class="p">-ge</span> 12) { <span class="s">"C"</span> }
+<span class="k">else</span>                  { <span class="s">"Insuffisant"</span> }
+
+<span class="k">switch</span> ([int](Read-Host <span class="s">"Mois (1-12)"</span>)) {
+    <span class="k">2</span>                      { <span class="s">"28 jours"</span> }
+    <span class="k">{</span> <span class="p">$_</span> <span class="p">-in</span> 4, 6, 9, 11 } { <span class="s">"30 jours"</span> }
+    <span class="k">default</span>                { <span class="s">"31 jours"</span> }
+<span class="k">}</span></pre>
+            </div>
+            <div class="exo">
+                <p class="exo__label">Exercice — année bissextile</p>
+                <p>Demande une année et affiche si elle est bissextile. Règle : divisible par 4, sauf les siècles, sauf les siècles divisibles par 400 (2000 l'est, 1900 non).</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><pre class="verify__out">[int]$a = Read-Host "Année"
+if (($a % 4 -eq 0 -and $a % 100 -ne 0) -or ($a % 400 -eq 0)) { "$a est bissextile" }
+else { "$a n'est pas bissextile" }</pre><p><code>%</code> donne le reste de la division : <code>$a % 4 -eq 0</code> = « divisible par 4 ». Les parenthèses rendent la règle lisible.</p></div>
+                </details>
+            </div>
+            <div class="cmdex" data-accept="\(?\$n ?% ?2 -eq 0\)? -and \(?\$n -gt 10\)?;;\(?\$n -gt 10\)? -and \(?\$n ?% ?2 -eq 0\)?" data-hint="le reste de la division par 2, -eq, -and, -gt.">
+                <p class="cmdex__label">À toi d'écrire</p>
+                <p>Écris la condition (sans <code>if</code>) qui vaut vrai si <code>$n</code> est <strong>pair et supérieur à 10</strong>.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>($n % 2 -eq 0) -and ($n -gt 10)</code> — exercice 11 du cours.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>-eq -ne -gt -ge -lt -le</code>, <code>-like</code> (jokers), <code>-match</code> (regex), <code>-in</code> (liste), insensibles à la casse par défaut. <code>if/elseif/else</code> pour quelques cas, <code>switch</code> pour beaucoup.</p>
+            </div>
+        </section>
+
+        <!-- 04 -->
+        <section class="chapter" id="boucles">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">Les boucles</h2>
+            <p class="chapter__intro">Répéter une action est la raison d'être d'un script d'administration : créer 50 comptes, vérifier 20 serveurs, parcourir un fichier. PowerShell offre quatre boucles, plus une cinquième dans le pipeline.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Boucle</th><th>Quand</th><th>Exemple du cours</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>for</code></td><td>Un compteur, un pas</td><td>Les nombres pairs de 0 à 20</td></tr>
+                        <tr><td><code>foreach</code></td><td>Chaque élément d'une liste</td><td>Chaque nom d'un fichier texte</td></tr>
+                        <tr><td><code>while</code></td><td>Tant qu'une condition est vraie (testée avant)</td><td>Le menu de la calculatrice de température</td></tr>
+                        <tr><td><code>do { } until ()</code></td><td>Au moins une fois, jusqu'à une condition</td><td>Redemander une saisie invalide</td></tr>
+                        <tr><td><code>ForEach-Object</code></td><td>Dans un pipeline, objet par objet</td><td><code>Get-Content noms.txt | ForEach-Object { … }</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — trois boucles du cours</span></div>
+                <pre class="terminal__code"><span class="k">for</span> ($i = 50; <span class="p">$i</span> <span class="p">-ge</span> 20; <span class="p">$i</span> -= 2) { <span class="p">$i</span> }<span class="c">               # pairs de 50 à 20, décroissant</span>
+
+$<span class="k">total</span> = 0
+$<span class="k">nombres</span> = 1..10
+<span class="k">foreach</span> ($n in <span class="p">$nombres)</span> { <span class="p">$total</span> += <span class="p">$n</span> }
+$<span class="k">moyenne</span> = <span class="p">$total</span> / <span class="p">$nombres.Count</span><span class="c">                      # .Count évite un compteur à la main</span>
+
+<span class="k">foreach</span> ($nom in Get-Content <span class="s">"C:\Lab\noms.txt"</span>) {<span class="c">      # chaque ligne d'un fichier</span>
+    <span class="k">Write-Host</span> <span class="s">"Bonjour $nom"</span>
+<span class="k">}</span></pre>
+            </div>
+            <p><code>break</code> sort de la boucle, <code>continue</code> passe directement au tour suivant. Et pour un calcul comme la moyenne, PowerShell a déjà la réponse : <code>(1..10 | Measure-Object -Average).Average</code>.</p>
+            <div class="cmdex" data-accept="for ?\( ?\$\w+ ?= ?3 ?; ?\$\w+ ?-le 30 ?; ?\$\w+ ?\+= ?3 ?\) ?\{ ?(Write-Host |Write-Output )?\$\w+ ?\};;for ?\( ?\$\w+ ?= ?3 ?; ?\$\w+ ?-lt 31 ?; ?\$\w+ ?\+= ?3 ?\) ?\{ ?(Write-Host |Write-Output )?\$\w+ ?\}" data-hint="for ($i = …; $i -le …; $i += …) { $i }">
+                <p class="cmdex__label">À toi d'écrire</p>
+                <p>Écris une boucle <code>for</code> qui affiche les multiples de 3, de 3 à 30.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>for ($i = 3; $i -le 30; $i += 3) { $i }</code> — départ, condition, pas. Variante en pipeline : <code>3..30 | Where-Object { $_ % 3 -eq 0 }</code>.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>for</code> pour compter, <code>foreach</code> pour parcourir, <code>while</code>/<code>do-until</code> pour attendre une condition, <code>ForEach-Object</code> dans un pipeline. Avant d'écrire une boucle de calcul, vérifier que <code>Measure-Object</code> ne le fait pas déjà.</p>
+            </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="chapter" id="objets">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Tableaux, tables de hachage et objets</h2>
+            <p class="chapter__intro">Les vraies données d'administration sont des listes d'objets : des utilisateurs, des serveurs, des services. Savoir les fabriquer, les lire depuis un CSV et les réécrire, c'est l'essentiel de l'automatisation.</p>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — les trois structures</span></div>
+                <pre class="terminal__code">$<span class="k">serveurs</span> = @("SRV-AD01", <span class="s">"SRV-AD02"</span>, <span class="s">"SRV-FILE01"</span>)<span class="c">      # tableau</span>
+$<span class="k">serveurs[0];</span> <span class="p">$serveurs.Count;</span> <span class="p">$serveurs</span> += <span class="s">"SRV-WEB01"</span>
+
+$<span class="k">ip</span> = @{ <span class="s">"SRV-AD01"</span> = <span class="s">"172.16.50.10"</span>; <span class="s">"SRV-FILE01"</span> = <span class="s">"172.16.50.20"</span> }<span class="c">   # table de hachage</span>
+$<span class="k">ip["SRV-AD01"]</span>
+
+$<span class="k">vm</span> = [PSCustomObject]@{ Nom = <span class="s">"SRV-WEB01"</span>; IP = <span class="s">"172.16.50.25"</span>; RAM = 4GB }<span class="c">   # objet</span>
+$<span class="k">vm.Nom</span></pre>
+            </div>
+            <h3>Le CSV, format d'échange de l'administrateur</h3>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — lire, filtrer, écrire</span></div>
+                <pre class="terminal__code">$<span class="k">comptes</span> = Import-Csv <span class="s">"C:\Lab\comptes.csv"</span> <span class="p">-Delimiter</span> <span class="s">";"</span><span class="c">   # une ligne = un objet, une colonne = une propriété</span>
+$<span class="k">comptes</span> | <span class="k">Where-Object</span> Service <span class="p">-eq</span> <span class="s">"Development"</span> | <span class="k">Select-Object</span> Prenom, Nom
+<span class="k">Get-ADUser</span> <span class="p">-Filter</span> * <span class="p">-Properties</span> Department |
+    <span class="k">Select-Object</span> Name, SamAccountName, Department |
+    <span class="k">Export-Csv</span> <span class="s">"C:\Lab\export.csv"</span> <span class="p">-NoTypeInformation</span> <span class="p">-Delimiter</span> <span class="s">";"</span> <span class="p">-Encoding</span> UTF8</pre>
+            </div>
+            <div class="tip">
+                <p class="tip__label">Le point-virgule</p>
+                <p>Par défaut, Excel enregistre un CSV avec une <strong>virgule</strong>, mais le séparateur de liste peut être réglé sur le point-virgule. Sans <code>-Delimiter ";"</code>, PowerShell lit toute la ligne comme une seule colonne.</p>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Tableau <code>@()</code>, table de hachage <code>@{}</code>, objet <code>[PSCustomObject]@{}</code>. <code>Import-Csv</code> transforme un fichier en objets, <code>Export-Csv</code> fait l'inverse : c'est le pont entre un tableur et un script.</p>
+            </div>
+        </section>
+
+        <!-- 06 -->
+        <section class="chapter" id="pipeline">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">Le pipeline</h2>
+            <p class="chapter__intro">Le pipeline <code>|</code> passe des <strong>objets</strong> d'une commande à la suivante, pas du texte. On filtre, on trie, on sélectionne, on regroupe, sans jamais découper de chaîne à la main.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Cmdlet</th><th>Rôle</th><th>Exemple</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>Where-Object</code></td><td>Filtrer</td><td><code>Where-Object Status -eq Running</code></td></tr>
+                        <tr><td><code>Select-Object</code></td><td>Choisir des propriétés, ou les N premiers</td><td><code>Select-Object Name, Status -First 5</code></td></tr>
+                        <tr><td><code>Sort-Object</code></td><td>Trier</td><td><code>Sort-Object CPU -Descending</code></td></tr>
+                        <tr><td><code>Group-Object</code></td><td>Regrouper et compter</td><td><code>Group-Object Status</code></td></tr>
+                        <tr><td><code>Measure-Object</code></td><td>Compter, sommer, moyenne</td><td><code>Measure-Object Length -Sum</code></td></tr>
+                        <tr><td><code>ForEach-Object</code></td><td>Agir sur chaque objet (<code>$_</code>)</td><td><code>ForEach-Object { $_.Name.ToUpper() }</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — trois questions d'administrateur, trois pipelines</span></div>
+                <pre class="terminal__code"><span class="c"># Les 5 processus qui consomment le plus de mémoire</span>
+<span class="k">Get-Process</span> | <span class="k">Sort-Object</span> WorkingSet64 <span class="p">-Descending</span> | <span class="k">Select-Object</span> Name, Id, WorkingSet64 <span class="p">-First</span> 5
+<span class="c"># Les services automatiques arrêtés (souvent une panne)</span>
+<span class="k">Get-Service</span> | <span class="k">Where-Object</span> { <span class="p">$_.StartType</span> <span class="p">-eq</span> <span class="s">'Automatic'</span> <span class="p">-and</span> <span class="p">$_.Status</span> <span class="p">-ne</span> <span class="s">'Running'</span> }
+<span class="c"># Les comptes AD qui ne se sont pas connectés depuis 90 jours</span>
+<span class="k">Search-ADAccount</span> <span class="p">-AccountInactive</span> <span class="p">-TimeSpan</span> 90.00:00:00 <span class="p">-UsersOnly</span> | <span class="k">Select-Object</span> Name</pre>
+            </div>
+            <div class="tip">
+                <p class="tip__label">Format-Table en dernier</p>
+                <p><code>Format-Table</code> et <code>Format-List</code> transforment les objets en texte mis en page : après eux, plus rien d'utilisable. Ils ne se mettent qu'en <strong>fin</strong> de pipeline, et jamais avant <code>Export-Csv</code>.</p>
+            </div>
+            <div class="cmdex" data-accept="Get-Service \| (Where-Object|Where|\?) \{? ?\$(_|PSItem)\.Status -eq [&#x27;\&quot;]?Stopped[&#x27;\&quot;]? ?\}?;;Get-Service \| (Where-Object|Where|\?) Status -eq [&#x27;\&quot;]?Stopped[&#x27;\&quot;]?" data-hint="Get-Service | Where-Object …">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Affiche uniquement les services <strong>arrêtés</strong> (<code>Status</code> vaut <code>Stopped</code>).</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>Get-Service | Where-Object Status -eq Stopped</code> — ou, forme longue, <code>Where-Object { $_.Status -eq 'Stopped' }</code>. <code>$_</code> (ou <code>$PSItem</code>) désigne l'objet en cours.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Le pipeline transporte des objets : <strong>filtrer</strong> (<code>Where</code>), <strong>trier</strong> (<code>Sort</code>), <strong>choisir</strong> (<code>Select</code>), <strong>compter</strong> (<code>Measure</code>/<code>Group</code>), et ne mettre en forme qu'à la fin.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q"><code>Get-Service | Format-Table Name, Status | Export-Csv services.csv</code> produit un fichier plein de lignes illisibles (<code>Microsoft.PowerShell.Commands.Internal.Format…</code>). Pourquoi ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Format-Table a transformé les services en objets de mise en page</button>
+                        <button class="scenario__opt" data-why="Le délimiteur change la séparation des colonnes, pas leur contenu : les noms de classes de mise en forme resteraient.">Il manque -Delimiter &quot;;&quot; sur Export-Csv</button>
+                        <button class="scenario__opt" data-why="L&#x27;encodage change les accents, pas la nature des objets exportés.">Il manque -Encoding UTF8 sur Export-Csv</button>
+                    </div>
+                    <div class="scenario__why"><p>Après <code>Format-Table</code>, le pipeline ne transporte plus des services mais des instructions d'affichage. On choisit les propriétés avec <code>Select-Object</code> : <code>Get-Service | Select-Object Name, Status | Export-Csv services.csv -NoTypeInformation</code>.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="chapter" id="fonctions">
+            <p class="chapter__num">07</p>
+            <h2 class="chapter__title">Fonctions, scripts et erreurs</h2>
+            <p class="chapter__intro">Un bon script d'administration se relance sans danger, accepte des paramètres au lieu de valeurs écrites en dur, et s'arrête proprement quand quelque chose échoue.</p>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — une fonction avec paramètres et gestion d'erreur</span></div>
+                <pre class="terminal__code"><span class="k">function</span> Test-Port {
+    <span class="k">param(</span>
+        <span class="k">[Parameter(Mandatory)]</span> [string] <span class="p">$Ordinateur,</span>
+        <span class="k">[int]</span> <span class="p">$Port</span> = 3389<span class="c">                       # valeur par défaut</span>
+    <span class="k">)</span>
+    <span class="k">try</span> {
+        $<span class="k">r</span> = Test-NetConnection <span class="p">$Ordinateur</span> <span class="p">-Port</span> <span class="p">$Port</span> <span class="p">-WarningAction</span> SilentlyContinue <span class="p">-ErrorAction</span> Stop
+        <span class="k">[PSCustomObject]@{</span> Ordinateur = <span class="p">$Ordinateur;</span> Port = <span class="p">$Port;</span> Ouvert = <span class="p">$r.TcpTestSucceeded</span> }
+    <span class="k">}</span>
+    <span class="k">catch</span> {
+        <span class="k">Write-Warning</span> <span class="s">"Test impossible vers $Ordinateur : $($_.Exception.Message)"</span>
+    <span class="k">}</span>
+<span class="k">}</span>
+<span class="s">"SRV-AD01"</span>, <span class="s">"SRV-FILE01"</span> | <span class="k">ForEach-Object</span> { Test-Port <span class="p">-Ordinateur</span> <span class="p">$_</span> <span class="p">-Port</span> 445 }</pre>
+            </div>
+            <ul>
+                <li><code>param()</code> déclare les paramètres ; <code>[Parameter(Mandatory)]</code> les rend obligatoires (PowerShell les demande s'ils manquent).</li>
+                <li><code>try { } catch { }</code> n'attrape que les erreurs <strong>bloquantes</strong> : beaucoup de cmdlets n'émettent que des erreurs non bloquantes, d'où <code>-ErrorAction Stop</code>.</li>
+                <li>Une fonction <strong>renvoie des objets</strong> (pas du texte avec <code>Write-Host</code>) : le résultat se trie, se filtre, s'exporte.</li>
+                <li><code>Test-NetConnection</code> renvoie simplement <code>TcpTestSucceeded</code>, à <code>True</code> si la connexion TCP réussit (exemple 3 de la page Test-NetConnection). Le <code>catch</code> ne sert que pour les vraies erreurs.</li>
+                <li>Le même bloc <code>param()</code> en tête d'un fichier <code>.ps1</code> en fait un script paramétrable : <code>.\Test-Lab.ps1 -Ordinateur SRV-AD01</code>.</li>
+            </ul>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Des paramètres plutôt que des valeurs en dur, <code>-ErrorAction Stop</code> + <code>try/catch</code> pour décider quoi faire en cas d'échec, des objets en sortie. Un script qui respecte ces trois règles se réutilise.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Ton script fait <code>try { Get-Item C:\Inexistant } catch { "Introuvable" }</code>. L'erreur rouge s'affiche, mais jamais « Introuvable ». Que corriges-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Ajouter <code>-ErrorAction Stop</code> à Get-Item</button>
+                        <button class="scenario__opt" data-why="finally s&#x27;exécute dans tous les cas, mais ne rend pas l&#x27;erreur bloquante : le catch resterait muet.">Ajouter un bloc finally après le catch</button>
+                        <button class="scenario__opt" data-why="SilentlyContinue masque l&#x27;erreur : le catch ne s&#x27;exécute toujours pas, et tu ne sais même plus qu&#x27;il y a eu un problème.">Ajouter -ErrorAction SilentlyContinue</button>
+                    </div>
+                    <div class="scenario__why"><p>Un chemin introuvable est une erreur <strong>non bloquante</strong> : la cmdlet l'affiche et continue, sans passer par <code>catch</code>. <code>-ErrorAction Stop</code> la rend bloquante pour cette commande ; <code>$ErrorActionPreference = 'Stop'</code> le fait pour tout le script.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="chapter" id="automatiser">
+            <p class="chapter__num">08</p>
+            <h2 class="chapter__title">Automatiser le lab Orion</h2>
+            <p class="chapter__intro">Les scripts du cours rejouent tout le lab : création des VM, configuration réseau, annuaire. L'étape suivante est de les rendre <strong>génériques</strong> — une fonction et une liste plutôt qu'un bloc copié-collé par machine.</p>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — hôte Hyper-V : une fonction pour toutes les VM du lab</span></div>
+                <pre class="terminal__code"><span class="k">function</span> New-LabVM {
+    <span class="k">param([Parameter(Mandatory)]</span> [string] <span class="p">$Nom,</span> [int64] <span class="p">$Memoire</span> = 4GB)
+    $<span class="k">dossier</span> = <span class="s">"C:\VM\LABOPS\$Nom"</span>
+    <span class="k">New-Item</span> <span class="p">-ItemType</span> Directory <span class="p">-Path</span> <span class="p">$dossier</span> <span class="p">-Force</span> | <span class="k">Out-Null</span>
+    <span class="k">New-VHD</span> <span class="p">-Path</span> <span class="s">"$dossier\$Nom-DISK1-DIFF.vhdx"</span> <span class="p">-ParentPath</span> <span class="s">"C:\PARENT\TEST-SYSPREP.vhdx"</span> <span class="p">-Differencing</span> | <span class="k">Out-Null</span>
+    <span class="k">New-VM</span> <span class="p">-Name</span> <span class="p">$Nom</span> <span class="p">-Generation</span> 2 <span class="p">-MemoryStartupBytes</span> <span class="p">$Memoire</span> <span class="p">-VHDPath</span> <span class="s">"$dossier\$Nom-DISK1-DIFF.vhdx"</span> <span class="p">-Path</span> <span class="p">$dossier</span> <span class="p">-SwitchName</span> <span class="s">"LABOPS"</span> | <span class="k">Out-Null</span>
+    <span class="k">Set-VMMemory</span> <span class="p">-VMName</span> <span class="p">$Nom</span> <span class="p">-DynamicMemoryEnabled</span> <span class="p">$false</span>
+    <span class="k">Set-VMProcessor</span> <span class="p">-VMName</span> <span class="p">$Nom</span> <span class="p">-Count</span> 2
+<span class="k">}</span>
+<span class="s">"SRV-AD01"</span>, <span class="s">"SRV-AD02"</span>, <span class="s">"SRV-FILE01"</span> | <span class="k">ForEach-Object</span> { New-LabVM <span class="p">-Nom</span> <span class="p">$_</span> }</pre>
+            </div>
+            <div class="lab" data-lab="ps-csv-ad">
+                <p class="lab__label">Lab guidé</p>
+                <p class="lab__title">Créer les comptes du domaine depuis un CSV</p>
+                <div class="lab__meta"><span><b>Objectif :</b> remplacer dix commandes New-ADUser copiées-collées par un script qui lit un fichier</span><span><b>Point de départ :</b> SRV-AD01 promu, l'arborescence ORION-DPT créée (module Windows Server)</span><span><b>Durée :</b> 30 min</span></div>
+                <ol class="lab__steps">
+                <li><p>Créer <code>C:\Lab\comptes.csv</code> (séparateur point-virgule) :</p><pre class="verify__out">Prenom;Nom;Login;Service
+Sacha;Somers;sso;Development
+Bastien;Delmotte;bde;Accounting
+Mathis;Thomas;mth;Management</pre>
+            </li>
+                <li><p>Le script :</p><div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01</span></div>
+                <pre class="terminal__code">$<span class="k">mdp</span> = Read-Host <span class="p">-AsSecureString</span> <span class="s">"Mot de passe initial"</span>
+<span class="k">Import-Csv</span> <span class="s">"C:\Lab\comptes.csv"</span> <span class="p">-Delimiter</span> <span class="s">";"</span> | <span class="k">ForEach-Object</span> {
+    $<span class="k">ou</span> = <span class="s">"OU=$($_.Service),OU=ORION-DPT,DC=orion,DC=local"</span>
+    <span class="k">New-ADUser</span> <span class="p">-Name</span> <span class="s">"$($_.Prenom) $($_.Nom)"</span> <span class="p">-GivenName</span> <span class="p">$_.Prenom</span> <span class="p">-Surname</span> <span class="p">$_.Nom</span> `
+        <span class="p">-SamAccountName</span> <span class="p">$_.Login</span> <span class="p">-UserPrincipalName</span> <span class="s">"$($_.Login)@orion.local"</span> `
+        <span class="p">-Path</span> <span class="p">$ou</span> <span class="p">-AccountPassword</span> <span class="p">$mdp</span> <span class="p">-ChangePasswordAtLogon</span> <span class="p">$true</span> <span class="p">-Enabled</span> <span class="p">$true</span>
+    <span class="k">Add-ADGroupMember</span> <span class="p">-Identity</span> <span class="s">"$(switch ($_.Service) { 'Development' {'DEV'} 'Accounting' {'ACC'} 'Management' {'MGMT'} })-GRP"</span> <span class="p">-Members</span> <span class="p">$_.Login</span>
+<span class="k">}</span></pre>
+            </div>
+            </li>
+                <li><p>Vérifier : <code>Get-ADUser -Filter * -SearchBase "OU=ORION-DPT,DC=orion,DC=local" | Select-Object Name</code> liste les trois comptes.</p></li>
+                <li><p>Relancer le script : il échoue sur les comptes existants. L'améliorer pour qu'il saute un compte déjà présent (<code>if (-not (Get-ADUser -Filter "SamAccountName -eq '$($_.Login)'")) { … }</code>) : un script qu'on peut relancer sans danger est dit <strong>idempotent</strong>.</p></li>
+                </ol>
+            </div>
+            <p>Le compte de service managé (<strong>gMSA</strong>), qui évite tout mot de passe de service à gérer, se crée aussi en PowerShell ; il est détaillé là où il sert, dans le module <a href="sql-server.html#gmsa">SQL Server</a>.</p>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Une fonction paramétrée + une liste (ou un CSV) remplace les blocs copiés-collés. Un mot de passe se saisit avec <code>Read-Host -AsSecureString</code>, jamais en clair dans le script. Et un bon script se relance sans casser ce qui existe.</p>
+            </div>
+        </section>
+
+        <!-- 09 -->
+        <section class="chapter" id="distance">
+            <p class="chapter__num">09</p>
+            <h2 class="chapter__title">Administrer à distance</h2>
+            <p class="chapter__intro">On n'ouvre pas une session graphique sur chaque serveur pour taper une commande. PowerShell exécute du code à distance par <strong>WinRM</strong> (ports 5985/5986), actif par défaut sur Windows Server (depuis 2012). 5985 = HTTP, mais le contenu reste chiffré par l'authentification Kerberos dans un domaine ; 5986 = HTTPS, avec un certificat.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Commande</th><th>Ce qu'elle fait</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>Enter-PSSession SRV-FILE01</code></td><td>Une session interactive à distance (l'invite devient <code>[SRV-FILE01]: PS&gt;</code>)</td></tr>
+                        <tr><td><code>Invoke-Command -ComputerName SRV-AD01, SRV-AD02 -ScriptBlock { … }</code></td><td>Le même bloc sur plusieurs serveurs à la fois ; les résultats reviennent avec une propriété <code>PSComputerName</code></td></tr>
+                        <tr><td><code>Invoke-Command -VMName SRV-FILE01 -ScriptBlock { … }</code></td><td><strong>PowerShell Direct</strong> : depuis l'hôte Hyper-V vers une VM qui tourne sur cet hôte, sans réseau, avec un compte de la VM (<code>-Credential</code>) — idéal pour configurer une VM qui n'a pas encore d'adresse</td></tr>
+                        <tr><td><code>Enable-PSRemoting</code></td><td>Active WinRM sur une machine où il ne l'est pas (un poste Windows 11, par exemple)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — l'état d'un service sur tous les DC</span></div>
+                <pre class="terminal__code"><span class="k">Invoke-Command</span> <span class="p">-ComputerName</span> SRV-AD01, SRV-AD02 <span class="p">-ScriptBlock</span> {
+    <span class="k">Get-Service</span> NTDS, DNS, Netlogon | <span class="k">Select-Object</span> Name, Status
+<span class="k">}</span> | <span class="k">Sort-Object</span> PSComputerName</pre>
+            </div>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>WinRM répond-il sur le serveur ?</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell</span></div>
+                <pre class="terminal__code"><span class="k">Test-WSMan</span> SRV-FILE01</pre>
+            </div>
+                <p class="verify__sub">Sortie attendue</p>
+            <pre class="verify__out">wsmid           : http://schemas.dmtf.org/wbem/wsman/identity/1/wsmanidentity.xsd
+ProtocolVersion : http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd
+ProductVendor   : Microsoft Corporation</pre>
+                <p class="verify__fail">Erreur WinRM : le pare-feu bloque 5985, le service WinRM est arrêté, ou la machine cible n'est pas dans le domaine (hors domaine, il faut configurer <em>TrustedHosts</em> ou passer en HTTPS).</p>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>Invoke-Command</code> pour plusieurs serveurs d'un coup, <code>Enter-PSSession</code> pour un seul en interactif, <code>-VMName</code> (PowerShell Direct) pour une VM sans réseau. WinRM écoute sur 5985.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Tu viens de créer SRV-WEB01 sur l'hôte Hyper-V : elle n'a ni adresse IP ni domaine. Comment lui passer <code>New-NetIPAddress</code> sans ouvrir sa console ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok><code>Invoke-Command -VMName SRV-WEB01 -Credential (Get-Credential) -ScriptBlock { … }</code></button>
+                        <button class="scenario__opt" data-why="-ComputerName passe par le réseau et WinRM : sans adresse IP, la VM est injoignable.">Invoke-Command -ComputerName SRV-WEB01 -ScriptBlock { … }</button>
+                        <button class="scenario__opt" data-why="Enable-PSRemoting active WinRM sur la machine où on le tape ; il ne donne pas d&#x27;adresse à la VM.">Enable-PSRemoting, puis Enter-PSSession SRV-WEB01</button>
+                    </div>
+                    <div class="scenario__why"><p><strong>PowerShell Direct</strong> (<code>-VMName</code>) passe par le bus de la VM, pas par le réseau. Il se lance depuis l'hôte Hyper-V, avec un compte <strong>de la VM</strong> (l'administrateur local tant qu'elle n'est pas dans le domaine).</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10 -->
+        <section class="chapter" id="projets">
+            <p class="chapter__num">10</p>
+            <h2 class="chapter__title">Les projets du cours</h2>
+            <p class="chapter__intro">L'exercice global du cours enchaîne quatre petits programmes : une calculatrice de température avec menu, une opération entre deux nombres, une table de multiplication, la suite de Fibonacci — puis un pierre-papier-ciseaux en trois manches gagnantes. Les refaire sans regarder est le meilleur test du module.</p>
+
+            <div class="exo">
+                <p class="exo__label">Projet 1 — la calculatrice de température</p>
+                <p>Un menu en boucle : 1 convertit des °C en °F, 2 des °F en °C, 0 quitte, tout autre choix affiche « Choix incorrect ». Formules : °F = °C × 9/5 + 32 ; °C = (°F − 32) × 5/9.</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><pre class="verify__out">do {
+    $choix = Read-Host "1. °C vers °F`n2. °F vers °C`n0. Quitter"
+    switch ($choix) {
+        '1' { $c = [double](Read-Host "°C"); "$c °C = $($c * 9 / 5 + 32) °F" }
+        '2' { $f = [double](Read-Host "°F"); "$f °F = $(($f - 32) * 5 / 9) °C" }
+        '0' { "Au revoir" }
+        default { "Choix incorrect" }
+    }
+} until ($choix -eq '0')</pre><p>Par rapport à la version du cours : <code>do/until</code> évite la variable <code>$stop</code>, <code>switch</code> remplace la cascade de <code>elseif</code>, et <code>[double]</code> accepte les décimales.</p></div>
+                </details>
+            </div>
+            <div class="exo">
+                <p class="exo__label">Projet 2 — Fibonacci</p>
+                <p>Demande un nombre de termes N (au moins 2) et affiche les N premiers termes de la suite de Fibonacci (0, 1, 1, 2, 3, 5…).</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><pre class="verify__out">[int]$n = Read-Host "Nombre de termes"
+$suite = [System.Collections.Generic.List[int]]@(0, 1)
+while ($suite.Count -lt $n) { $suite.Add($suite[-1] + $suite[-2]) }
+$suite -join ", "</pre><p><code>$suite[-1]</code> et <code>$suite[-2]</code> sont les deux derniers éléments. Une <code>List</code> s'agrandit sans recopier le tableau à chaque ajout (seulement quand sa capacité est dépassée), contrairement à <code>+=</code> sur un tableau.</p></div>
+                </details>
+            </div>
+            <div class="exo">
+                <p class="exo__label">Projet 3 — pierre, papier, ciseaux, en mieux</p>
+                <p>La version du cours compare chaque combinaison dans un <code>elseif</code> (sept branches). Réécris la décision du vainqueur avec une table de hachage « ce qui bat quoi », et fais jouer le joueur 2 par l'ordinateur.</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><pre class="verify__out">$bat = @{ pierre = 'ciseaux'; papier = 'pierre'; ciseaux = 'papier' }
+$s1 = 0; $s2 = 0
+while ($s1 -lt 3 -and $s2 -lt 3) {
+    $j1 = Read-Host "pierre, papier ou ciseaux"
+    if ($j1 -notin $bat.Keys) { "Entrée invalide"; continue }
+    $j2 = $bat.Keys | Get-Random
+    if ($j1 -eq $j2)           { "Égalité ($j2)" }
+    elseif ($bat[$j1] -eq $j2) { $s1++; "Gagné : $j1 bat $j2" }
+    else                       { $s2++; "Perdu : $j2 bat $j1" }
+    "Score $s1 - $s2"
+}</pre><p>La règle tient en une ligne de données au lieu de sept conditions : ajouter « lézard » et « Spock » ne demanderait que de changer la table.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Refaire ces projets sans regarder la correction valide les chapitres 02 à 05. Le réflexe à garder : quand une cascade de <code>elseif</code> s'allonge, chercher la <strong>donnée</strong> (table de hachage) ou le <code>switch</code> qui la remplace.</p>
+            </div>
+        </section>
+
+
+        <section class="test" id="test" data-test="powershell">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#windows">examen du Parcours 02 · Infrastructure Windows</a>, qui le croise avec les autres modules du parcours, puis par l'<a href="../examens.html#final">examen final</a>. Ses questions reviennent aussi dans la <a href="../revision.html">révision du jour</a>.</p>
+        </section>
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+            <ul>
+                <li><a href="https://learn.microsoft.com/fr-fr/powershell/" rel="noopener">Microsoft Learn — documentation PowerShell (en français)</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/about/about_comparison_operators" rel="noopener">Microsoft Learn — about_Comparison_Operators</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/about/about_execution_policies" rel="noopener">Microsoft Learn — about_Execution_Policies</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/powershell/scripting/whats-new/differences-from-windows-powershell" rel="noopener">Microsoft Learn — différences entre Windows PowerShell 5.1 et PowerShell 7</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/about/about_try_catch_finally" rel="noopener">Microsoft Learn — about_Try_Catch_Finally</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/virtualization/hyper-v-on-windows/user-guide/powershell-direct" rel="noopener">Microsoft Learn — PowerShell Direct pour les VM Hyper-V</a></li>
+                <li><a href="https://learn.microsoft.com/fr-fr/training/paths/powershell/" rel="noopener">Microsoft Learn — parcours « Automatiser des tâches d'administration avec PowerShell »</a></li>
+            </ul>
+                        <details class="sources__verif">
+                    <summary>Sources officielles relues pour la vérification des faits du 08/10/2026 (46)</summary>
+                    <ul>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Execution_Policies.md" rel="noopener">Microsoft Learn — Stratégies d&#x27;exécution, Windows PowerShell 5.1</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/7.5/Microsoft.PowerShell.Core/About/about_Execution_Policies.md" rel="noopener">Microsoft Learn — Stratégies d&#x27;exécution, PowerShell 7.5</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Aliases.md" rel="noopener">Microsoft Learn — Alias (ls vers Get-ChildItem)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/Get-Help.md" rel="noopener">Microsoft Learn — Get-Help -Examples</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/Update-Help.md" rel="noopener">Microsoft Learn — Update-Help, droits administrateur</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/Get-Command.md" rel="noopener">Microsoft Learn — Get-Command -Verb / -Noun</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Windows_PowerShell_5.1.md" rel="noopener">Microsoft Learn — Windows PowerShell 5.1 installé par défaut</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/docs-conceptual/whats-new/differences-from-windows-powershell.md" rel="noopener">Microsoft Learn — Différences Windows PowerShell 5.1 / PowerShell 7</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/docs-conceptual/whats-new/Migrating-from-Windows-PowerShell-51-to-PowerShell-7.md" rel="noopener">Microsoft Learn — Migration 5.1 vers 7 (ternaire, -Parallel, Windows 10/11)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/docs-conceptual/whats-new/module-compatibility.md" rel="noopener">Microsoft Learn — Compatibilité des modules Windows avec PowerShell 7</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/7.5/Microsoft.PowerShell.Core/About/about_Operators.md" rel="noopener">Microsoft Learn — Opérateurs ternaire et ?? (PowerShell 7)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/7.5/Microsoft.PowerShell.Core/About/about_Pipeline_Chain_Operators.md" rel="noopener">Microsoft Learn — de pipeline (PowerShell 7)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/docs-conceptual/install/PowerShell-Support-Lifecycle.md" rel="noopener">Microsoft Learn — Cycle de support, Windows PowerShell 5.1</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Type_Conversion.md" rel="noopener">Microsoft Learn — Conversion de types, opérande de gauche</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Utility/Read-Host.md" rel="noopener">Microsoft Learn — Read-Host renvoie une chaîne</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Operators.md" rel="noopener">Microsoft Learn — Opérateur -f ; StartType dans un pipeline</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Comparison_Operators.md" rel="noopener">Microsoft Learn — Comparaisons, sensibilité à la casse</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Do.md" rel="noopener">Microsoft Learn — do/until, au moins une fois</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_For.md" rel="noopener">Microsoft Learn — Boucle for</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_While.md" rel="noopener">Microsoft Learn — Boucle while</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Utility/Measure-Object.md" rel="noopener">Microsoft Learn — Measure-Object -Average</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_PSCustomObject.md" rel="noopener">Microsoft Learn — [PSCustomObject]</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Utility/Import-Csv.md" rel="noopener">Microsoft Learn — Import-Csv, -Delimiter, virgule par défaut</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Utility/Export-Csv.md" rel="noopener">Microsoft Learn — Export-Csv, -Delimiter, -NoTypeInformation, objets formatés</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Utility/Format-Table.md" rel="noopener">Microsoft Learn — Format-Table renvoie des objets de format</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/ActiveDirectory/Search-ADAccount.md" rel="noopener">Microsoft Learn — Search-ADAccount -AccountInactive, -TimeSpan</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Try_Catch_Finally.md" rel="noopener">Microsoft Learn — try / catch / finally</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Error_Handling.md" rel="noopener">Microsoft Learn — Erreurs non bloquantes et -ErrorAction Stop</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Preference_Variables.md" rel="noopener">Microsoft Learn — $ErrorActionPreference = &#x27;Stop&#x27;</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Functions_Advanced_Parameters.md" rel="noopener">Microsoft Learn — Paramètre Mandatory, invite de saisie</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/NetTCPIP/Test-NetConnection.md" rel="noopener">Microsoft Learn — Test-NetConnection, TcpTestSucceeded</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/Hyper-V/New-VHD.md" rel="noopener">Microsoft Learn — New-VHD différencié</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/Hyper-V/New-VM.md" rel="noopener">Microsoft Learn — New-VM</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/Hyper-V/Set-VMMemory.md" rel="noopener">Microsoft Learn — Set-VMMemory</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/Hyper-V/Set-VMProcessor.md" rel="noopener">Microsoft Learn — Set-VMProcessor</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/ActiveDirectory/New-ADUser.md" rel="noopener">Microsoft Learn — New-ADUser</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windows-powershell-docs/blob/main/docset/winserver2025-ps/ActiveDirectory/Add-ADGroupMember.md" rel="noopener">Microsoft Learn — Add-ADGroupMember</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Remote_Output.md" rel="noopener">Microsoft Learn — PSComputerName dans la sortie distante</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/docs-conceptual/security/remoting/WinRM-Security.md" rel="noopener">Microsoft Learn — Ports WinRM 5985/5986, chiffrement, Kerberos</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Remote_Troubleshooting.md" rel="noopener">Microsoft Learn — WinRM activé par défaut, TrustedHosts, HTTPS</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/7.5/Microsoft.PowerShell.Core/Enter-PSSession.md" rel="noopener">Microsoft Learn — Invite [ordinateur]: PS&gt;</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.WSMan.Management/Test-WSMan.md" rel="noopener">Microsoft Learn — Test-WSMan</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/Invoke-Command.md" rel="noopener">Microsoft Learn — Invoke-Command -VMName</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/virtualization/hyper-v/powershell-direct.md" rel="noopener">Microsoft Learn — PowerShell Direct</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/windowsserverdocs/blob/main/WindowsServerDocs/virtualization/hyper-v/architecture.md" rel="noopener">Microsoft Learn — Architecture Hyper-V, VMBus</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/PowerShell-Docs/blob/main/reference/5.1/Microsoft.PowerShell.Core/About/about_Arrays.md" rel="noopener">Microsoft Learn — += crée un nouveau tableau</a></li>
+                    </ul>
+                    <p class="sources__note">Liens vers les dépôts publics de la documentation (le texte source des pages officielles).</p>
+                </details>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>PowerShell</strong> — Module du centre d'apprentissage IT</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · <a href="../revision.html">Révision du jour</a></p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/powershell.js?v=22c13ac0"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+</body>
+</html>

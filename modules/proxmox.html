@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Module Proxmox VE : hyperviseur de type 1, VM KVM et conteneurs LXC, installation et dépôts, stockage et ZFS, réseau bridges et VLAN, snapshots et sauvegardes vzdump, cluster, quorum et haute disponibilité.">
+    <title>Proxmox &amp; Virtualisation — Module</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="../assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="../index.html">← Portail</a> · Parcours 04 · Virtualisation, homelab &amp; sécurité · 1 / 4</p>
+        <h1 class="hero__title">Proxmox &amp;<br><em>Virtualisation</em></h1>
+        <p class="hero__lead">Le cœur du métier d'admin orienté virtualisation. Proxmox VE est un hyperviseur de type 1, gratuit et open source, qui fait tourner des machines virtuelles (KVM) <em>et</em> des conteneurs (LXC) sur le même serveur, avec une interface web complète. On part de l'installation pour arriver au cluster à haute disponibilité.</p>
+        <div class="hero__meta">
+            <span class="chip">KVM</span><span class="chip">LXC</span><span class="chip">ZFS</span><span class="chip">Cluster</span><span class="chip">HA</span><span class="chip">Backup</span>
+        </div>
+        <div class="hero__facts">
+            <span class="fact fact--n2"><b>Niveau</b> Intermédiaire</span>
+            <span class="fact"><b>Durée</b> ≈ 2 h 30</span>
+            <span class="fact"><b>Chapitres</b> 10</span>
+            <span class="fact"><b>Test</b> 20 questions</span>
+            <span class="fact"><b>Prérequis</b> <a href="linux-debian.html">Linux Debian</a> (utile)</span>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="toc">
+        <a class="toc__back" href="../index.html">← Tous les modules</a>
+        <p class="toc__label">Proxmox VE</p>
+        <ul class="toc__list">
+            <li><a class="toc__link" href="#pourquoi"><span>01</span> Pourquoi virtualiser</a></li>
+            <li><a class="toc__link" href="#install"><span>02</span> Installation &amp; accès web</a></li>
+            <li><a class="toc__link" href="#vm"><span>03</span> Machines virtuelles (KVM)</a></li>
+            <li><a class="toc__link" href="#lxc"><span>04</span> Conteneurs LXC</a></li>
+            <li><a class="toc__link" href="#stockage"><span>05</span> Stockage &amp; ZFS</a></li>
+            <li><a class="toc__link" href="#reseau"><span>06</span> Réseau : bridges &amp; VLAN</a></li>
+            <li><a class="toc__link" href="#backup"><span>07</span> Sauvegardes &amp; snapshots</a></li>
+            <li><a class="toc__link" href="#cluster"><span>08</span> Cluster &amp; haute dispo</a></li>
+            <li><a class="toc__link" href="#exploit"><span>09</span> Exploitation au quotidien</a></li>
+            <li><a class="toc__link" href="#pratique"><span>10</span> Commandes</a></li>
+            <li><a class="toc__link" href="#test"><span>✓</span> Test de fin de module</a></li>
+        </ul>
+    </aside>
+
+    <main class="content">
+
+        <p class="theory"><b>Module de théorie, pas encore pratiqué.</b> Rédigé à partir de documentations publiques : Proxmox n'a pas encore fait l'objet d'un TP dans la formation. Les commandes sont à éprouver sur un lab avant de s'y fier — et ce module sera réécrit avec les vraies sorties et les vrais pièges le jour où il le sera.</p>
+
+        <section class="brief">
+            <p class="brief__label">Ce que tu sauras faire à la fin</p>
+            <ul class="brief__list">
+                <li>Situer Proxmox parmi les hyperviseurs, et choisir entre une VM et un conteneur pour un besoin donné.</li>
+                <li>Installer Proxmox, accéder à l'interface web et corriger les dépôts pour pouvoir mettre à jour sans abonnement.</li>
+                <li>Créer une VM performante (virtio, agent invité) et un conteneur LXC non privilégié.</li>
+                <li>Choisir un type de stockage et monter un pool ZFS en miroir avec compression.</li>
+                <li>Distinguer snapshot et sauvegarde, et planifier des jobs vzdump.</li>
+                <li>Monter un cluster, comprendre le quorum, et énoncer ce qu'exige la haute disponibilité.</li>
+            </ul>
+            <p class="brief__foot"><strong>Prérequis :</strong> <a href="linux-debian.html">Linux Debian</a> (utile)</p>
+            <p class="brief__foot">Le module <a href="docker.html">Docker</a> ajoute les conteneurs d'application, <a href="homelab.html">Homelab &amp; Self-hosting</a> prolonge celui-ci côté services, et le module <a href="securite.html">Cybersécurité</a> y monte son labo isolé.</p>
+        </section>
+
+        <!-- 01 -->
+        <section class="chapter" id="pourquoi">
+            <p class="chapter__num">01</p>
+            <h2 class="chapter__title">Pourquoi virtualiser, et pourquoi Proxmox</h2>
+            <p class="chapter__intro">Virtualiser, c'est faire tourner plusieurs serveurs logiques sur une seule machine physique. Un hyperviseur découpe les ressources réelles (CPU, RAM, disque, réseau) et les présente à chaque système invité comme s'il avait son propre matériel.</p>
+
+            <h3>Hyperviseur de type 1 vs type 2</h3>
+            <ul>
+                <li><strong>Type 1 (bare-metal)</strong> — s'installe directement sur le matériel, sans OS hôte en dessous. Performant et stable. Ex. Proxmox VE, VMware ESXi, Microsoft Hyper-V (rôle).</li>
+                <li><strong>Type 2 (hosted)</strong> — s'exécute comme une application au-dessus d'un OS classique. Pratique pour du test sur son PC. Ex. VirtualBox, VMware Workstation.</li>
+            </ul>
+            <p>Proxmox VE est un type 1 : c'est une distribution <strong>Debian</strong> spécialisée, avec un noyau optimisé, l'hyperviseur <strong>KVM</strong> pour les VM et <strong>LXC</strong> pour les conteneurs, le tout piloté par une interface web.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Plateforme</th><th>Type</th><th>Licence</th><th>VM</th><th>Conteneurs</th></tr></thead>
+                    <tbody>
+                        <tr><td>Proxmox VE</td><td>1 (Debian)</td><td>Open source (support payant optionnel)</td><td class="yes">KVM</td><td class="yes">LXC</td></tr>
+                        <tr><td>VMware ESXi</td><td>1</td><td>Propriétaire (payant)</td><td class="yes">Oui</td><td class="no">Non natif (vSphere Pods avec vSphere with Tanzu)</td></tr>
+                        <tr><td>Hyper-V</td><td>1</td><td>Inclus dans Windows Server et Windows Pro</td><td class="yes">Oui</td><td class="partial">Windows/conteneurs</td></tr>
+                        <tr><td>VirtualBox</td><td>2</td><td>Open source (paquet de base, GPLv3 ; Extension Pack sous licence PUEL)</td><td class="yes">Oui</td><td class="no">Non</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>VM ou conteneur : deux façons d'isoler</h3>
+            <div class="cards">
+                <div class="card">
+                    <h4>VM (KVM) — virtualisation matérielle</h4>
+                    <ul>
+                        <li>Noyau <strong>invité complet</strong> et indépendant</li>
+                        <li>N'importe quel OS : Windows, BSD, autres Linux</li>
+                        <li>Isolation forte, mais plus lourde en RAM/disque</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Conteneur (LXC) — virtualisation système</h4>
+                    <ul>
+                        <li>Partage le <strong>noyau de l'hôte</strong> (Linux seulement)</li>
+                        <li>Très léger</li>
+                        <li>Démarrage quasi instantané</li>
+                        <li>Idéal pour des services Linux (web, DNS, DB)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Proxmox = <strong>Debian + KVM + LXC + ZFS</strong>, gratuit et open source. VM quand il faut un OS complet ou non-Linux ; conteneur LXC quand on veut un service Linux léger et rapide.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">On te demande d'héberger sur Proxmox un serveur de fichiers Windows Server et un petit DNS Linux. Que crées-tu ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Une VM KVM pour Windows, un conteneur LXC pour le DNS</button>
+                        <button class="scenario__opt" data-why="Un conteneur LXC partage le noyau Linux de l&#x27;hôte : impossible d&#x27;y faire tourner Windows.">Deux conteneurs LXC, plus légers</button>
+                        <button class="scenario__opt" data-why="Un service DNS Linux tourne très bien en LXC ; une VM fonctionnerait aussi, mais consommerait plus pour rien.">Deux VM, un conteneur ne pouvant pas faire de DNS</button>
+                    </div>
+                    <div class="scenario__why"><p>Le critère est le <strong>noyau</strong> : Windows a besoin du sien, donc d'une VM. Un service Linux léger profite d'un conteneur LXC.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="chapter" id="install">
+            <p class="chapter__num">02</p>
+            <h2 class="chapter__title">Installation &amp; premier accès web</h2>
+            <p class="chapter__intro">On grave l'ISO Proxmox VE sur une clé USB, on boote dessus, et l'installeur graphique fait le reste. Deux points comptent : bien choisir le système de fichiers (ZFS si plusieurs disques) et corriger les dépôts après coup.</p>
+
+            <h3>Étapes de l'installation</h3>
+            <ul class="steps">
+                <li class="step"><div class="step__num">01</div><div class="step__body"><strong>Télécharger &amp; graver l'ISO</strong>Récupère l'ISO sur <code>proxmox.com</code>, écris-la sur une clé USB (Rufus, Ventoy ou <code>dd</code>), puis boote dessus.</div></li>
+                <li class="step"><div class="step__num">02</div><div class="step__body"><strong>Choisir le disque &amp; le filesystem</strong>Sur un seul disque : <code>ext4</code> suffit. Sur plusieurs disques : choisis <strong>ZFS</strong> (RAID1 = miroir, RAIDZ = parité) pour la résilience et les snapshots.</div></li>
+                <li class="step"><div class="step__num">03</div><div class="step__body"><strong>Réseau &amp; identité</strong>Renseigne le <em>hostname</em> (FQDN, ex. <code>pve01.home.arpa</code>), une IP fixe, la passerelle et le DNS. Le mot de passe root et un email d'admin.</div></li>
+                <li class="step"><div class="step__num">04</div><div class="step__body"><strong>Accéder à l'interface</strong>Après reboot, ouvre <code>https://IP-DU-SERVEUR:8006</code> dans un navigateur. Connexion en <code>root</code> / realm <em>Linux PAM</em>. Le certificat auto-signé déclenche un avertissement : normal en labo.</div></li>
+            </ul>
+
+            <h3>Corriger les dépôts (sans abonnement)</h3>
+            <p>Par défaut Proxmox pointe vers le dépôt <em>enterprise</em>, réservé aux abonnés : sans clé, <code>apt update</code> affiche des messages d'erreur. En labo, on bascule sur le dépôt <em>no-subscription</em>. Le plus sûr : l'interface, <em>Nœud → Updates → Repositories</em> → <em>Disable</em> sur <em>enterprise</em>, puis <em>Add</em> → <em>No-Subscription</em>. En ligne de commande, cela dépend de la version :</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Shell — Proxmox VE 9 (Debian 13 « trixie », format deb822)</span></div>
+                <pre class="terminal__code"><span class="c"># Désactiver le dépôt entreprise (fichier .sources)</span>
+<span class="k">echo</span> <span class="s">"Enabled: no"</span> &gt;&gt; /etc/apt/sources.list.d/pve-enterprise.sources
+
+<span class="c"># Ajouter le dépôt no-subscription</span>
+<span class="k">cat</span> &gt; /etc/apt/sources.list.d/proxmox.sources &lt;&lt; EOF
+Types: deb
+URIs: http://download.proxmox.com/debian/pve
+Suites: trixie
+Components: pve-no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+EOF
+
+<span class="k">apt</span> update &amp;&amp; <span class="k">apt</span> <span class="p">-y</span> full-upgrade</pre>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Shell — Proxmox VE 8 (Debian 12 « bookworm », ancien format)</span></div>
+                <pre class="terminal__code"><span class="k">sed</span> <span class="p">-i</span> <span class="s">'s/^deb/#deb/'</span> /etc/apt/sources.list.d/pve-enterprise.list
+<span class="k">echo</span> <span class="s">"deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription"</span> \
+  &gt; /etc/apt/sources.list.d/pve-no-sub.list</pre>
+            </div>
+            <p class="note">Proxmox VE 9 est sorti en août 2025 sur Debian 13 ; la branche 8 n'est plus maintenue depuis août 2026 : une installation neuve se fait en 9. Le même piège existe pour le dépôt Ceph (<code>ceph.sources</code>) s'il est présent.</p>
+
+            <div class="tip">
+                <p class="tip__label">Astuce</p>
+                <p>Un abonnement donne accès aux dépôts « enterprise » (Proxmox VE et Ceph) et au support.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Interface web sur le port <code>8006</code> en HTTPS. Après l'install, on désactive le dépôt <em>enterprise</em> et on active <em>no-subscription</em> pour pouvoir mettre à jour.</p>
+            </div>
+            <div class="verify">
+                <p class="verify__label">Vérifier</p>
+                <p>Les dépôts répondent-ils, et quelle version tourne ?</p>
+                <div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Shell — nœud Proxmox</span></div>
+                    <pre class="terminal__code"><span class="k">apt</span> update        <span class="c"># aucune ligne d'erreur</span>
+<span class="k">pveversion</span>        <span class="c"># version du gestionnaire et du noyau</span></pre>
+                </div>
+                <p class="verify__fail">Encore des messages d'erreur à <code>apt update</code> : le dépôt <em>enterprise</em> est toujours actif (fichier oublié, ou dépôt Ceph enterprise). Une erreur « Release file » sur <code>bookworm</code> alors que le nœud est en 9 : on a recopié la ligne d'une ancienne version.</p>
+            </div>
+        </section>
+
+        <!-- 03 -->
+        <section class="chapter" id="vm">
+            <p class="chapter__num">03</p>
+            <h2 class="chapter__title">Créer une machine virtuelle (KVM)</h2>
+            <p class="chapter__intro">Une VM a besoin d'un disque, de RAM, de vCPU, d'une carte réseau et d'un média d'installation. Les bons réglages « virtio » et l'agent invité font toute la différence sur les performances.</p>
+
+            <h3>L'assistant « Create VM », onglet par onglet</h3>
+            <ul>
+                <li><strong>General</strong> — un <em>VM ID</em> (ex. 100) et un nom.</li>
+                <li><strong>OS</strong> — l'ISO uploadée (stockage <code>local</code> → ISO Images). Pour Windows, cocher aussi l'ISO des pilotes <em>virtio-win</em>.</li>
+                <li><strong>System</strong> — machine <code>q35</code>, BIOS <code>OVMF (UEFI)</code> pour du récent, contrôleur disque <strong>VirtIO SCSI single</strong>. Cocher <em>QEMU Agent</em>.</li>
+                <li><strong>Disks</strong> — bus <strong>SCSI</strong>, cache <em>Default (no cache)</em>, cocher <em>Discard</em> (TRIM) sur du SSD/ZFS.</li>
+                <li><strong>CPU</strong> — type <code>host</code> pour exposer toutes les instructions du processeur physique (perf max en labo).</li>
+                <li><strong>Memory</strong> — fixe, ou <em>ballooning</em> pour rendre la RAM inutilisée à l'hôte.</li>
+                <li><strong>Network</strong> — modèle <strong>VirtIO (paravirtualized)</strong>, bridge <code>vmbr0</code>.</li>
+            </ul>
+
+            <h3>Créer une VM en ligne de commande</h3>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">qm — gestion des VM</span></div>
+                <pre class="terminal__code"><span class="c"># Créer la VM 100 : 2 vCPU, 4 Go RAM, réseau virtio sur vmbr0</span>
+<span class="k">qm</span> create <span class="p">100</span> <span class="p">--name</span> <span class="s">"srv-web"</span> <span class="p">--memory</span> <span class="s">4096</span> <span class="p">--cores</span> <span class="s">2</span> \
+  <span class="p">--net0</span> <span class="s">virtio,bridge=vmbr0</span> <span class="p">--scsihw</span> <span class="s">virtio-scsi-single</span>
+
+<span class="c"># Ajouter un disque de 32 Go sur le stockage local-lvm</span>
+<span class="k">qm</span> set <span class="p">100</span> <span class="p">--scsi0</span> <span class="s">local-lvm:32,discard=on</span>
+
+<span class="c"># Attacher l'ISO en lecteur CD, puis démarrer</span>
+<span class="k">qm</span> set <span class="p">100</span> <span class="p">--ide2</span> <span class="s">local:iso/debian-13.iso,media=cdrom</span>
+<span class="k">qm</span> start <span class="p">100</span></pre>
+            </div>
+
+            <h3>Cloud-init &amp; templates : déployer en série</h3>
+            <p>Une VM peut devenir un <strong>template</strong> (clic droit → <em>Convert to template</em>). Combinée à <strong>cloud-init</strong> (image « cloud » du distributeur), on déploie une nouvelle VM déjà configurée (hostname, IP, clé SSH, utilisateur) en quelques secondes par clonage.</p>
+
+            <div class="tip">
+                <p class="tip__label">Astuce</p>
+                <p>Installe <strong>qemu-guest-agent</strong> dans la VM (<code>apt install qemu-guest-agent</code>). Proxmox affiche alors l'IP de la VM, peut la figer proprement pour un backup cohérent, et l'arrêter/redémarrer « en douceur ».</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Pour de bonnes perfs : disque <strong>SCSI + VirtIO SCSI single</strong>, carte réseau <strong>VirtIO</strong>, CPU <code>host</code>, et l'<strong>agent invité</strong> installé. Un template + cloud-init transforme le déploiement en clonage express.</p>
+            </div>
+        </section>
+
+        <!-- 04 -->
+        <section class="chapter" id="lxc">
+            <p class="chapter__num">04</p>
+            <h2 class="chapter__title">Les conteneurs LXC</h2>
+            <p class="chapter__intro">Un conteneur LXC partage le noyau de l'hôte : pas de matériel virtuel à émuler, donc un démarrage instantané et une empreinte minuscule. Parfait pour multiplier les petits services Linux sur un seul serveur.</p>
+
+            <h3>Créer un conteneur</h3>
+            <p>On télécharge d'abord un <strong>template</strong> (Datacenter → stockage <code>local</code> → CT Templates → Templates), puis on crée le CT avec ce template.</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">pct — gestion des conteneurs</span></div>
+                <pre class="terminal__code"><span class="c"># Lister &amp; télécharger un template Debian (le nom exact change : le recopier depuis « pveam available »)</span>
+<span class="k">pveam</span> update
+<span class="k">pveam</span> available <span class="p">--section</span> <span class="s">system</span>
+<span class="k">pveam</span> download <span class="s">local</span> <span class="s">debian-12-standard_12.12-1_amd64.tar.zst</span>
+
+<span class="c"># Créer le conteneur 200 : 1 Go RAM, 8 Go disque, réseau DHCP</span>
+<span class="k">pct</span> create <span class="p">200</span> <span class="s">local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst</span> \
+  <span class="p">--hostname</span> <span class="s">ct-dns</span> <span class="p">--memory</span> <span class="s">1024</span> <span class="p">--rootfs</span> <span class="s">local-lvm:8</span> \
+  <span class="p">--net0</span> <span class="s">name=eth0,bridge=vmbr0,ip=dhcp</span> <span class="p">--unprivileged</span> <span class="s">1</span>
+
+<span class="k">pct</span> start <span class="p">200</span>
+<span class="k">pct</span> enter <span class="p">200</span>   <span class="c"># ouvre un shell dans le conteneur</span></pre>
+            </div>
+
+            <h3>Privileged vs unprivileged</h3>
+            <ul>
+                <li><strong>Unprivileged (recommandé)</strong> — le root du conteneur n'est <em>pas</em> le root de l'hôte (mappage d'UID). Bien plus sûr : c'est le défaut.</li>
+                <li><strong>Privileged</strong> — root = root hôte. À réserver à des cas précis (montages spéciaux), en toute connaissance de cause.</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>LXC = service Linux léger et instantané, mais lié au noyau de l'hôte (pas de Windows, pas de noyau custom). Garde-les <strong>unprivileged</strong> par défaut. Pour Docker, préfère une VM plutôt qu'un conteneur LXC.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Un conteneur LXC non privilégié est compromis : l'attaquant est root dans le conteneur. Que vaut ce « root » sur l'hôte Proxmox ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Un simple utilisateur sans droits : son UID 0 est traduit en un UID élevé sur l&#x27;hôte</button>
+                        <button class="scenario__opt" data-why="C&#x27;est le cas d&#x27;un conteneur privilégié. En non privilégié, le mappage d&#x27;UID fait de ce root un utilisateur ordinaire côté hôte.">Le root de l&#x27;hôte, puisque le noyau est partagé</button>
+                        <button class="scenario__opt" data-why="Il y a bien un root dans le conteneur (UID 0), avec tous les droits à l&#x27;intérieur ; c&#x27;est côté hôte qu&#x27;il ne vaut rien.">Rien du tout : un conteneur ne peut pas avoir de root</button>
+                    </div>
+                    <div class="scenario__why"><p>Le conteneur non privilégié utilise les <strong>user namespaces</strong> : l'UID 0 du conteneur correspond, par défaut, à l'UID 100000 sur l'hôte. Une évasion du conteneur donnerait donc un compte sans privilège — d'où ce choix par défaut.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 05 -->
+        <section class="chapter" id="stockage">
+            <p class="chapter__num">05</p>
+            <h2 class="chapter__title">Stockage &amp; ZFS</h2>
+            <p class="chapter__intro">Proxmox sépare le <em>type</em> de stockage (où et comment sont posées les données) de son <em>usage</em> (disques de VM, disques de conteneurs, ISO, backups, templates). Comprendre cette matrice évite bien des erreurs.</p>
+
+            <h3>Les principaux types de stockage</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Type</th><th>Disques VM</th><th>Snapshots</th><th>Fichiers (ISO/backup)</th><th>Usage typique</th></tr></thead>
+                    <tbody>
+                        <tr><td>Directory</td><td class="partial">qcow2</td><td class="partial">via qcow2</td><td class="yes">Oui</td><td>Simple, un dossier</td></tr>
+                        <tr><td>LVM-Thin</td><td class="yes">Oui</td><td class="yes">Oui</td><td class="no">Non</td><td>Défaut <code>local-lvm</code></td></tr>
+                        <tr><td>ZFS</td><td class="yes">Oui</td><td class="yes">Oui (instantanés)</td><td class="partial">Via dataset</td><td>Résilience + snapshots</td></tr>
+                        <tr><td>NFS / CIFS</td><td class="yes">Oui</td><td class="partial">Selon</td><td class="yes">Oui</td><td>Partagé (cluster, NAS)</td></tr>
+                        <tr><td>Ceph RBD</td><td class="yes">Oui</td><td class="yes">Oui</td><td class="no">Non</td><td>Cluster distribué</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>ZFS : le combo résilience + snapshots</h3>
+            <p>ZFS est à la fois un système de fichiers et un gestionnaire de volumes RAID logiciel. Ses atouts : sommes de contrôle (détection de corruption silencieuse), snapshots quasi gratuits, compression transparente et <em>self-healing</em> sur un miroir.</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">ZFS — pool en miroir</span></div>
+                <pre class="terminal__code"><span class="c"># Créer un pool « tank » en miroir sur deux disques (ashift=12 : secteurs de 4 Kio)</span>
+<span class="c"># En vrai, désigner les disques par /dev/disk/by-id/… : sdb et sdc peuvent changer d'un démarrage à l'autre</span>
+<span class="k">zpool</span> create <span class="p">-o ashift=12</span> <span class="p">tank</span> mirror /dev/sdb /dev/sdc
+
+<span class="c"># Activer la compression (gratuit, souvent bénéfique)</span>
+<span class="k">zfs</span> set <span class="p">compression=lz4</span> <span class="s">tank</span>
+
+<span class="c"># État du pool &amp; espace</span>
+<span class="k">zpool</span> status <span class="s">tank</span>
+<span class="k">zpool</span> list
+
+<span class="c"># Le déclarer comme stockage Proxmox (disques de VM et de CT)</span>
+<span class="k">pvesm</span> add zfspool <span class="s">tank</span> <span class="p">--pool</span> <span class="s">tank</span></pre>
+            </div>
+            <p class="note">RAM : ZFS aime la mémoire (l'ARC met en cache les lectures). La documentation Proxmox donne comme règle de départ <strong>4 Go + 1 Go par To</strong> de disque brut.</p>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>local</code> = fichiers (ISO, backups, templates). <code>local-lvm</code> = disques de VM/CT (il s'appelle <code>local-zfs</code> si on a installé Proxmox sur ZFS). Pour la résilience et des snapshots instantanés, monte un pool <strong>ZFS en miroir</strong> et active la compression <code>lz4</code>.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Tu veux stocker tes ISO et tes sauvegardes vzdump sur le stockage <code>local-lvm</code> créé à l'installation. Proxmox ne te le propose pas. Pourquoi ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>LVM-Thin ne stocke que des disques de VM et de CT, pas de fichiers</button>
+                        <button class="scenario__opt" data-why="Les snapshots n&#x27;y changent rien : un stockage LVM-Thin n&#x27;accepte tout simplement pas le contenu « ISO » ni « backup ».">Il faut d&#x27;abord activer les snapshots sur local-lvm</button>
+                        <button class="scenario__opt" data-why="Un stockage plein afficherait une erreur à l&#x27;écriture ; ici le type de contenu n&#x27;est même pas proposé.">Le stockage est plein</button>
+                    </div>
+                    <div class="scenario__why"><p>Chaque type de stockage accepte certains <em>contenus</em>. <code>local</code> (un dossier) prend les fichiers : ISO, templates, sauvegardes. <code>local-lvm</code> (LVM-Thin) ne prend que des volumes de disques. C'est visible dans <em>Datacenter → Storage</em>, colonne <em>Content</em>.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 06 -->
+        <section class="chapter" id="reseau">
+            <p class="chapter__num">06</p>
+            <h2 class="chapter__title">Le réseau : bridges &amp; VLAN</h2>
+            <p class="chapter__intro">Par défaut, Proxmox crée un pont réseau Linux <code>vmbr0</code> qui relie la carte physique du serveur. Chaque VM/CT s'y branche comme sur un switch virtuel, et se retrouve sur le même réseau que l'hôte.</p>
+
+            <div class="net">
+                <div class="node"><b>Carte physique</b><span class="ip">enp1s0</span><span>Lien vers le switch réel</span></div>
+                <div class="node"><b>vmbr0</b><span class="ip">192.168.1.10/24</span><span>Pont Linux — porte l'IP de l'hôte + relie les VM/CT</span></div>
+                <div class="node"><b>VM 100</b><span class="ip">192.168.1.20</span><span>net0 → vmbr0 (VirtIO)</span></div>
+                <div class="node"><b>CT 200</b><span class="ip">192.168.1.21</span><span>eth0 → vmbr0</span></div>
+            </div>
+
+            <h3>Configuration du pont</h3>
+            <p>Tout se règle dans <em>Nœud → System → Network</em> (ou le fichier <code>/etc/network/interfaces</code>). Un pont typique :</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">/etc/network/interfaces</span></div>
+                <pre class="terminal__code"><span class="k">auto</span> vmbr0
+<span class="k">iface</span> vmbr0 inet static
+    <span class="p">address</span>  <span class="s">192.168.1.10/24</span>
+    <span class="p">gateway</span>  <span class="s">192.168.1.1</span>
+    <span class="p">bridge-ports</span>     <span class="s">enp1s0</span>
+    <span class="p">bridge-stp</span>       <span class="s">off</span>
+    <span class="p">bridge-fd</span>        <span class="s">0</span>
+    <span class="p">bridge-vlan-aware</span> <span class="s">yes</span>   <span class="c"># pont conscient des VLAN 802.1Q</span>
+    <span class="p">bridge-vids</span>     <span class="s">2-4094</span></pre>
+            </div>
+
+            <h3>Segmenter avec des VLAN</h3>
+            <p>Avec un pont <em>VLAN-aware</em>, on assigne un tag VLAN par carte de VM : dans les options réseau de la VM, champ <em>VLAN Tag</em> = <code>20</code> par exemple. Le switch physique doit alors être en mode <em>trunk</em> sur le port du serveur. C'est le lien direct avec le module <a href="ccna-reseau.html">CCNA</a> (VLAN &amp; 802.1Q).</p>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>vmbr0</code> est un switch virtuel : il porte l'IP de l'hôte et relie les VM/CT. Pour segmenter, active <strong>bridge-vlan-aware</strong> et pose un <strong>VLAN Tag</strong> par interface — le port physique côté switch doit être en trunk.</p>
+            </div>
+        </section>
+
+        <!-- 07 -->
+        <section class="chapter" id="backup">
+            <p class="chapter__num">07</p>
+            <h2 class="chapter__title">Sauvegardes &amp; snapshots</h2>
+            <p class="chapter__intro">Ne jamais confondre les deux : un <strong>snapshot</strong> est un point de restauration <em>sur place</em> (utile avant une manip risquée) ; une <strong>sauvegarde</strong> est une copie <em>ailleurs</em>, seule vraie protection contre la perte du serveur.</p>
+
+            <h3>Snapshots</h3>
+            <p>Sur un stockage qui les supporte (ZFS, LVM-Thin, qcow2), un snapshot fige l'état de la VM en un clic. On peut inclure la RAM (VM en marche) et « rollback » si la mise à jour tourne mal. Ce n'est <em>pas</em> une sauvegarde : si le disque meurt, le snapshot meurt avec.</p>
+
+            <h3>Sauvegardes vzdump</h3>
+            <p>Le moteur natif <code>vzdump</code> exporte VM et CT en archives. Trois modes :</p>
+            <ul>
+                <li><strong>Snapshot</strong> — sans interruption (recommandé ; avec l'agent invité, les systèmes de fichiers de la VM sont figés pendant l'opération, pour une copie cohérente).</li>
+                <li><strong>Suspend</strong> — gardé pour compatibilité ; coupe plus longtemps que le mode snapshot, rarement utile.</li>
+                <li><strong>Stop</strong> — arrête proprement la VM, lance la sauvegarde, puis la relance aussitôt : la plus grande cohérence, au prix d'une courte coupure.</li>
+            </ul>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">vzdump — sauvegarde manuelle</span></div>
+                <pre class="terminal__code"><span class="c"># Sauvegarder la VM 100, compressée, mode snapshot, vers le stockage backup</span>
+<span class="k">vzdump</span> <span class="p">100</span> <span class="p">--mode</span> <span class="s">snapshot</span> <span class="p">--compress</span> <span class="s">zstd</span> <span class="p">--storage</span> <span class="s">backup-nas</span>
+
+<span class="c"># Restaurer sous un nouvel ID (110)</span>
+<span class="k">qmrestore</span> /mnt/pve/backup-nas/dump/vzdump-qemu-100-*.vma.zst <span class="p">110</span>   <span class="c"># un stockage réseau est monté sous /mnt/pve/&lt;nom&gt;</span></pre>
+            </div>
+
+            <h3>Planifier &amp; Proxmox Backup Server</h3>
+            <p>Dans <em>Datacenter → Backup</em>, on programme des jobs (ex. tous les jours à 2h) avec une politique de rétention. Pour aller plus loin, <strong>Proxmox Backup Server (PBS)</strong> ajoute la <em>déduplication</em>, les backups <em>incrémentaux</em> et la vérification d'intégrité — idéal quand le volume grossit.</p>
+
+            <div class="takeaway takeaway--warn">
+                <p class="takeaway__label">Règle du 3-2-1</p>
+                <p><strong>3</strong> copies des données, sur <strong>2</strong> supports différents, dont <strong>1</strong> hors site. Un snapshot local ne compte pas comme sauvegarde : teste régulièrement une <em>restauration</em>, pas seulement le backup.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Avant une mise à jour risquée de la VM 100, tu as pris un snapshot sur le pool ZFS. Le lendemain, les deux disques du miroir lâchent. Le snapshot te sauve-t-il ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Non : il vivait sur le même pool, perdu avec lui</button>
+                        <button class="scenario__opt" data-why="Un snapshot ZFS est stocké dans le pool lui-même : si le pool meurt, ses snapshots meurent avec.">Oui, ZFS garde ses snapshots à part</button>
+                        <button class="scenario__opt" data-why="Inclure la RAM rend le retour plus fidèle, mais tout reste sur le même stockage.">Oui, s&#x27;il incluait la RAM</button>
+                    </div>
+                    <div class="scenario__why"><p>Le snapshot protège d'une <strong>mauvaise manipulation</strong>, la sauvegarde d'une <strong>perte de stockage</strong>. Seul un vzdump ou un PBS sur un <em>autre</em> support aurait permis de restaurer.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 08 -->
+        <section class="chapter" id="cluster">
+            <p class="chapter__num">08</p>
+            <h2 class="chapter__title">Cluster &amp; haute disponibilité</h2>
+            <p class="chapter__intro">Plusieurs nœuds Proxmox se regroupent en <strong>cluster</strong> : une seule interface web pilote tout, on migre des VM d'un nœud à l'autre, et avec la HA une VM redémarre automatiquement ailleurs si son nœud tombe.</p>
+
+            <h3>Créer et rejoindre un cluster</h3>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">pvecm — cluster manager</span></div>
+                <pre class="terminal__code"><span class="c"># Sur le 1er nœud : créer le cluster</span>
+<span class="k">pvecm</span> create <span class="s">homelab-cluster</span>
+
+<span class="c"># Sur chaque nœud suivant : rejoindre via l'IP du 1er nœud</span>
+<span class="k">pvecm</span> add <span class="s">192.168.1.10</span>
+
+<span class="c"># Vérifier l'état &amp; le quorum</span>
+<span class="k">pvecm</span> status</pre>
+            </div>
+
+            <h3>Quorum : la règle du nombre impair</h3>
+            <p>Le cluster ne prend de décision que s'il a le <strong>quorum</strong> (majorité des votes), via Corosync. D'où la règle : un nombre <strong>impair</strong> de nœuds (3 minimum pour une vraie HA). Avec 2 nœuds, si l'un tombe, le survivant n'a plus que 1 vote sur 2 : il perd le quorum. Le cluster passe en lecture seule : ses VM continuent de tourner, mais on ne peut plus en démarrer ni modifier la configuration — sauf si des VM y sont gérées en HA : faute de quorum, le nœud se redémarre de lui-même au bout de 60 s (<em>watchdog</em>). On ajoute alors un <em>QDevice</em> (un petit service sur une troisième machine) comme 3ᵉ votant.</p>
+
+            <h3>Migration &amp; haute disponibilité</h3>
+            <ul>
+                <li><strong>Migration à froid</strong> — VM éteinte, déplacée puis redémarrée sur l'autre nœud.</li>
+                <li><strong>Migration à chaud (live)</strong> — VM déplacée <em>sans coupure</em>. Quasi instantanée avec un <strong>stockage partagé</strong> (NFS, Ceph…) ; possible aussi avec des disques locaux, que Proxmox recopie alors pendant la migration (plus long).</li>
+                <li><strong>HA</strong> — on déclare la VM en ressource HA ; si son nœud meurt, le cluster la relance ailleurs automatiquement. Il faut pour cela que ses disques soient accessibles depuis l'autre nœud : stockage partagé, ou réplication ZFS (on perd alors ce qui a changé depuis la dernière réplication).</li>
+            </ul>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Cluster = gestion unifiée + migration. La HA suppose des disques accessibles depuis les autres nœuds (<strong>stockage partagé</strong> ou réplication) et un nombre <strong>impair</strong> de nœuds (≥ 3) pour garder le quorum. À 2 nœuds, un QDevice témoin est recommandé pour la disponibilité, mais la HA exige trois nœuds.</p>
+            </div>
+            <div class="scenario scenario--quick">
+                <p class="scenario__label scenario__label--quick">Question éclair</p>
+                <div class="scenario__step">
+                    <p class="scenario__q">Ton cluster compte 4 nœuds, 2 dans chaque salle. Le lien entre les deux salles est coupé. Que se passe-t-il ?</p>
+                    <div class="scenario__opts">
+                        <button class="scenario__opt" data-ok>Aucune moitié n&#x27;a la majorité (2 votes sur 4) : les deux perdent le quorum</button>
+                        <button class="scenario__opt" data-why="Ce serait le « split brain » que le quorum empêche justement : sans majorité, aucune moitié ne prend de décision.">Chaque moitié continue normalement de son côté</button>
+                        <button class="scenario__opt" data-why="Le quorum compte des votes, pas l&#x27;ancienneté : 2 votes sur 4 ne font pas une majorité.">La moitié qui contient le premier nœud créé garde la main</button>
+                    </div>
+                    <div class="scenario__why"><p>Le quorum exige <strong>plus de la moitié</strong> des votes : 3 sur 4. Avec 2 + 2, personne ne l'a, donc les VM ne peuvent plus être démarrées ni gérées. C'est pour cela qu'on vise un nombre impair de votants, ou qu'on ajoute un QDevice dans un troisième lieu.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 09 -->
+        <section class="chapter" id="exploit">
+            <p class="chapter__num">09</p>
+            <h2 class="chapter__title">Exploitation au quotidien</h2>
+            <p class="chapter__intro">Une fois l'infra en place, l'admin gère les accès, les mises à jour, la surveillance et l'automatisation. Quelques réflexes rendent Proxmox propre et sûr sur la durée.</p>
+
+            <h3>Utilisateurs, rôles &amp; jetons API</h3>
+            <p>Proxmox a son propre modèle de permissions (Datacenter → Permissions). On crée des utilisateurs dans un <em>realm</em> (PVE ou PAM), on leur affecte des rôles sur des chemins (ex. <em>PVEVMUser</em> sur un pool de VM). Pour l'automatisation (Terraform, Ansible, scripts), on génère un <strong>API Token</strong> plutôt que d'utiliser le mot de passe root.</p>
+
+            <h3>Mises à jour &amp; santé</h3>
+            <ul>
+                <li><code>apt update &amp;&amp; apt full-upgrade</code> régulièrement ; reboot planifié si le noyau change.</li>
+                <li>Surveiller la RAM, la charge et l'espace ZFS ; alerter par email (déjà configuré à l'install).</li>
+                <li>Sur ZFS, lancer un <code>zpool scrub</code> périodique pour détecter/réparer la corruption.</li>
+            </ul>
+
+            <h3>Helper scripts de la communauté</h3>
+            <p>La communauté (ex. projet <em>Proxmox VE Helper-Scripts</em>) fournit des scripts qui déploient un service en conteneur ou en VM en une commande. Pratique, mais à n'exécuter qu'après avoir <strong>lu le script</strong> : ne colle jamais un <code>curl … | bash</code> à l'aveugle sur ton hyperviseur.</p>
+
+            <div class="tip">
+                <p class="tip__label">Pour aller plus loin</p>
+                <p>Deux chaînes de référence pour ce module : <a href="https://www.youtube.com/@VirtualizationHowto" target="_blank" rel="noopener">Virtualization HowTo</a> (très orientée Proxmox) et <a href="https://www.youtube.com/@TechnoTim" target="_blank" rel="noopener">TechnoTim</a> (homelab &amp; automatisation). Le module <a href="homelab.html">Homelab &amp; Self-hosting</a> prolonge celui-ci côté services.</p>
+            </div>
+
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p>Automatise avec des <strong>API tokens</strong> (jamais root), maintiens à jour, surveille l'espace ZFS et lance des <em>scrubs</em>. Et relis toujours un script communautaire avant de l'exécuter sur l'hyperviseur.</p>
+            </div>
+        </section>
+
+        <!-- 10 -->
+        <section class="chapter" id="pratique">
+            <p class="chapter__num">10</p>
+            <h2 class="chapter__title">Les commandes à connaître</h2>
+            <p class="chapter__intro">Même sans TP, les commandes de base d'un nœud Proxmox se mémorisent : elles servent dès qu'on ouvre un shell sur un hôte.</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Commande</th><th>Ce qu'elle fait</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>qm list</code> / <code>pct list</code></td><td>Les VM (KVM) / les conteneurs LXC du nœud</td></tr>
+                        <tr><td><code>qm start 100</code> · <code>qm shutdown 100</code></td><td>Démarrer / arrêter proprement la VM 100</td></tr>
+                        <tr><td><code>pvecm status</code></td><td>État du cluster et du quorum</td></tr>
+                        <tr><td><code>zpool status</code></td><td>Santé des pools ZFS (disques dégradés, erreurs)</td></tr>
+                        <tr><td><code>vzdump 100 --storage local --mode snapshot</code></td><td>Sauvegarder la VM 100 sans l'arrêter</td></tr>
+                        <tr><td><code>pveversion --verbose</code></td><td>Versions de Proxmox et des paquets</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="cmdex" data-accept="qm list">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Liste les machines virtuelles KVM du nœud.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>qm list</code> — et <code>pct list</code> pour les conteneurs LXC. <code>qm</code> pilote les VM, <code>pct</code> les conteneurs.</p></div>
+                </details>
+            </div>
+            <div class="cmdex" data-accept="pvecm status">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Affiche l'état du quorum du cluster.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>pvecm status</code> — la ligne <em>Quorate: Yes</em> dit que le cluster a la majorité des votes ; sans quorum, les invités ne se démarrent plus.</p></div>
+                </details>
+            </div>
+            <div class="takeaway">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>qm</code> pour les VM, <code>pct</code> pour les conteneurs, <code>pvecm</code> pour le cluster, <code>zpool</code> pour ZFS, <code>vzdump</code> pour sauvegarder. À éprouver sur un vrai nœud avant de s'y fier.</p>
+            </div>
+        </section>
+
+        <section class="test" id="test" data-test="proxmox">
+            <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
+        </section>
+
+        <section class="brief">
+            <p class="brief__label">Une fois le test validé</p>
+            <p class="brief__foot">Ce module est aussi couvert par l'<a href="../examens.html#virtualisation">examen du Parcours 04 · Virtualisation, homelab & sécurité</a>, qui le croise avec les autres modules du parcours, puis par l'<a href="../examens.html#final">examen final</a> sur les vingt-sept modules.</p>
+        </section>
+        <div class="sources">
+            <p class="sources__label">Pour aller plus loin — sources</p>
+                <details class="sources__verif">
+                    <summary>Sources officielles relues pour la vérification des faits du 08/10/2026 (29)</summary>
+                    <ul>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-intro.adoc" rel="noopener">Proxmox VE — PVE basé sur Debian, open source, KVM et LXC</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-installation.adoc" rel="noopener">Proxmox VE — Installeur : ext4 par défaut, ZFS (RAID1, RAID-Z), port 8006, notifications vers l&#x27;adresse admin</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-gui.adoc" rel="noopener">Proxmox VE — Interface web https://IP:8006</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-faq.adoc" rel="noopener">Proxmox VE — PVE 9 sorti en 2025-08 sur Debian 13 ; PVE 8 : Debian 12, fin 2026-08</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-package-repos.adoc" rel="noopener">Proxmox VE — Dépôts enterprise (activé par défaut, abonnement), no-subscription, fichiers .sources, ceph.sources (lignes PVE 8 : section wiki, l. 395-412)</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/certificate-management.adoc" rel="noopener">Proxmox VE — Certificat auto-signé par défaut</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pveum.adoc" rel="noopener">Proxmox VE — Realm Linux PAM (root), realm PVE, API tokens, rôle PVEVMUser, Datacenter → Permissions</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/qm.adoc" rel="noopener">Proxmox VE — Options VM : virtio-win pour Windows, Q35/OVMF, VirtIO SCSI single, QEMU Agent, cache No cache, Discard, CPU host, ballooning, VirtIO, snapshot avec RAM, migration disques locaux</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/qm-cloud-init.adoc" rel="noopener">Proxmox VE — Cloud-init, template puis clone</a></li>
+                    <li><a href="https://raw.githubusercontent.com/proxmox/qemu-server/master/src/PVE/CLI/qm.pm" rel="noopener">Proxmox VE — qm list (vmlist), qm start, qm shutdown</a></li>
+                    <li><a href="https://raw.githubusercontent.com/proxmox/qemu-server/master/src/PVE/QemuServer.pm" rel="noopener">Proxmox VE — scsihw : virtio-scsi-single figure dans l&#x27;énumération</a></li>
+                    <li><a href="https://raw.githubusercontent.com/proxmox/qemu-server/master/src/PVE/QemuServer/Drive.pm" rel="noopener">Proxmox VE — media=cdrom ; discard=on ; taille en GiB (STORAGE:SIZE)</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pct.adoc" rel="noopener">Proxmox VE — Conteneur = noyau de l&#x27;hôte ; unprivileged par défaut à la création ; privileged moins sûr ; VM recommandée pour l&#x27;imbrication (Docker) ; pveam ; pct enter</a></li>
+                    <li><a href="https://raw.githubusercontent.com/proxmox/pve-container/master/src/PVE/CLI/pct.pm" rel="noopener">Proxmox VE — pct list (vmlist LXC), pct enter (lxc-attach)</a></li>
+                    <li><a href="https://raw.githubusercontent.com/proxmox/pve-container/master/src/PVE/API2/LXC.pm" rel="noopener">Proxmox VE — unprivileged forcé à 1 à la création si absent</a></li>
+                    <li><a href="https://raw.githubusercontent.com/proxmox/pve-container/master/src/PVE/LXC/Config.pm" rel="noopener">Proxmox VE — net0 : name, bridge, ip=dhcp ; rootfs : volume storage:taille</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pvesm.adoc" rel="noopener">Proxmox VE — Types de stockage et snapshots ; contenus par défaut : local (iso, vztmpl, backup), local-lvm (rootdir, images), local-zfs</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-storage-rbd.adoc" rel="noopener">Proxmox VE — Ceph RBD : contenu images et rootdir uniquement</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/local-zfs.adoc" rel="noopener">Proxmox VE — ZFS : ashift=12 (blocs 4 k), zpool create mirror, compression lz4, nom local-zfs, pvesm zfspool</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-network.adoc" rel="noopener">Proxmox VE — vmbr0 = pont logiciel (switch) ; VLAN tag par VM</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/vzdump.adoc" rel="noopener">Proxmox VE — Modes stop / suspend / snapshot ; fsfreeze via agent ; compression zstd ; jobs Datacenter → Backup ; rétention</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pve-storage-dir.adoc" rel="noopener">Proxmox VE — Fichiers de sauvegarde dans dump/</a></li>
+                    <li><a href="https://raw.githubusercontent.com/proxmox/pve-manager/master/PVE/VZDump.pm" rel="noopener">Proxmox VE — option compress : zstd</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/qmrestore.adoc" rel="noopener">Proxmox VE — qmrestore : restauration des archives vzdump (exemple vzdump.adoc l. 676)</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pvecm.adoc" rel="noopener">Proxmox VE — pvecm create / add / status ; Quorate: Yes ; majorité ; QDevice ; démarrage attendant le quorum</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/pvesr.adoc" rel="noopener">Proxmox VE — HA combinable avec la réplication (perte depuis la dernière synchro)</a></li>
+                    <li><a href="https://github.com/proxmox/pve-docs/blob/master/ha-manager.adoc" rel="noopener">Proxmox VE — HA : au moins trois nœuds, stockage partagé, watchdog 60 s, fencing</a></li>
+                    <li><a href="https://raw.githubusercontent.com/openzfs/zfs/master/man/man8/zpool-scrub.8" rel="noopener">OpenZFS — zpool scrub ; scrub périodique par timers (OpenZFS)</a></li>
+                    <li><a href="https://github.com/MicrosoftDocs/Virtualization-Documentation/blob/main/virtualization/windowscontainers/manage-containers/hyperv-container.md" rel="noopener">Microsoft Learn — Hyper-V disponible sur Windows 10 Pro (isolation Hyper-V)</a></li>
+                    </ul>
+                    <p class="sources__note">Liens vers les dépôts publics de la documentation (le texte source des pages officielles).</p>
+                </details>
+        </div>
+
+    </main>
+</div>
+
+<footer>
+    <p><strong>Proxmox &amp; Virtualisation</strong> — Module du centre d'apprentissage IT</p>
+    <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · Pour approfondir : <a href="https://www.youtube.com/@VirtualizationHowto" target="_blank" rel="noopener">Virtualization HowTo</a> · <a href="https://www.youtube.com/@TechnoTim" target="_blank" rel="noopener">TechnoTim</a></p>
+</footer>
+
+<script src="../assets/catalogue.js?v=835ec2e5"></script>
+<script src="../assets/app.js?v=fabe4251"></script>
+<script src="../assets/notes.js?v=172c0c32"></script>
+<script src="../assets/quiz/proxmox.js?v=962260d9"></script>
+<script src="../assets/quiz.js?v=87192477"></script>
+<script src="../assets/pratique.js?v=6ed4d335"></script>
+</body>
+</html>

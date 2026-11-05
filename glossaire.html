@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#F3EEE5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#13100D" media="(prefers-color-scheme: dark)">
+    <title>Glossaire — Centre d'apprentissage IT</title>
+    <meta name="description" content="Tous les termes des modules — réseau, Windows, Linux, virtualisation, sécurité, supervision, cloud — avec une définition courte et des liens vers les chapitres qui les expliquent.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script>try{var t=localStorage.getItem('cai.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+    <link rel="stylesheet" href="assets/theme.css?v=d45d9954">
+</head>
+<body>
+
+<div class="progress"><div class="progress__bar" id="progressBar"></div></div>
+
+<header class="hero">
+    <div class="hero__inner">
+        <p class="eyebrow"><a href="index.html">← Portail</a> · Glossaire</p>
+        <h1 class="hero__title">Le <em>glossaire</em></h1>
+        <p class="hero__lead">Chaque sigle, chaque mot technique des modules, en une ou deux phrases — et surtout <strong>où il est expliqué</strong> : chaque terme renvoie aux chapitres qui le traitent. Un mot inconnu dans un chapitre ? Cherche-le ici, ou tape <kbd>Ctrl</kbd> <kbd>K</kbd> depuis n'importe quelle page.</p>
+        <div class="hero__facts" data-glo-facts>
+            <span class="fact"><b>Termes</b> —</span>
+        </div>
+    </div>
+</header>
+
+<main class="glo" id="glossaire">
+    <div class="glo__bar">
+        <input class="glo__search" type="search" placeholder="Filtrer : un sigle, un mot, une notion…" aria-label="Filtrer le glossaire" autocomplete="off" spellcheck="false">
+        <div class="glo__doms" role="group" aria-label="Domaines"></div>
+        <nav class="glo__az" aria-label="Lettres"></nav>
+    </div>
+    <p class="glo__count" aria-live="polite"></p>
+    <div class="glo__list">
+        <noscript><p>Le glossaire a besoin de JavaScript.</p></noscript>
+    </div>
+</main>
+
+<footer>
+    <p><strong>Glossaire</strong> — Centre d'apprentissage IT · généré à partir des modules</p>
+    <p><a href="index.html">← Retour au portail</a> · <a href="atelier.html">Atelier</a> · <a href="revision.html">Révision du jour</a></p>
+</footer>
+
+<script src="assets/catalogue.js?v=835ec2e5"></script>
+<script src="assets/app.js?v=fabe4251"></script>
+<script src="assets/glossaire.js?v=ba4c3732"></script>
+<script src="assets/glossaire-ui.js?v=178c909e"></script>
+</body>
+</html>

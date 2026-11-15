@@ -50,9 +50,8 @@ dans le dépôt source, `site/rapports/PLAN-REFONTE-2026-11.md`.
 
 Règles de fond :
 - **Rien d'inventé.** Pas de commande « plausible », pas de sortie fabriquée : une sortie attendue vient
-  d'une exécution réelle. Une commande reconstituée est signalée comme telle. Toute affirmation technique
-  nouvelle cite sa source officielle en encadré ; la doc sert à vérifier ou corriger, pas à combler un
-  trou en silence.
+  d'une exécution réelle. Une commande reconstituée est signalée comme telle. La refonte pédagogique
+  rédige de la **théorie nouvelle**, permise à condition de citer la source officielle en encadré.
 - Un terme nouveau est défini à sa première apparition (infobulle du glossaire).
 - Une adresse ou un nom de machine d'un module Windows vient du plan Orion (`labo.html`).
 - Après toute modification de la source : `node site/outils/construit.js`, puis `--verif`, puis

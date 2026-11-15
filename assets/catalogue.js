@@ -180,7 +180,7 @@ window.CATALOGUE = {
       "icon": "HV",
       "desc": "Créer et régler des VM Windows Server, configurer le serveur au premier démarrage, fabriquer une image Sysprep, déployer en série par disques de différenciation, choisir son commutateur virtuel, et se servir des points de contrôle sans les prendre pour des sauvegardes.",
       "level": 1,
-      "duree": "2 h",
+      "duree": "5 h",
       "chapters": 8,
       "prereq": [],
       "related": [

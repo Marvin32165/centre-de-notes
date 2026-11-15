@@ -1009,7 +1009,7 @@ window.QUIZ_BANK = {
     name: "Hyper-V & labo virtuel",
     file: "hyperv.html",
     title: "Test — Hyper-V & labo virtuel",
-    intro: "Huit chapitres, vingt questions tirées au hasard parmi soixante. L'objectif : savoir monter un labo Hyper-V propre et le redéployer sans tout refaire à la main.",
+    intro: "Huit chapitres, vingt questions tirées au hasard dans le fonds. L'objectif : savoir monter un labo Hyper-V propre et le redéployer sans tout refaire à la main.",
     pass: 70,
     questions: [
     {
@@ -1491,6 +1491,46 @@ window.QUIZ_BANK = {
         a: 3,
         why: "Hyper-V demande un redémarrage après son activation : tant que le poste n'a pas redémarré, le module PowerShell n'est pas chargé et <code>Get-VM</code> est inconnu. La génération d'une VM, un commutateur ou le démarrage sécurisé n'interviennent pas à ce stade.",
         ref: "Chapitre 01"
+    },
+    {
+        lvl: 2,
+        q: "Un collègue veut installer Windows 11 dans une VM et choisit la génération 1 « pour la compatibilité ». Que lui réponds-tu ?",
+        c: ["Windows 11 n'est pas supporté en génération 1 : il faut recréer la VM en génération 2", "C'est correct : la génération 1 accepte tous les systèmes", "Il peut convertir la VM en génération 2 après l'installation", "La génération n'a aucun effet sur le système invité"],
+        a: 0,
+        why: "Windows 11 n'est supporté qu'en génération 2, et la génération ne se change pas une fois la VM créée : il faut la recréer. La génération 1 n'est pas « la plus compatible » : elle sert aux systèmes anciens ou 32 bits.",
+        ref: "Chapitre 02"
+    },
+    {
+        lvl: 2,
+        q: "La fenêtre de connexion à ta VM garde un affichage figé et le copier-coller de l'hôte vers la VM ne fonctionne pas. Que fais-tu ?",
+        c: ["Je passe la VM en génération 1", "J'active la session étendue dans la fenêtre de connexion", "Je désactive la mémoire dynamique", "Je réarme la période d'évaluation avec slmgr /rearm"],
+        a: 1,
+        why: "La session étendue adapte l'affichage à la taille de la fenêtre et partage le presse-papiers avec l'hôte. La génération, la mémoire et la période d'évaluation n'ont aucun rapport avec l'affichage ou le copier-coller.",
+        ref: "Chapitre 03"
+    },
+    {
+        lvl: 3,
+        q: "Un serveur doit vivre six mois dans ton labo et rester réactif. Quel type de disque privilégies-tu, selon le module ?",
+        c: ["Un disque de différenciation, parce que sa création est instantanée", "Un disque à taille dynamique classique, sans parent", "Directement le disque parent, démarré en place", "Un disque de point de contrôle (.avhdx)"],
+        a: 1,
+        why: "Les performances des disques de différenciation ne suivent pas : la lecture peut traverser la chaîne parent / enfant. Pour un labo durable, un disque à taille dynamique est un meilleur compromis ; la différenciation sert au jetable. Démarrer le parent le rendrait inutilisable pour ses enfants.",
+        ref: "Chapitre 06"
+    },
+    {
+        lvl: 3,
+        q: "Sysprep (Generalize) s'arrête sur une erreur après que des applications ont été mises à jour depuis le Microsoft Store. Où cherches-tu la cause ?",
+        c: ["Dans le fichier .avhdx de la VM", "Dans les journaux de Sysprep, sous %WINDIR%\\System32\\Sysprep\\Panther", "Dans l'ordre de démarrage de la VM", "Dans les paramètres du commutateur virtuel"],
+        a: 1,
+        why: "Les journaux de Sysprep se trouvent dans le dossier Panther : une application mise à jour par le Store est liée à un utilisateur au lieu d'être provisionnée pour tous, et Generalize l'exige. Le .avhdx, l'ordre de démarrage et le commutateur n'interviennent pas.",
+        ref: "Chapitre 05"
+    },
+    {
+        lvl: 3,
+        q: "Dans le dossier de SRV-FILE01, des fichiers .avhdx s'accumulent à côté du .vhdx. Un collègue propose de les supprimer à la main. Quelle est la bonne démarche ?",
+        c: ["Les supprimer dans l'explorateur : ce ne sont que des copies", "Supprimer les points de contrôle devenus inutiles avec Remove-VMSnapshot, qui fusionne leur contenu dans le disque principal", "Convertir la VM en génération 1", "Déplacer le dossier de la VM sur un autre commutateur"],
+        a: 1,
+        why: "Chaque .avhdx est un point de contrôle : on ne le supprime jamais à la main. Remove-VMSnapshot le fusionne proprement dans le .vhdx. Ce ne sont pas des copies, et ni la génération ni le commutateur n'ont de rapport.",
+        ref: "Chapitre 08"
     }]
 },
 

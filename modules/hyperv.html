@@ -29,7 +29,7 @@
         </div>
         <div class="hero__facts">
             <span class="fact fact--n1"><b>Niveau</b> Débutant</span>
-            <span class="fact"><b>Durée</b> ≈ 1 h 30</span>
+            <span class="fact"><b>Durée</b> ≈ 5 h</span>
             <span class="fact"><b>Chapitres</b> 8</span>
             <span class="fact"><b>Test</b> 20 questions</span>
             <span class="fact"><b>Prérequis</b> aucun</span>
@@ -75,6 +75,62 @@
             <h2 class="chapter__title">Activer Hyper-V &amp; créer une VM</h2>
             <p class="chapter__intro">Hyper-V est déjà dans Windows — il suffit de l'allumer. C'est l'hyperviseur qui portera tout le labo Windows Server du parcours.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Vérifier qu'un poste peut héberger Hyper-V (édition de Windows, virtualisation matérielle) puis activer la fonctionnalité.</li>
+                    <li>Créer une VM de génération 2 avec <code>New-VM</code> et contrôler son état avec <code>Get-VM</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> aucun prérequis · 30 min · un poste Windows 11 Pro, Entreprise ou Éducation dont la virtualisation (Intel VT-x / AMD-V) est activée dans le BIOS/UEFI.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi un hyperviseur sur son propre poste</h3>
+                <p>Un technicien qui apprend Windows Server a besoin de plusieurs machines : un contrôleur de domaine, un serveur de fichiers, un client. Acheter ou prêter trois ordinateurs n'est pas réaliste, et casser un serveur réel pour s'entraîner est exclu. Un hyperviseur fait tourner ces machines <em>simulées</em> sur un seul poste : on les crée, on les casse, on les refait.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Hôte, invité et console : le vocabulaire d'Hyper-V</h3>
+                <p>Hyper-V est l'hyperviseur de Microsoft, livré avec Windows comme fonctionnalité facultative : il n'y a rien à télécharger, il faut l'activer. Trois mots suffisent pour la suite.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Terme</th><th>Ce que c'est</th><th>Exemple du module</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Hôte</strong></td><td>L'ordinateur réel qui fait tourner Hyper-V</td><td>Ton poste Windows 11 Pro</td></tr>
+                            <tr><td><strong>Invité</strong> (VM)</td><td>Une machine virtuelle : un ordinateur simulé avec son propre système</td><td><code>SRV-FILE01</code></td></tr>
+                            <tr><td><strong>Hyper-V Manager</strong></td><td>La console graphique qui crée et pilote les VM de l'hôte</td><td>Menu <em>New → Virtual Machine</em></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Deux conditions pour que l'activation fonctionne : une édition Windows qui contient Hyper-V (Pro ou Entreprise ; Famille est exclue), et un processeur 64 bits avec virtualisation et SLAT.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/install-hyper-v" rel="noopener">Microsoft Learn — Install Hyper-V in Windows and Windows Server</a> (prérequis : Windows 10/11 Pro ou Enterprise, processeur 64 bits avec SLAT ; pas de Hyper-V sur Famille).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Léa veut son premier serveur de fichiers virtuel : de la vérification au contrôle</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · l'hôte est-il éligible ?</p>
+                        <p class="walk__head">On vérifie avant de cocher</p>
+                        <p>Léa a un portable sous Windows 11 <strong>Pro</strong> : l'édition convient. Elle contrôle ensuite que la virtualisation matérielle est active dans le BIOS/UEFI : c'est le second prérequis du chapitre.</p>
+                        <p class="walk__change">Décision : éligible, on continue.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · activer, redémarrer</p>
+                        <p class="walk__head">Une fonctionnalité, un redémarrage</p>
+                        <p>Elle active Hyper-V puis redémarre le poste : tant que le redémarrage n'a pas eu lieu, les commandes Hyper-V sont inconnues.</p>
+                        <p class="walk__change">Hyper-V Manager apparaît, <code>Get-VM</code> existe.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · lire la commande de création</p>
+                        <p class="walk__head">Chaque paramètre de <code>New-VM</code> est un choix</p>
+                        <p><code>-Generation 2</code> : définitif, on prend la génération moderne (chapitre suivant). <code>-MemoryStartupBytes 8GB</code> : la mémoire de départ d'un Windows Server. <code>-NewVHDSizeBytes 60GB</code> : un disque neuf de 60 Go. <code>-SwitchName "Default Switch"</code> : le commutateur fourni, pour avoir du réseau sans rien configurer.</p>
+                        <p class="walk__change">La VM existe, éteinte, sans système : elle attend une ISO (chapitre 03).</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="steps">
                 <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Activer la fonctionnalité</strong><p>Panneau de configuration → <em>Fonctionnalités Windows</em> → cocher <strong>Hyper-V</strong>. Redémarrage nécessaire.</p></div></div>
                 <div class="step"><div class="step__num">2</div><div class="step__body"><strong>Ouvrir le gestionnaire</strong><p><strong>Hyper-V Manager</strong> : c'est la console qui pilote toutes les VM.</p></div></div>
@@ -96,7 +152,7 @@
 <span class="k">New-VM</span> <span class="p">-Name</span> <span class="s">"SRV-FILE01"</span> <span class="p">-Generation</span> 2 <span class="p">-MemoryStartupBytes</span> 8GB <span class="p">-Path</span> <span class="s">"C:\VM"</span> `
        <span class="p">-NewVHDPath</span> <span class="s">"C:\VM\SRV-FILE01\SRV-FILE01.vhdx"</span> <span class="p">-NewVHDSizeBytes</span> 60GB <span class="p">-SwitchName</span> <span class="s">"Default Switch"</span></pre>
             </div>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>La VM existe-t-elle, avec la bonne génération ?</p>
                 <div class="terminal">
@@ -114,6 +170,36 @@ SRV-FILE01   Off          2</pre>
                 <p class="tip__label">Lancer une console en administrateur</p>
                 <p>Depuis <kbd>Win</kbd> + <kbd>R</kbd>, valider avec <kbd>Ctrl</kbd> + <kbd>Maj</kbd> + <kbd>Entrée</kbd> au lieu de <kbd>Entrée</kbd> : le programme démarre directement en tant qu'administrateur.</p>
             </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — une seconde VM de test</p>
+                <p>Crée en PowerShell une VM génération 2 nommée <code>SRV-TEST01</code> : 4 Go de mémoire au démarrage, un disque neuf de 40 Go, rangée sous <code>C:\VM</code>, branchée sur le <em>Default Switch</em>. Puis affiche son nom, son état et sa génération.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>On reprend la commande du chapitre en changeant le nom, la mémoire et la taille du disque :</p>
+<div class="terminal"><pre class="terminal__code">New-VM -Name "SRV-TEST01" -Generation 2 -MemoryStartupBytes 4GB -Path "C:\VM" `
+       -NewVHDPath "C:\VM\SRV-TEST01\SRV-TEST01.vhdx" -NewVHDSizeBytes 40GB -SwitchName "Default Switch"
+Get-VM -Name SRV-TEST01 | Select-Object Name, State, Generation</pre></div>
+                <p>Attendu : la VM est <code>Off</code>, génération <code>2</code>. Variante des commandes du module, adaptée sans exécution supplémentaire.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Une collègue veut suivre ce module sur son portable Windows 11 <strong>Famille</strong>. Que lui réponds-tu, et quelles sont ses options ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Hyper-V n'existe pas dans l'édition Famille : l'activation est impossible. Elle peut passer à une édition qui l'inclut (Pro, Entreprise ou Éducation), ou utiliser un autre poste Windows Pro. Contrôler aussi que la virtualisation est active dans le BIOS/UEFI.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la commande est inconnue</p>
+                <p>Tu viens de cocher <strong>Hyper-V</strong> dans <em>Fonctionnalités Windows</em> et de fermer la fenêtre. Dans une console administrateur, <code>Get-VM</code> répond que la commande est inconnue. Hyper-V Manager n'apparaît pas encore dans le menu Démarrer.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> vérifier que la fonctionnalité est bien activée et si le poste a redémarré depuis. <strong>Cause :</strong> le module PowerShell Hyper-V n'est chargé qu'après le redémarrage demandé par l'activation. <strong>Correctif :</strong> redémarrer le poste, puis relancer <code>Get-VM</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Hyper-V se <strong>active</strong> (Pro, Entreprise, Éducation) ; il faut la virtualisation matérielle et un <strong>redémarrage</strong>.</li>
+                    <li><code>New-VM -Generation 2</code> crée la VM ; <code>Get-VM</code> contrôle son nom, son état et sa génération.</li>
+                    <li>La génération se choisit à la création : chapitre suivant.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 02 -->
@@ -121,6 +207,64 @@ SRV-FILE01   Off          2</pre>
             <p class="chapter__num">02</p>
             <h2 class="chapter__title">Régler la VM : génération, RAM, CPU, boot</h2>
             <p class="chapter__intro">Quatre réglages décident du confort du labo. Un seul est irréversible : la génération.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Choisir la génération d'une VM d'après le système invité et son mode de démarrage.</li>
+                    <li>Régler mémoire fixe, 2 processeurs virtuels et ordre de démarrage, puis choisir le modèle de démarrage sécurisé d'une VM Linux.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#activer">Activer Hyper-V &amp; créer une VM</a> · 30 min · Hyper-V actif sur l'hôte.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi régler avant d'installer</h3>
+                <p>Une VM créée à la va-vite se paie plus tard : un serveur qui rame parce qu'il a trop ou trop peu de processeurs, une installation qui refuse de démarrer sur l'ISO, ou une génération qui ne convient pas au système voulu. La génération, elle, ne se corrige pas : il faut recréer la VM. On règle donc avant d'installer.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Les deux générations et ce qui les distingue</h3>
+                <p>La <strong>génération</strong> décide du matériel virtuel offert à la VM. Elle est une propriété de la VM, pas du disque, et ne peut plus changer après la création. Microsoft recommande la génération 2 sauf si le système invité, le disque préparé ou le mode de démarrage ne la supportent pas.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th></th><th>Génération 1</th><th>Génération 2</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Microprogramme</strong></td><td>BIOS</td><td>UEFI (démarrage sécurisé, activé par défaut)</td></tr>
+                            <tr><td><strong>Démarrer depuis</strong></td><td>Disque ou DVD sur contrôleur IDE</td><td>Disque VHDX ou ISO sur contrôleur SCSI</td></tr>
+                            <tr><td><strong>Volume de démarrage max (VHDX)</strong></td><td>2 To</td><td>64 To</td></tr>
+                            <tr><td><strong>Windows 11 invité</strong></td><td>Non</td><td>Oui</td></tr>
+                            <tr><td><strong>Windows Server 2012 à 2025 invité</strong></td><td>Oui</td><td>Oui</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Deuxième notion : la <strong>mémoire dynamique</strong> laisse Hyper-V ajuster la mémoire d'une VM selon sa charge, entre un minimum et un maximum. Le module la désactive pour un serveur : on lui donne une valeur fixe. Enfin, un invité Linux qui garde le démarrage sécurisé doit utiliser le modèle <strong>Microsoft UEFI Certificate Authority</strong>.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/plan/should-i-create-a-generation-1-or-2-virtual-machine-in-hyper-v" rel="noopener">Microsoft Learn — Should I create a generation 1 or 2 virtual machine in Hyper-V?</a> (tableaux de support, tailles de volume, modèle UEFI CA pour Linux) et <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/features-terminology" rel="noopener">Hyper-V Features and Terminology Overview</a> (mémoire dynamique).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Trois VM à créer : quelle génération pour chacune ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>VM 1</b> · Windows Server 2025</p>
+                        <p class="walk__head">Les deux générations conviennent : on prend la 2</p>
+                        <p>Le tableau de support accepte Windows Server 2025 dans les deux générations ; la génération 2 apporte UEFI et démarrage sécurisé.</p>
+                        <p class="walk__change">Choix : génération 2.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>VM 2</b> · Debian 12</p>
+                        <p class="walk__head">Génération 2, mais avec le bon modèle de démarrage sécurisé</p>
+                        <p>Debian 12 est supportée en génération 2. Comme on veut garder le démarrage sécurisé, on choisit le modèle <em>Microsoft UEFI Certificate Authority</em> dans <em>Sécurité</em>, sinon le microprogramme refuse le chargeur Linux.</p>
+                        <p class="walk__change">Choix : génération 2 + modèle UEFI CA.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>VM 3</b> · Windows 11</p>
+                        <p class="walk__head">Le tableau tranche seul</p>
+                        <p>Windows 11 n'est pas supporté en génération 1 : la question ne se pose pas.</p>
+                        <p class="walk__change">Choix : génération 2, imposée.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>Génération 1 ou 2 ?</h3>
             <div class="cards">
@@ -166,7 +310,31 @@ SRV-FILE01   Off          2</pre>
 <span class="c"># VM Linux : démarrage sécurisé gardé, modèle « Microsoft UEFI Certificate Authority »</span>
 <span class="k">Set-VMFirmware</span> <span class="p">-VMName</span> SRV-ZBX01 <span class="p">-EnableSecureBoot</span> On <span class="p">-SecureBootTemplate</span> MicrosoftUEFICertificateAuthority</pre>
             </div>
-            <div class="takeaway">
+            <div class="verify" data-bloc="6">
+                <p class="verify__label">Vérifier</p>
+                <p>Constat d'interface, VM éteinte : clic droit → <strong>Paramètres</strong>. Rubrique <em>Mémoire</em> : l'option de mémoire dynamique est décochée et la mémoire de démarrage vaut 8192 Mo. Rubrique <em>Processeurs</em> : le nombre de processeurs virtuels est 2. Rubrique <em>Microprogramme</em> : le disque ou l'ISO attendu est en tête de l'ordre de démarrage.</p>
+                <p class="verify__fail">Un réglage est grisé : la VM n'est pas éteinte. Le nombre de processeurs affiche encore 12 : la valeur proposée par l'assistant n'a pas été changée.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — régler SRV-FILE01 en PowerShell</p>
+                <p>La VM <code>SRV-FILE01</code> est éteinte. Passe-la en mémoire fixe de 8 Go et en 2 processeurs virtuels, sans passer par les fenêtres de paramètres.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal"><pre class="terminal__code">Set-VMMemory -VMName SRV-FILE01 -DynamicMemoryEnabled $false -StartupBytes 8GB
+Set-VMProcessor -VMName SRV-FILE01 -Count 2</pre></div><p>Ce sont les commandes du terminal ci-dessus.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un collègue a créé une VM en génération 1 pour installer Windows 11, « parce que la génération 1 est plus compatible ». Que lui dis-tu, et que doit-il faire ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Windows 11 n'est pas supporté en génération 1, et la génération ne se change pas après la création : il faut <strong>recréer</strong> la VM en génération 2.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — l'hôte rame avec trois VM</p>
+                <p>Tu as créé trois VM avec l'assistant sans toucher à leurs paramètres. Dès qu'elles tournent ensemble, l'hôte et les VM deviennent lents. Dans les paramètres, rien ne ressemble à une erreur évidente.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> ouvrir les paramètres d'une VM et comparer les ressources attribuées à ce que le module recommande. <strong>Cause probable :</strong> l'assistant a créé chaque VM avec <strong>12</strong> processeurs virtuels (valeur relevée au TP) : trop de vCPU prive l'hôte et les autres VM. <strong>Correctif :</strong> passer chaque VM à 2 processeurs, mémoire fixe.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
                 <p>Génération <strong>2</strong> (définitive), mémoire <strong>fixe</strong>, <strong>2 vCPU</strong>, ordre de démarrage dans <em>Microprogramme</em>. Pour un invité Linux : le modèle de démarrage sécurisé <strong>Microsoft UEFI Certificate Authority</strong>.</p>
             </div>
@@ -190,6 +358,62 @@ SRV-FILE01   Off          2</pre>
             <h2 class="chapter__title">Installer Windows Server dans la VM</h2>
             <p class="chapter__intro">L'installation elle-même est classique — trois détails la font rater quand on ne les connaît pas.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Démarrer une VM sur l'ISO et installer Windows Server 2025 Standard (Desktop Experience).</li>
+                    <li>Réarmer la période d'évaluation et activer la session étendue.</li>
+                    <li>Diagnostiquer un écran d'installation qui ne propose aucun disque.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#reglages">Régler la VM</a> · 30 min · une VM réglée et une ISO de Windows Server 2025.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi l'installation mérite un chapitre</h3>
+                <p>C'est le geste que le technicien répète le plus : chaque serveur commence par là. Le rater coûte du temps : si on manque la courte fenêtre de démarrage sur le DVD, la VM démarre sur un disque vide et il faut la redémarrer ; une mauvaise édition oblige à tout refaire.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>L'ISO, l'édition et la session étendue</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Notion</th><th>Ce que c'est</th><th>Ce qu'on retient</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>ISO</strong></td><td>Fichier-image d'un DVD ; la VM le voit comme un lecteur DVD virtuel</td><td>Le microprogramme boote dessus avant le disque, d'où l'ordre de démarrage du chapitre précédent</td></tr>
+                            <tr><td><strong>Standard (Desktop Experience)</strong></td><td>L'édition de Windows Server avec interface graphique</td><td>C'est celle du labo</td></tr>
+                            <tr><td><strong>Période d'évaluation</strong></td><td>Le serveur fonctionne 180 jours sans activation</td><td><code>slmgr /rearm</code> la réarme</td></tr>
+                            <tr><td><strong>Session étendue</strong></td><td>Connexion à la VM par RDP via l'hôte : affichage ajustable, presse-papiers partagé</td><td>Disponible en génération 2, si l'invité la supporte</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/features-terminology" rel="noopener">Microsoft Learn — Hyper-V Features and Terminology Overview</a> (session étendue : RDP via l'hôte, presse-papiers, génération 2).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Installer SRV-FILE01 sans manquer le démarrage sur l'ISO</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · avant de démarrer</p>
+                        <p class="walk__head">Se connecter d'abord, démarrer ensuite</p>
+                        <p>La fenêtre pour booter sur le DVD ne reste affichée que quelques secondes. On ouvre donc la console de la VM, on démarre, puis on appuie plusieurs fois sur une touche sans attendre.</p>
+                        <p class="walk__change">L'assistant d'installation s'ouvre.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · l'édition</p>
+                        <p class="walk__head">Desktop Experience, pas l'autre</p>
+                        <p>Le labo a besoin de l'interface graphique : on choisit Windows Server 2025 <strong>Standard (Desktop Experience)</strong>.</p>
+                        <p class="walk__change">Choix : Standard (Desktop Experience).</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le mot de passe</p>
+                        <p class="walk__head">Fort, et hors du dépôt</p>
+                        <p>Le mot de passe administrateur n'est ni versionné ni recopié dans des notes partagées.</p>
+                        <p class="walk__change">Le serveur démarre sur son bureau.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="steps">
                 <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Démarrer et « spammer » une touche</strong><p>Se connecter à la VM, démarrer, puis appuyer répétitivement sur une touche : la fenêtre pour booter sur le DVD virtuel ne s'affiche que quelques secondes.</p></div></div>
                 <div class="step"><div class="step__num">2</div><div class="step__body"><strong>Choisir l'édition</strong><p>Windows Server 2025 <strong>Standard (Desktop Experience)</strong> — c'est la version avec interface graphique.</p></div></div>
@@ -208,6 +432,39 @@ SRV-FILE01   Off          2</pre>
 <span class="k">slmgr</span> <span class="p">/rearm</span></pre>
             </div>
             <p>Activer aussi la <strong>session étendue</strong> dans la fenêtre de connexion à la VM : l'affichage s'adapte alors dynamiquement à la taille de la fenêtre, et le presse-papiers devient partagé avec l'hôte.</p>
+
+            <div class="verify" data-bloc="6">
+                <p class="verify__label">Vérifier</p>
+                <p>Constat d'interface : tu ouvres une session administrateur avec le mot de passe défini à l'installation ; le <strong>Gestionnaire de serveur</strong> (<em>Local Server</em>) est accessible, c'est le point de départ du chapitre suivant. Avec la session étendue, redimensionner la fenêtre de la VM adapte l'affichage.</p>
+                <p class="verify__fail">La VM redémarre sur l'écran d'installation ou reste sur un disque vide : la touche n'a pas été pressée à temps, ou l'ordre de démarrage place le disque avant l'ISO (chapitre précédent).</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — réarmer l'évaluation</p>
+                <p>Le serveur approche de la fin de sa période d'évaluation. Quelle commande la réarme, et dans quelle console la lances-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>slmgr /rearm</code>, dans une invite de commandes <strong>administrateur</strong>.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Dans la fenêtre de connexion à ta VM, l'affichage reste figé à une petite taille et tu ne peux pas copier un texte de l'hôte vers la VM. Que fais-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Activer la <strong>session étendue</strong> dans la fenêtre de connexion : l'affichage s'adapte à la fenêtre et le presse-papiers est partagé avec l'hôte.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — l'installation ne trouve aucun disque</p>
+                <p>Tu installes Windows Server sur un serveur <em>physique</em>. À l'étape où l'assistant doit proposer le disque de destination, la liste est vide.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> se demander si Windows « voit » le contrôleur de stockage. <strong>Cause :</strong> Windows n'a pas le pilote du contrôleur de stockage du serveur. <strong>Correctif :</strong> charger le pilote depuis l'assistant d'installation.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Se connecter à la VM <strong>puis</strong> démarrer, et presser une touche tout de suite pour booter sur l'ISO.</li>
+                    <li>Édition du labo : Windows Server 2025 <strong>Standard (Desktop Experience)</strong>.</li>
+                    <li><code>slmgr /rearm</code> (console admin) réarme l'évaluation de 180 jours ; la session étendue partage l'affichage et le presse-papiers.</li>
+                    <li>Aucun disque proposé sur un serveur physique : pilote du contrôleur de stockage.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 04 -->
@@ -215,6 +472,62 @@ SRV-FILE01   Off          2</pre>
             <p class="chapter__num">04</p>
             <h2 class="chapter__title">Configurer le serveur au premier démarrage</h2>
             <p class="chapter__intro">Une check-list à dérouler dans l'ordre — le renommage en dernier, parce qu'il redémarre la machine.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Dérouler la check-list de premier démarrage dans le bon ordre, en justifiant que le renommage vient en dernier.</li>
+                    <li>Fixer l'adresse IPv4 d'un serveur, autoriser le Bureau à distance (port 3389) et décider quand couper le pare-feu.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#installer-ws">Installer Windows Server</a> · 30 min · un Windows Server 2025 fraîchement installé dans une VM.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi un serveur ne se configure pas « au fil de l'eau »</h3>
+                <p>Un serveur neuf est configuré pour un poste quelconque : adresse automatique, mauvais fuseau, nom aléatoire. Les autres machines doivent pouvoir le retrouver à une adresse stable, et chaque réglage oublié se paie plus tard au milieu d'un TP. D'où une liste courte, dans un ordre qui évite d'être interrompu par un redémarrage.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Les réglages, leur raison et leur piège</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Réglage</th><th>Pourquoi</th><th>Piège</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Adresse IPv4 fixe</strong></td><td>Un serveur doit avoir une adresse prévisible : les autres machines le joignent par elle</td><td>Rester en DHCP, l'adresse peut changer</td></tr>
+                            <tr><td><strong>Bureau à distance (RDP)</strong></td><td>Administrer le serveur sans passer par la console de la VM ; port <strong>3389</strong> par défaut</td><td>Oublier d'autoriser les connexions à distance</td></tr>
+                            <tr><td><strong>Pare-feu</strong></td><td>Filtre le trafic ; en labo, le couper évite de chercher un blocage en déboguant un TP</td><td>Le laisser coupé en dehors du labo</td></tr>
+                            <tr><td><strong>Windows Update</strong></td><td><em>Download updates only</em> évite un redémarrage en plein TP</td><td>S'étonner que rien ne s'installe</td></tr>
+                            <tr><td><strong>Renommage</strong></td><td>Donne son vrai nom au serveur (<code>WS01</code>)</td><td>Il redémarre la machine : on le fait en dernier</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-advfirewall" rel="noopener">Microsoft Learn — netsh advfirewall</a> (états de profil on/off) et <a href="https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/remotepc/change-listening-port" rel="noopener">Change the listening port for Remote Desktop</a> (port 3389 par défaut).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">WS01 : de l'adresse automatique à un serveur prêt, dans l'ordre</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · l'adresse</p>
+                        <p class="walk__head">Sortir du DHCP</p>
+                        <p>On ouvre <code>ncpa.cpl</code>, on décoche IPv6 et on fixe IPv4 à <code>192.168.1.1</code> / <code>255.255.255.0</code>, comme le module. Raison : le serveur sera joint par cette adresse.</p>
+                        <p class="walk__change">L'adresse de WS01 ne dépend plus d'un DHCP.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · accès et confort</p>
+                        <p class="walk__head">Fuseau, RDP, Windows Update</p>
+                        <p>Fuseau horaire depuis <em>Local Server</em> ; connexions à distance autorisées (RDP, 3389) ; Windows Update en <em>download updates only</em>. Aucun de ces réglages ne redémarre la machine.</p>
+                        <p class="walk__change">WS01 est administrable à distance.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le nom</p>
+                        <p class="walk__head">Renommer en dernier</p>
+                        <p><em>Computer Name → Change</em> → <code>WS01</code>. L'opération redémarre le serveur : si on l'avait faite au milieu, elle aurait interrompu la liste.</p>
+                        <p class="walk__change">Après le redémarrage, <em>Local Server</em> affiche <code>WS01</code>.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="steps">
                 <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Sortir du DHCP</strong><p>Un serveur ne reste jamais en adressage automatique : son adresse doit être prévisible.</p></div></div>
@@ -240,6 +553,38 @@ SRV-FILE01   Off          2</pre>
                 <p class="takeaway__label">Réservé au labo</p>
                 <p>Couper le pare-feu fait gagner du temps quand on débogue un TP, et <strong>uniquement</strong> dans ce cadre. Sur un serveur réel, on ouvre les ports nécessaires — on ne désarme pas la machine.</p>
             </div>
+
+            <div class="verify" data-bloc="6">
+                <p class="verify__label">Vérifier</p>
+                <p>Constat d'interface : dans <code>ncpa.cpl</code>, les propriétés IPv4 affichent <code>192.168.1.1</code> et <code>255.255.255.0</code> ; après le redémarrage, <em>Local Server</em> affiche le nom <code>WS01</code>, le fuseau choisi et le Bureau à distance activé.</p>
+                <p class="verify__fail">Le nom n'a pas changé : le redémarrage n'a pas eu lieu. L'adresse est repassée en automatique : la modification n'a pas été validée dans les propriétés de la carte.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — préparer TEST-WS02</p>
+                <p>Tu prépares la seconde VM, <code>TEST-WS02</code> (adresse <code>192.168.1.2</code>, masque <code>255.255.255.0</code>). Dans quel ordre fais-tu : le nom, l'adresse, le Bureau à distance ? Justifie la place de l'un d'eux.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Adresse fixe et Bureau à distance dans n'importe quel ordre, puis le <strong>nom en dernier</strong> : le renommage redémarre la machine, il ne doit pas interrompre le reste de la liste.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le TP est terminé et tu prêtes la VM à un collègue pour un autre exercice. Le pare-feu y est coupé depuis ton débogage. Que fais-tu, et avec quelle commande ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal"><pre class="terminal__code">netsh advfirewall set allprofiles state on</pre></div><p>Le pare-feu n'est coupé que le temps du TP : on le réactive dès qu'il est fini.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — aucun correctif après une semaine</p>
+                <p>WS01 tourne depuis une semaine. Windows Update ne signale aucune erreur, mais aucun correctif n'est installé.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> relire les réglages posés au premier démarrage. <strong>Cause :</strong> Windows Update est réglé sur <em>download updates only</em>, choisi pour éviter un redémarrage en plein TP : les correctifs sont téléchargés, leur installation se déclenche au moment choisi. <strong>Correctif :</strong> lancer l'installation quand le TP est terminé ; il n'y a rien à réparer.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>IPv4 <strong>fixe</strong>, Bureau à distance (port <strong>3389</strong>), <em>download updates only</em>, puis le <strong>renommage en dernier</strong>.</li>
+                    <li><code>netsh advfirewall set allprofiles state off</code> / <code>on</code> : coupé seulement en labo, réactivé dès le TP fini.</li>
+                    <li>Sur un serveur réel : on ouvre les ports nécessaires, on ne désarme pas la machine.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 05 -->
@@ -247,6 +592,63 @@ SRV-FILE01   Off          2</pre>
             <p class="chapter__num">05</p>
             <h2 class="chapter__title">Sysprep : fabriquer une image réutilisable</h2>
             <p class="chapter__intro">Réinstaller Windows Server à chaque TP prend une demi-heure. Sysprep permet de le faire <em>une fois</em>, puis de repartir de cette image pour toutes les VM suivantes.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Expliquer ce que fait <em>Generalize</em> et pourquoi une image généralisée ne se rallume pas.</li>
+                    <li>Fabriquer une image : lancer <code>sysprep.exe</code> (<em>Generalize</em> + <em>Shutdown</em>), isoler le <code>.vhdx</code> dans <code>C:\PARENT</code>.</li>
+                    <li>Reconnaître un fichier <code>.avhdx</code> et savoir quoi en faire avant d'isoler le disque.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#post-install">Configurer le serveur au premier démarrage</a> · 40 min · une VM WS01 installée et configurée.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi fabriquer une image une seule fois</h3>
+                <p>Réinstaller et reconfigurer un serveur prend une demi-heure à chaque TP. En fabriquant <em>une</em> image propre, on repart d'elle pour toutes les VM suivantes. Mais on ne peut pas cloner une installation telle quelle : deux machines ne doivent pas partager le même identifiant. Sysprep règle ce problème.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Généraliser : ce qui disparaît, ce qui reste</h3>
+                <p>Le <strong>SID</strong> est l'identifiant de sécurité unique d'une installation Windows. <em>Generalize</em> retire les informations propres à la machine, dont ce SID et les périphériques configurés (les pilotes restent sur le disque). Au démarrage suivant, Windows passe par l'<strong>OOBE</strong>, l'écran de première configuration, et se personnalise : nouveau SID, nom, réglages.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th></th><th>VM de référence avant Sysprep</th><th>Image généralisée</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Identité</strong></td><td>SID propre à la machine</td><td>SID retiré</td></tr>
+                            <tr><td><strong>Peut démarrer ?</strong></td><td>Oui</td><td>Une seule fois : le premier démarrage la personnalise et consomme la généralisation</td></tr>
+                            <tr><td><strong>Usage</strong></td><td>Se configure</td><td>Se copie, ne se démarre plus</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Règle : une image généralisée est faite pour <strong>un seul</strong> premier démarrage, celui de chaque VM qui en dérive. Sysprep se relance sur une même image jusqu'à 1001 fois au plus.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--generalize--a-windows-installation" rel="noopener">Microsoft Learn — Sysprep (Generalize) a Windows installation</a> (SID et périphériques retirés, pilotes conservés, limite de 1001 exécutions).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">De WS01 à <code>C:\PARENT\TEST-SYSPREP.vhdx</code></p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · généraliser</p>
+                        <p class="walk__head">Generalize + Shutdown</p>
+                        <p>On lance <code>sysprep.exe</code>, on coche <em>Generalize</em> et on choisit <em>Shutdown</em> : la VM s'éteint d'elle-même une fois généralisée.</p>
+                        <p class="walk__change">La VM est éteinte, l'installation neutre.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · ne pas rallumer</p>
+                        <p class="walk__head">Le seul risque de l'opération</p>
+                        <p>Un démarrage, même « pour vérifier », lance la personnalisation de Windows : l'image n'est plus généralisée. On ne touche plus à la VM.</p>
+                        <p class="walk__change">L'image est intacte.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · isoler</p>
+                        <p class="walk__head">Supprimer la VM, garder le disque</p>
+                        <p>On supprime la VM dans Hyper-V Manager (le disque reste sur l'hôte), on renomme <code>WS01.vhdx</code> en <code>TEST-SYSPREP.vhdx</code>, on le copie dans <code>C:\PARENT</code>, puis on supprime <code>C:\VM\WS01</code>.</p>
+                        <p class="walk__change">Il ne reste qu'une image, réutilisable.</p>
+                    </li>
+                </ol>
+            </div>
 
             <p>Sysprep « généralise » l'installation : il retire le SID unique de la machine et les informations propres au PC, comme les pilotes installés. L'image redevient neutre, prête à être clonée.</p>
 
@@ -259,7 +661,30 @@ SRV-FILE01   Off          2</pre>
                 <div class="step"><div class="step__num">6</div><div class="step__body"><strong>Nettoyer</strong><p>Supprimer <code>C:\VM\WS01</code>. Il ne reste que l'image, réutilisable indéfiniment.</p></div></div>
             </div>
 
-            <div class="takeaway">
+            <div class="verify" data-bloc="6">
+                <p class="verify__label">Vérifier</p>
+                <p>Constat d'interface : à la fin de Sysprep, la VM passe à l'état <em>Off</em> dans Hyper-V Manager et tu ne la redémarres pas. Après l'isolement, l'explorateur de fichiers montre <code>C:\PARENT\TEST-SYSPREP.vhdx</code> et plus aucun dossier <code>C:\VM\WS01</code>.</p>
+                <p class="verify__fail">Un fichier <code>.avhdx</code> traîne à côté du <code>.vhdx</code> : un point de contrôle existe encore. Le supprimer dans Hyper-V Manager le fusionne dans le disque principal, avant d'isoler l'image.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — archiver l'image</p>
+                <p>Sysprep a éteint la VM <code>WS01</code>. Décris, dans l'ordre, ce que tu fais jusqu'à avoir une image prête pour les VM suivantes, et ce que tu ne fais surtout pas.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Supprimer la VM dans Hyper-V Manager (le disque reste) ; renommer <code>WS01.vhdx</code> en <code>TEST-SYSPREP.vhdx</code> ; le copier dans <code>C:\PARENT\</code> ; supprimer <code>C:\VM\WS01</code>. À ne pas faire : <strong>rallumer</strong> la VM ou démarrer sur ce disque.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Dans <code>C:\VM\WS01\Virtual Hard Disks</code>, tu vois <code>WS01.vhdx</code> et un fichier <code>.avhdx</code>. Que fais-tu avant d'isoler l'image ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Le <code>.avhdx</code> est le fichier d'un point de contrôle. On supprime le <strong>point de contrôle</strong> dans Hyper-V Manager : Hyper-V fusionne alors le <code>.avhdx</code> dans le <code>.vhdx</code>. On ne supprime jamais le <code>.avhdx</code> à la main.</p><p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/checkpoints" rel="noopener">Microsoft Learn — Using checkpoints</a> (suppression, fusion, ne pas supprimer les .avhdx directement).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — Sysprep s'arrête sur une erreur</p>
+                <p>Tu lances <em>Generalize</em> et Sysprep s'interrompt avec un message d'erreur : la VM reste allumée, rien n'est généralisé. La veille, tu avais mis à jour des applications depuis le Microsoft Store.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> lire les journaux de Sysprep, dans <code>%WINDIR%\System32\Sysprep\Panther</code>. <strong>Cause :</strong> une application mise à jour par le Store est liée au compte connecté et non provisionnée pour tous les utilisateurs ; <em>Generalize</em> l'exige. <strong>Correctif :</strong> ne pas mettre à jour les applications par le Store avant de généraliser.</p><p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/sysprep--generalize--a-windows-installation" rel="noopener">Microsoft Learn — Sysprep (Generalize) a Windows installation</a>, section « Microsoft Store apps » (cas décrit pour Windows ; non reproduit dans ce module).</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
                 <p>Le fichier <code>C:\PARENT\TEST-SYSPREP.vhdx</code> est désormais un <strong>disque parent</strong> en lecture seule de fait : il ne doit plus jamais être démarré ni modifié directement, sinon toutes les VM qui en dépendent deviennent inutilisables.</p>
             </div>
@@ -283,6 +708,62 @@ SRV-FILE01   Off          2</pre>
             <h2 class="chapter__title">Déployer des VM en série (disque parent)</h2>
             <p class="chapter__intro">Un <strong>disque de différenciation</strong> ne stocke que les écarts par rapport au disque parent. Créer une nouvelle VM revient alors à créer un fichier quasi vide — quelques secondes au lieu d'une installation complète.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Expliquer ce que stocke un disque de différenciation et pourquoi le disque parent ne doit jamais changer.</li>
+                    <li>Déployer une VM depuis l'image Sysprep et vérifier la chaîne parent / enfant avec <code>Get-VHD</code>.</li>
+                    <li>Décider entre un disque de différenciation et un disque à taille dynamique selon la durée de vie de la VM.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#sysprep">Sysprep</a> · 40 min · l'image <code>C:\PARENT\TEST-SYSPREP.vhdx</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi ne pas copier l'image à chaque VM</h3>
+                <p>Un labo de dix VM issues de la même image, c'est dix fois les mêmes gigaoctets recopiés. Un disque de différenciation ne stocke que ce qui change : créer une VM revient à créer un fichier presque vide, en quelques secondes, et l'image d'origine reste intacte.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Parent et enfants : qui contient quoi</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Fichier</th><th>Rôle</th><th>Règle</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Disque parent</strong><br><code>C:\PARENT\TEST-SYSPREP.vhdx</code></td><td>L'image de référence, lue par tous les enfants</td><td>Ne jamais le démarrer, le modifier, le déplacer ni le renommer</td></tr>
+                            <tr><td><strong>Disque enfant</strong><br><code>TEST-WS01-DISK1.vhdx</code></td><td>Ne contient que les écarts par rapport au parent</td><td>Un par VM ; sa <code>ParentPath</code> désigne le parent</td></tr>
+                            <tr><td><strong>Disque à taille dynamique</strong></td><td>Un disque autonome, sans parent</td><td>Meilleur compromis pour un labo durable</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Un enfant enregistre des blocs <em>par rapport à un état précis</em> du parent : si le parent change, les enfants ne correspondent plus. Pour mettre l'image à jour, on crée une <strong>nouvelle</strong> image et on y rattache les futures VM.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/features-terminology" rel="noopener">Microsoft Learn — Hyper-V Features and Terminology Overview</a> (les changements faits dans le disque de différenciation n'affectent pas le parent). Performances et parent modifié : constats du TP du module, voir ses sources.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Deux VM de test, un seul parent</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le parent</p>
+                        <p class="walk__head">On part de l'image archivée</p>
+                        <p><code>C:\PARENT\TEST-SYSPREP.vhdx</code> existe, généralisé, jamais redémarré.</p>
+                        <p class="walk__change">Parent prêt.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · TEST-WS01</p>
+                        <p class="walk__head">Une VM sans disque, un enfant</p>
+                        <p>La VM est créée sans disque, puis on lui ajoute sur le contrôleur SCSI un disque de type <strong>Différenciation</strong> nommé <code>TEST-WS01-DISK1</code>, dans <code>C:\VM\TEST-WS01\</code>, avec le parent désigné. On règle ensuite l'ordre de démarrage sur ce disque.</p>
+                        <p class="walk__change">Fichier enfant presque vide, créé en quelques secondes.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · TEST-WS02</p>
+                        <p class="walk__head">Même parent, autre enfant</p>
+                        <p>On répète pour <code>TEST-WS02</code> avec l'adresse <code>192.168.1.2</code>. Chaque VM finit la personnalisation de Windows à son premier démarrage : deux machines distinctes, un seul parent.</p>
+                        <p class="walk__change">Si quelqu'un modifie le parent, les deux enfants cassent.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="steps">
                 <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Créer la VM sans disque</strong><p>Même démarche qu'au chapitre 01, mais choisir <em>« Attacher un disque dur virtuel ultérieurement »</em>.</p></div></div>
                 <div class="step"><div class="step__num">2</div><div class="step__body"><strong>Ajouter le disque</strong><p>Clic droit sur la machine → <em>Paramètres</em> → <strong>Contrôleur SCSI</strong> → <em>Disque dur</em> → <em>Ajouter</em> → <em>Nouveau</em>.</p></div></div>
@@ -297,7 +778,7 @@ SRV-FILE01   Off          2</pre>
                 <p class="takeaway__label">Ce que le TP a montré</p>
                 <p>Les disques de différenciation sont pratiques mais <strong>les performances ne suivent pas</strong> : chaque lecture peut devoir traverser la chaîne parent/enfant. Pour un labo durable, un disque à <strong>taille dynamique</strong> classique est un meilleur compromis — on garde la différenciation pour du jetable qu'on recrée souvent.</p>
             </div>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>La VM s'appuie-t-elle bien sur le disque parent ?</p>
                 <div class="terminal">
@@ -322,6 +803,32 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
                     <div class="scenario__why"><p>Un disque de différenciation enregistre des blocs <strong>par rapport à un état précis</strong> du parent. Modifier le parent casse tous ses enfants. Pour mettre l'image à jour, on crée une <strong>nouvelle</strong> image de référence (nouveau parent) et on y rattache les futures VM.</p></div>
                 </div>
             </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — une troisième VM</p>
+                <p>Tu ajoutes <code>TEST-WS03</code> sur le même parent. Quel type de disque, où le places-tu, quel parent désignes-tu et que règles-tu ensuite dans la VM ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Type <strong>Différenciation</strong>, ajouté sur le contrôleur SCSI de la VM créée sans disque ; nommé sur le même schéma que les autres (<code>TEST-WS03-DISK1</code>, dans <code>C:\VM\TEST-WS03\</code>) ; parent <code>C:\PARENT\TEST-SYSPREP.vhdx</code> ; puis l'<strong>ordre de démarrage</strong> (rubrique <em>Microprogramme</em>) sur ce disque. Vérification : <code>Get-VHD</code> sur le disque enfant affiche <code>Differencing</code> et le bon <code>ParentPath</code>.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu montes un serveur qui doit vivre six mois dans ton labo et rester réactif. Disque de différenciation ou autre chose ? Justifie.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Plutôt un disque à <strong>taille dynamique</strong> classique : les performances des disques de différenciation ne suivent pas (la lecture peut traverser la chaîne parent / enfant). On garde la différenciation pour du jetable qu'on recrée souvent.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — les deux VM ne démarrent plus</p>
+                <p>Ce matin, <code>TEST-WS01</code> et <code>TEST-WS02</code> refusent de démarrer. Tu n'y as pas touché, et elles fonctionnaient hier. Hyper-V Manager les affiche toujours. Un collègue a fait du rangement sur le disque de l'hôte hier soir.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> lancer <code>Get-VHD</code> sur le disque enfant et lire <code>ParentPath</code>. <strong>Cause :</strong> le disque parent a été déplacé ou renommé ; toutes les VM qui en dépendent refusent de démarrer. <strong>Correctif :</strong> remettre le parent à sa place, ou rattacher l'enfant avec <code>Set-VHD -Path "C:\VM\TEST-WS01\TEST-WS01-DISK1.vhdx" -ParentPath "C:\PARENT\TEST-SYSPREP.vhdx"</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Un disque de <strong>différenciation</strong> ne stocke que les écarts ; le <strong>parent</strong> n'est jamais démarré, modifié, déplacé ni renommé.</li>
+                    <li><code>Get-VHD</code> : <code>VhdType</code> = <code>Differencing</code> et <code>ParentPath</code> = le parent attendu.</li>
+                    <li>Image à mettre à jour : nouvelle image, nouveau parent. Labo durable : disque à taille dynamique.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 07 -->
@@ -330,6 +837,24 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
             <h2 class="chapter__title">Choisir son commutateur virtuel</h2>
             <p class="chapter__intro">Le <strong>Gestionnaire de commutateur virtuel</strong> décide de qui peut parler à qui. Trois types, trois périmètres de plus en plus fermés.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Choisir entre commutateur externe, interne et privé selon ce que le labo doit pouvoir joindre.</li>
+                    <li>Créer un commutateur avec <code>New-VMSwitch</code> et le raccorder aux VM.</li>
+                    <li>Décrire le réseau du lab Orion (commutateur interne, hôte passerelle, NAT).</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#differenciation">Déployer des VM en série</a> · 30 min · deux VM prêtes et une console PowerShell administrateur sur l'hôte.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi le réseau d'un labo se choisit avec soin</h3>
+                <p>Un labo qui monte son propre DHCP et son propre DNS ne doit pas les laisser répondre sur le réseau de la maison ou de l'école : les ordinateurs voisins pourraient y prendre leur adresse. En revanche, des VM sans aucune sortie ne peuvent pas télécharger leurs mises à jour. Le commutateur virtuel décide de ce périmètre.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Externe, interne, privé : trois périmètres</h3>
+                <p>Un <strong>commutateur virtuel</strong> est un switch de couche 2 logiciel, dans l'hôte : chaque VM y branche une carte réseau virtuelle. Hyper-V en propose trois types, choisis à la création.</p>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Type</th><th>Qui communique</th><th>Usage</th></tr></thead>
@@ -339,6 +864,34 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
                         <tr><td><strong>Privé</strong></td><td>VM ↔ VM uniquement</td><td>Le périmètre le plus fermé. Idéal pour un labo de domaine isolé.</td></tr>
                     </tbody>
                 </table>
+            </div>
+                <p>Deux précisions : on peut changer le type d'un commutateur existant, mais cela touche toutes les VM qui y sont connectées ; et une carte réseau virtuelle ne change pas de type, on en ajoute une autre sur le bon commutateur.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/plan/plan-hyper-v-networking-in-windows-server" rel="noopener">Microsoft Learn — Plan for Hyper-V networking in Windows Server</a> (les trois types de commutateurs, changement de type, option de partage avec l'hôte).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Le réseau du lab Orion : pourquoi interne + NAT</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le besoin</p>
+                        <p class="walk__head">Trois contraintes</p>
+                        <p>Les VM doivent se parler et parler à l'hôte ; elles doivent sortir sur Internet pour leurs mises à jour ; le DHCP du lab ne doit jamais répondre sur le réseau physique.</p>
+                        <p class="walk__change">Un externe est exclu (le DHCP du lab répondrait aux autres PC) ; un privé est exclu (aucune sortie).</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le choix</p>
+                        <p class="walk__head">Un commutateur interne</p>
+                        <p>Il relie VM et hôte, sans toucher le réseau physique. L'hôte y reçoit une carte virtuelle <code>vEthernet (LABOPS)</code> et sert de passerelle.</p>
+                        <p class="walk__change">Réseau du lab : <code>172.16.50.0/24</code>, hôte en <code>172.16.50.1</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la sortie</p>
+                        <p class="walk__head">Du NAT sur l'hôte</p>
+                        <p>Une traduction d'adresses (<code>New-NetNat</code>) fait sortir les VM par l'hôte : elles accèdent à Internet, personne n'entre, et aucune trame du lab n'atteint le réseau physique.</p>
+                        <p class="walk__change">Les trois commandes figurent dans le terminal plus bas.</p>
+                    </li>
+                </ol>
             </div>
 
             <div class="steps">
@@ -356,7 +909,13 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
 <span class="k">New-NetIPAddress</span> <span class="p">-InterfaceAlias</span> <span class="s">"vEthernet (LABOPS)"</span> <span class="p">-IPAddress</span> 172.16.50.1 <span class="p">-PrefixLength</span> 24   <span class="c"># l'hôte = passerelle</span>
 <span class="k">New-NetNat</span> <span class="p">-Name</span> <span class="s">"LABOPS-NAT"</span> <span class="p">-InternalIPInterfaceAddressPrefix</span> 172.16.50.0/24</pre>
             </div>
-            <div class="cmdex" data-accept="New-VMSwitch (-Name )?&quot;?LAN1&quot;? -SwitchType &quot;?Private&quot;?;;New-VMSwitch -SwitchType &quot;?Private&quot;? (-Name )?&quot;?LAN1&quot;?" data-hint="New-VMSwitch, avec -Name et -SwitchType.">
+            <div class="verify" data-bloc="6">
+                <p class="verify__label">Vérifier</p>
+                <p>Constat d'interface : dans le <em>Gestionnaire de commutateur virtuel</em> d'Hyper-V Manager, <code>LABOPS</code> figure dans la liste, de type interne ; sur l'hôte, la carte <code>vEthernet (LABOPS)</code> existe avec l'adresse <code>172.16.50.1</code>. Une VM raccordée à ce commutateur et configurée dans <code>172.16.50.0/24</code> joint l'hôte.</p>
+                <p class="verify__fail">La carte <code>vEthernet (LABOPS)</code> est introuvable : le commutateur n'est pas de type interne, ou <code>New-NetIPAddress</code> vise un autre nom de carte (<code>-InterfaceAlias</code>).</p>
+            </div>
+
+            <div class="cmdex" data-bloc="7" data-accept="New-VMSwitch (-Name )?&quot;?LAN1&quot;? -SwitchType &quot;?Private&quot;?;;New-VMSwitch -SwitchType &quot;?Private&quot;? (-Name )?&quot;?LAN1&quot;?" data-hint="New-VMSwitch, avec -Name et -SwitchType.">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>Crée en PowerShell un commutateur virtuel <strong>privé</strong> nommé <code>LAN1</code>.</p>
                 <details class="reveal">
@@ -376,6 +935,27 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
                     <div class="scenario__why"><p>Interne + <code>New-NetNat</code> : les VM sortent par l'hôte (traduction d'adresses), mais aucune trame du lab n'atteint le réseau physique — le DHCP reste confiné. C'est le choix du <a href="../labo.html#reseau">lab Orion</a>.</p></div>
                 </div>
             </div>
+
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu veux que trois VM échangent des fichiers avec ton poste hôte, sans qu'aucune ne puisse sortir vers Internet ni vers le réseau de la maison. Quel type de commutateur, et faut-il du NAT ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Un commutateur <strong>interne</strong> : VM et hôte se parlent par la carte <code>vEthernet</code> de l'hôte. Pas de <code>New-NetNat</code> : c'est lui qui ouvrirait la sortie vers Internet.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la maison reçoit des adresses étranges</p>
+                <p>Tu as branché ton lab AD (avec son propre DHCP) sur le réseau. Depuis, des ordinateurs de la maison obtiennent des adresses qui ne sont pas celles de la box, et perdent leur accès à Internet.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> regarder à quel commutateur les VM du lab sont raccordées. <strong>Cause probable :</strong> un commutateur <strong>externe</strong> place les VM sur le réseau de la maison : le DHCP du lab répond aux PC de la famille. <strong>Correctif :</strong> raccorder le lab à un commutateur <strong>privé</strong>, ou <strong>interne</strong> avec du NAT sur l'hôte si les VM doivent sortir.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li><strong>Externe</strong> : VM, hôte, réseau physique ; <strong>interne</strong> : VM et hôte ; <strong>privé</strong> : VM seulement.</li>
+                    <li><code>New-VMSwitch -Name "…" -SwitchType Private | Internal</code> ; un externe se branche sur une carte avec <code>-NetAdapterName</code>.</li>
+                    <li>Lab AD : privé, ou interne + <code>New-NetNat</code> pour la sortie (lab Orion, <code>172.16.50.0/24</code>). Jamais le DHCP du lab sur le réseau de la maison.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 08 -->
@@ -384,6 +964,23 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
             <h2 class="chapter__title">Points de contrôle et vérifications</h2>
             <p class="chapter__intro">Un point de contrôle (<em>checkpoint</em>) fige l'état d'une VM pour pouvoir y revenir : c'est l'outil idéal d'un lab — tester, casser, revenir. À condition de savoir ce qu'il n'est pas : une sauvegarde.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Choisir entre point de contrôle standard et production selon le besoin.</li>
+                    <li>Figer, lister, restaurer et supprimer un point de contrôle en PowerShell.</li>
+                    <li>Expliquer pourquoi un point de contrôle n'est pas une sauvegarde.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#differenciation">Déployer des VM en série</a> (disques parent / enfant) · 30 min · une VM, ici <code>SRV-FILE01</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi figer l'état d'une VM</h3>
+                <p>Avant de tester une stratégie de groupe risquée ou une mise à jour, on veut pouvoir revenir en arrière en quelques secondes si tout casse. C'est le grand avantage de la virtualisation pour un lab : tester, casser, revenir.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Standard ou production, et ce que le point de contrôle n'est pas</h3>
             <div class="cards">
                 <div class="card">
                     <h3>Standard</h3>
@@ -394,6 +991,34 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
                     <p>S'appuie sur les sauvegardes internes de l'OS invité (VSS sous Windows) : la VM revient comme après un arrêt propre, sans la mémoire. Plus sûr pour les applications et les bases de données.</p>
                 </div>
             </div>
+                <p>Techniquement, un point de contrôle est un fichier <code>.avhdx</code> posé à côté du <code>.vhdx</code> de la VM. Le supprimer par la commande dédiée <strong>fusionne</strong> ce fichier dans le disque principal ; on ne supprime jamais un <code>.avhdx</code> à la main.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/checkpoints" rel="noopener">Microsoft Learn — Using checkpoints</a> (types standard et production, production par défaut, fichiers .avhdx, suppression et fusion ; un instantané n'est pas une sauvegarde complète).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Quel type de point de contrôle pour quelle manipulation ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Cas 1</b> · tester une GPO risquée sur SRV-FILE01</p>
+                        <p class="walk__head">Standard</p>
+                        <p>On veut revenir à l'instant exact, applications ouvertes : le standard capture disque <em>et</em> mémoire.</p>
+                        <p class="walk__change">Choix : standard.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Cas 2</b> · une VM qui porte une base de données</p>
+                        <p class="walk__head">Production</p>
+                        <p>Il s'appuie sur les sauvegardes internes de l'invité (VSS) : la VM revient comme après un arrêt propre, plus sûr pour les applications.</p>
+                        <p class="walk__change">Choix : production.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Cas 3</b> · protéger la VM d'une panne du disque de l'hôte</p>
+                        <p class="walk__head">Ni l'un ni l'autre</p>
+                        <p>Le point de contrôle vit sur le même stockage que le disque : si le disque de l'hôte meurt, tout part. Il faut une vraie sauvegarde, sur un autre support.</p>
+                        <p class="walk__change">Choix : une sauvegarde, pas un point de contrôle.</p>
+                    </li>
+                </ol>
+            </div>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — hôte Hyper-V</span></div>
                 <pre class="terminal__code"><span class="k">Checkpoint-VM</span> <span class="p">-Name</span> SRV-FILE01 <span class="p">-SnapshotName</span> <span class="s">"Avant DFS"</span><span class="c">          # figer</span>
@@ -401,11 +1026,35 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
 <span class="k">Restore-VMSnapshot</span> <span class="p">-VMName</span> SRV-FILE01 <span class="p">-Name</span> <span class="s">"Avant DFS"</span> <span class="p">-Confirm:$false</span><span class="c">   # revenir</span>
 <span class="k">Remove-VMSnapshot</span> <span class="p">-VMName</span> SRV-FILE01 <span class="p">-Name</span> <span class="s">"Avant DFS"</span><span class="c">             # supprimer = fusionner</span></pre>
             </div>
+            <div class="verify" data-bloc="6">
+                <p class="verify__label">Vérifier</p>
+                <p>Après <code>Checkpoint-VM</code>, la commande <code>Get-VMSnapshot -VMName SRV-FILE01</code> liste le point de contrôle <code>Avant DFS</code> ; après <code>Remove-VMSnapshot</code>, il n'y figure plus et le fichier <code>.avhdx</code> correspondant a été fusionné.</p>
+                <p class="verify__fail">Le point n'apparaît pas dans la liste : le nom donné à <code>-SnapshotName</code> n'est pas celui interrogé, ou la VM visée n'est pas la bonne (<code>-VMName</code>).</p>
+            </div>
             <div class="takeaway takeaway--warn">
                 <p class="takeaway__label">Pas une sauvegarde</p>
                 <p>Un point de contrôle vit <strong>à côté</strong> du disque (fichier <code>.avhdx</code>) et sur le même stockage : si le disque de l'hôte meurt, tout part. Ce n'est pas une sauvegarde. Sur un contrôleur de domaine, Windows Server détecte le retour en arrière (identifiant de génération de la VM, depuis 2012) et se protège ; Microsoft déconseille malgré tout de s'en servir comme sauvegarde : on restaure une vraie sauvegarde de l'annuaire.</p>
             </div>
-            <div class="takeaway">
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — figer puis revenir</p>
+                <p>Avant d'appliquer une GPO de test, fige <code>SRV-FILE01</code> sous le nom « Avant GPO ». La GPO se passe mal : reviens en arrière sans qu'une confirmation soit demandée, puis supprime le point de contrôle.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal"><pre class="terminal__code">Checkpoint-VM -Name SRV-FILE01 -SnapshotName "Avant GPO"
+Restore-VMSnapshot -VMName SRV-FILE01 -Name "Avant GPO" -Confirm:$false
+Remove-VMSnapshot -VMName SRV-FILE01 -Name "Avant GPO"</pre></div><p>Mêmes cmdlets que dans le terminal ci-dessus, avec un autre nom de point de contrôle.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un collègue veut garder un point de contrôle d'un contrôleur de domaine comme « sauvegarde de l'annuaire ». Que lui réponds-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Un point de contrôle n'est pas une sauvegarde : il vit sur le même stockage que la VM. Sur un contrôleur de domaine, Windows Server détecte le retour en arrière et se protège, mais Microsoft déconseille d'en faire une sauvegarde : on restaure une <strong>vraie sauvegarde</strong> de l'annuaire.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le disque de l'hôte se remplit</p>
+                <p>Le dossier de <code>SRV-FILE01</code> grossit sans cesse. À côté du <code>.vhdx</code>, plusieurs fichiers <code>.avhdx</code> s'accumulent. Un collègue propose de les supprimer à la main dans l'explorateur pour libérer de la place.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> lister les points de contrôle avec <code>Get-VMSnapshot -VMName SRV-FILE01</code>. <strong>Cause :</strong> des points de contrôle gardés « au cas où » allongent la chaîne de disques ; chaque <code>.avhdx</code> en est un. <strong>Correctif :</strong> ne pas toucher aux fichiers ; supprimer les points de contrôle devenus inutiles avec <code>Remove-VMSnapshot</code>, qui fusionne leur contenu dans le disque principal.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
                 <p>Un point de contrôle avant chaque manipulation risquée du lab, supprimé ensuite pour ne pas allonger la chaîne de disques. <code>Get-VHD</code> (chapitre 06) pour vérifier qu'un disque enfant retrouve son parent.</p>
             </div>
@@ -420,6 +1069,23 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
                     </div>
                     <div class="scenario__why"><p>Un point de contrôle protège d'une <strong>mauvaise manipulation</strong>, pas d'une <strong>panne matérielle</strong> : il dépend du disque parent et vit sur le même stockage. Contre la panne, il faut une sauvegarde sur un autre support (module <a href="dpm.html">DPM</a>).</p></div>
                 </div>
+            </div>
+        </section>
+
+        <section class="brief" id="livrable" data-bloc="10">
+            <p class="brief__label">Livrable du module</p>
+            <div class="lab" data-lab="livrable-hyperv">
+                <p class="lab__label">Livrable · fiche de labo Hyper-V</p>
+                <p class="lab__title">Un mini-labo reconstructible, avec sa fiche d'une page</p>
+                <div class="lab__meta"><span><b>Objectif :</b> prouver que tu sais monter, déployer et documenter un labo Hyper-V</span><span><b>Point de départ :</b> un poste avec Hyper-V actif et une ISO de Windows Server 2025</span><span><b>Durée :</b> ≈ 2 h</span></div>
+                <ol class="lab__steps">
+                    <li><p><strong>VM de référence</strong> — une VM génération 2 (mémoire fixe, 2 vCPU) installée et configurée selon la check-list ; <code>Get-VM</code> affiche son nom, son état et sa génération.</p></li>
+                    <li><p><strong>Image Sysprep</strong> — généralisée (<em>Generalize</em> + <em>Shutdown</em>), jamais rallumée, archivée dans <code>C:\PARENT\</code>.</p></li>
+                    <li><p><strong>Deux VM de différenciation</strong> — <code>Get-VHD</code> affiche <code>Differencing</code> et le <code>ParentPath</code> de l'image, pour chacune.</p></li>
+                    <li><p><strong>Commutateur justifié</strong> — un commutateur créé et raccordé aux VM, avec trois lignes expliquant pourquoi ce type plutôt que les deux autres.</p></li>
+                    <li><p><strong>Point de contrôle</strong> — un point figé avant une manipulation, restauré, puis supprimé ; une phrase expliquant pourquoi ce n'est pas une sauvegarde.</p></li>
+                    <li><p><strong>Fiche d'une page</strong> — un tableau (VM, génération, mémoire, vCPU, disque, commutateur, adresse IP) et la liste des commandes utilisées. Aucun mot de passe ni adresse réelle dedans.</p></li>
+                </ol>
             </div>
         </section>
 
@@ -481,10 +1147,10 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
     <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a></p>
 </footer>
 
-<script src="../assets/catalogue.js?v=548e694c"></script>
+<script src="../assets/catalogue.js?v=ccfeab05"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/hyperv.js?v=f008c7bf"></script>
+<script src="../assets/quiz/hyperv.js?v=e54518cf"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 </body>

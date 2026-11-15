@@ -4,23 +4,23 @@
    - pages : réseau d'abord (toujours la dernière version), cache si le réseau manque ;
    - polices Google : gardées au premier chargement.
    VERSION et FICHIERS sont réécrits par site/outils/construit.js — ne pas éditer à la main. */
-const VERSION = '7925938942';
+const VERSION = '2b2a8cf3f6';
 const FICHIERS = [
   "assets/app.js?v=fabe4251",
   "assets/atelier.js?v=c35298a6",
   "assets/carnet.js?v=69bcfe1d",
   "assets/cartes.js?v=e3c23ad2",
-  "assets/catalogue.js?v=548e694c",
+  "assets/catalogue.js?v=ccfeab05",
   "assets/commandes-ui.js?v=12f19476",
   "assets/commandes.js?v=7087bc5f",
   "assets/dojo.js?v=b46a816e",
   "assets/favicon.svg",
   "assets/glossaire-ui.js?v=178c909e",
-  "assets/glossaire.js?v=ef3c79b2",
+  "assets/glossaire.js?v=a0326c06",
   "assets/notes.js?v=172c0c32",
   "assets/plan.js?v=5a5966ea",
   "assets/pratique.js?v=6ed4d335",
-  "assets/quiz-data.js?v=97bbe725",
+  "assets/quiz-data.js?v=158f73bf",
   "assets/quiz.js?v=87192477",
   "assets/quiz/azure.js?v=42079444",
   "assets/quiz/ccna-reseau.js?v=de311779",
@@ -31,7 +31,7 @@ const FICHIERS = [
   "assets/quiz/entretien-recrutement.js?v=89df4143",
   "assets/quiz/exchange-securite.js?v=699b6390",
   "assets/quiz/homelab.js?v=59ae86fa",
-  "assets/quiz/hyperv.js?v=f008c7bf",
+  "assets/quiz/hyperv.js?v=e54518cf",
   "assets/quiz/iis.js?v=4e325514",
   "assets/quiz/itil.js?v=0ef43a99",
   "assets/quiz/linux-debian.js?v=b1dc4a7c",
@@ -51,7 +51,7 @@ const FICHIERS = [
   "assets/quiz/windows-server.js?v=f7ac0523",
   "assets/quiz/zabbix-windows.js?v=50232a45",
   "assets/revision.js?v=843cfd26",
-  "assets/search-index.js?v=9a2b4344",
+  "assets/search-index.js?v=b86aa880",
   "assets/search.js?v=80a32003",
   "assets/serie.js?v=3e1cada5",
   "assets/simulateurs.js?v=b2610493",

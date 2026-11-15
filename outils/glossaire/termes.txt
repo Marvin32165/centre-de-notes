@@ -110,6 +110,15 @@ Hyper-V | | Hyperviseur de Microsoft, intégré à Windows et Windows Server. | 
 Point de contrôle | Checkpoint | Instantané d'une VM Hyper-V à un moment donné ; ce n'est pas une sauvegarde. | points? de contrôle;checkpoints?
 Disque de différenciation | | Disque virtuel qui n'enregistre que les écarts par rapport à un disque parent. | différenciation
 Commutateur virtuel | | Switch logiciel d'Hyper-V : externe, interne ou privé. | commutateurs? virtuels?;vSwitch
+UEFI | Unified Extensible Firmware Interface | Microprogramme moderne qui remplace le BIOS ; il vérifie la signature du chargeur avec le démarrage sécurisé. | UEFI
+Démarrage sécurisé | Secure Boot | Contrôle, au démarrage, que le chargeur est signé par une autorité de confiance ; actif par défaut sur une VM de génération 2. | démarrage sécurisé;Secure Boot
+VHDX | | Format de fichier de disque virtuel d'Hyper-V, jusqu'à 64 To. | VHDX
+Disque parent | | Disque virtuel de référence lu par des disques de différenciation ; il ne doit plus changer. | disques? parents?
+Mémoire dynamique | Dynamic Memory | Réglage Hyper-V qui ajuste la mémoire d'une VM selon sa charge ; désactivée pour un serveur du labo. | mémoire dynamique
+vCPU | Processeur virtuel | Processeur virtuel attribué à une VM ; trop de vCPU prive l'hôte et les autres VM. | vCPU;processeurs? virtuels?
+SID | Security Identifier | Identifiant de sécurité unique d'une installation Windows ou d'un compte ; Sysprep retire celui de la machine. | SID
+OOBE | Out-Of-Box Experience | Écran de première configuration de Windows, qui s'affiche au premier démarrage d'une image généralisée. | OOBE
+NAT | Network Address Translation | Traduction d'adresses : les machines d'un réseau privé sortent par l'adresse de l'hôte, sans être joignables de l'extérieur. | NAT\b
 ## Linux & virtualisation
 Linux | | Noyau libre ; une distribution (Debian, Ubuntu) l'assemble avec des outils et des paquets. | Linux
 Debian | | Distribution Linux communautaire, stable, base d'Ubuntu et de Proxmox. | Debian

@@ -112,6 +112,15 @@ Le lint ne contrôle ici que la structure (symptôme + `reveal`), pas la qualit�
 | Aucun secret (mot de passe, IP réelle, `ssh-rsa AAAA…`, jeton) | oui | oui | oui |
 | Nombre de `<li>` d'un `.lab[data-lab="mission-pN"]` = `mission.etapes` du catalogue | oui | oui | oui |
 
+Contrôles de contenu (tous niveaux) : bloc 1 = 2 à 4 `<li>` ; blocs 3 et 4 = au moins 40 mots hors balises et hors code ;
+blocs 7 et 8 contiennent un `<details class="reveal">` ; un `.verify` porte `verify__out` **ou** l'attribut `data-constat`
+(constat d'interface, sans sortie fabriquée) ; le `.takeaway[data-bloc="9"]` est le **dernier** `data-bloc` de la section
+chapitre. Avertissement (non bloquant) : `192.168.1.` dans un module non-réseau (adresses à ramener au plan Orion).
+
+**Commandes adaptées dans un reveal** : la correction d'un « À toi » qui reprend une commande du module en changeant
+noms ou tailles n'a pas été exécutée telle quelle. Son `.terminal` porte `data-reconstitue` **et** le libellé visible
+« reconstitué, non testé » (le lint les compte).
+
 Définition de « terminé » : voir `PLAN-REFONTE.md` §9 (lint + `construit.js --verif` + navigateur ; catalogue à jour ;
 au moins 1 question de test par objectif du bloc 1, écrite dans `assets/quiz-data.js`, jamais dans `assets/quiz/*.js`).
 

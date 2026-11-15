@@ -76,6 +76,20 @@ function analyseChapitre(ch) {
   const b4 = (b[4] || [])[0];
   a.terminalDansBloc4 = !!b4 && /class\s*=\s*"[^"]*\b(terminal|cmdex)\b/.test(b4.html);
   a.dedans = b;
+  // ordre : le bloc 9 doit être le dernier data-bloc de la section
+  const ordre = ouvertures(ch.corps, '(?:div|p|section|ul|ol|details)', (t) => aAttr(t, 'data-bloc')).map((o) => attr(o.tag, 'data-bloc'));
+  a.bloc9Dernier = !a.has[9] || ordre[ordre.length - 1] === '9';
+  // contenu minimal
+  const mots = (h) => texte(h.replace(/<(code|pre)\b[\s\S]*?<\/\1>/gi, ' ')).split(/\s+/).filter(Boolean).length;
+  a.mots = {};
+  for (const k of [3, 4]) a.mots[k] = (b[k] || []).reduce((t, x) => t + mots(x.html), 0);
+  a.li1 = b1 ? (b1.html.replace(/<p\b[^>]*brief__foot[\s\S]*?<\/p>/i, '').match(/<li\b/gi) || []).length : 0;
+  a.reveal = {};
+  for (const k of [7, 8]) a.reveal[k] = !(b[k] || []).length || (b[k] || []).every((x) => /<details\b[^>]*\breveal\b/i.test(x.html));
+  // .verify : verify__out ou data-constat
+  a.verifySansSortie = ouvertures(ch.corps, 'div', (t) => classes(t).includes('verify'))
+    .filter((o) => { const el = element(ch.corps, o.i, 'div'); return !/verify__out/.test(el) && !aAttr(o.tag, 'data-constat'); }).length;
+  a.f192 = (ch.corps.match(/192\.168\.1\./g) || []).length;
   a.reconstitues = ouvertures(ch.corps, '[a-z0-9]+', (t) => aAttr(t, 'data-reconstitue')).length;
   // corrections hors reveal
   for (const o of ouvertures(ch.corps, 'div', (t) => classes(t).some((c) => c === 'exo' || c === 'cmdex'))) {
@@ -146,6 +160,11 @@ function verifie(html, cle, niveau) {
     if (!a.has[1]) E(a.id, 'bloc 1 manquant');
     if (!a.has[2]) E(a.id, 'bloc 2 manquant');
     if (!a.has[9]) E(a.id, 'bloc 9 manquant');
+    else if (!a.bloc9Dernier) E(a.id, 'bloc 9 : doit être le dernier bloc data-bloc de la section');
+    if (a.has[1] && (a.li1 < 2 || a.li1 > 4)) E(a.id, `bloc 1 : ${a.li1} <li> (2 à 4 attendus)`);
+    for (const k of [3, 4]) if (a.has[k] && a.mots[k] < 40) E(a.id, `bloc ${k} : ${a.mots[k]} mots hors code (40 minimum)`);
+    for (const k of [7, 8]) if (a.has[k] && !a.reveal[k]) E(a.id, `bloc ${k} : <details class="reveal"> manquant`);
+    if (a.verifySansSortie) E(a.id, `bloc 6 : ${a.verifySansSortie} .verify sans verify__out ni data-constat`);
     if (niveau === 'A' || niveau === 'B') {
       if (!a.has[3]) E(a.id, 'bloc 3 manquant');
       if (!a.has[4]) E(a.id, 'bloc 4 manquant');
@@ -191,6 +210,10 @@ function verifie(html, cle, niveau) {
     const li = (element(html, o.i, 'div').match(/<li\b/gi) || []).length;
     if (attendu === undefined) avert.push(`mission-p${num} : palier absent du catalogue`);
     else if (li !== attendu) erreurs.push(`mission-p${num} : ${li} <li> pour mission.etapes = ${attendu}`);
+  }
+  if (!/^(reseau-bases|subnetting|depannage-reseau|ccna-reseau|cisco-securite|voip)$/.test(cle)) {
+    const l = analyses.filter((a) => a.f192).map((a) => `chap#${a.id} (${a.f192})`);
+    if (l.length) avert.push(`192.168.1.x dans un module non-réseau : ${l.join(', ')}`);
   }
   const s = secrets(html);
   s.err.forEach((m) => erreurs.push(`secret : ${m}`));

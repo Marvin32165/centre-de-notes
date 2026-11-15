@@ -175,10 +175,10 @@ SRV-FILE01   Off          2</pre>
                 <p class="exo__label">À toi — une seconde VM de test</p>
                 <p>Crée en PowerShell une VM génération 2 nommée <code>SRV-TEST01</code> : 4 Go de mémoire au démarrage, un disque neuf de 40 Go, rangée sous <code>C:\VM</code>, branchée sur le <em>Default Switch</em>. Puis affiche son nom, son état et sa génération.</p>
                 <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>On reprend la commande du chapitre en changeant le nom, la mémoire et la taille du disque :</p>
-<div class="terminal"><pre class="terminal__code">New-VM -Name "SRV-TEST01" -Generation 2 -MemoryStartupBytes 4GB -Path "C:\VM" `
+<div class="terminal" data-reconstitue><pre class="terminal__code">New-VM -Name "SRV-TEST01" -Generation 2 -MemoryStartupBytes 4GB -Path "C:\VM" `
        -NewVHDPath "C:\VM\SRV-TEST01\SRV-TEST01.vhdx" -NewVHDSizeBytes 40GB -SwitchName "Default Switch"
 Get-VM -Name SRV-TEST01 | Select-Object Name, State, Generation</pre></div>
-                <p>Attendu : la VM est <code>Off</code>, génération <code>2</code>. Variante des commandes du module, adaptée sans exécution supplémentaire.</p></div></details>
+                <p>Attendu : la VM est <code>Off</code>, génération <code>2</code>. Variante des commandes du module, adaptée sans exécution supplémentaire : <em>reconstitué, non testé</em>.</p></div></details>
             </div>
             <div class="exo exo--sans-indice" data-bloc="7">
                 <p class="exo__label">Variante sans indice</p>
@@ -310,7 +310,7 @@ Get-VM -Name SRV-TEST01 | Select-Object Name, State, Generation</pre></div>
 <span class="c"># VM Linux : démarrage sécurisé gardé, modèle « Microsoft UEFI Certificate Authority »</span>
 <span class="k">Set-VMFirmware</span> <span class="p">-VMName</span> SRV-ZBX01 <span class="p">-EnableSecureBoot</span> On <span class="p">-SecureBootTemplate</span> MicrosoftUEFICertificateAuthority</pre>
             </div>
-            <div class="verify" data-bloc="6">
+            <div class="verify" data-bloc="6" data-constat>
                 <p class="verify__label">Vérifier</p>
                 <p>Constat d'interface, VM éteinte : clic droit → <strong>Paramètres</strong>. Rubrique <em>Mémoire</em> : l'option de mémoire dynamique est décochée et la mémoire de démarrage vaut 8192 Mo. Rubrique <em>Processeurs</em> : le nombre de processeurs virtuels est 2. Rubrique <em>Microprogramme</em> : le disque ou l'ISO attendu est en tête de l'ordre de démarrage.</p>
                 <p class="verify__fail">Un réglage est grisé : la VM n'est pas éteinte. Le nombre de processeurs affiche encore 12 : la valeur proposée par l'assistant n'a pas été changée.</p>
@@ -433,7 +433,7 @@ Set-VMProcessor -VMName SRV-FILE01 -Count 2</pre></div><p>Ce sont les commandes 
             </div>
             <p>Activer aussi la <strong>session étendue</strong> dans la fenêtre de connexion à la VM : l'affichage s'adapte alors dynamiquement à la taille de la fenêtre, et le presse-papiers devient partagé avec l'hôte.</p>
 
-            <div class="verify" data-bloc="6">
+            <div class="verify" data-bloc="6" data-constat>
                 <p class="verify__label">Vérifier</p>
                 <p>Constat d'interface : tu ouvres une session administrateur avec le mot de passe défini à l'installation ; le <strong>Gestionnaire de serveur</strong> (<em>Local Server</em>) est accessible, c'est le point de départ du chapitre suivant. Avec la session étendue, redimensionner la fenêtre de la VM adapte l'affichage.</p>
                 <p class="verify__fail">La VM redémarre sur l'écran d'installation ou reste sur un disque vide : la touche n'a pas été pressée à temps, ou l'ordre de démarrage place le disque avant l'ISO (chapitre précédent).</p>
@@ -554,7 +554,7 @@ Set-VMProcessor -VMName SRV-FILE01 -Count 2</pre></div><p>Ce sont les commandes 
                 <p>Couper le pare-feu fait gagner du temps quand on débogue un TP, et <strong>uniquement</strong> dans ce cadre. Sur un serveur réel, on ouvre les ports nécessaires — on ne désarme pas la machine.</p>
             </div>
 
-            <div class="verify" data-bloc="6">
+            <div class="verify" data-bloc="6" data-constat>
                 <p class="verify__label">Vérifier</p>
                 <p>Constat d'interface : dans <code>ncpa.cpl</code>, les propriétés IPv4 affichent <code>192.168.1.1</code> et <code>255.255.255.0</code> ; après le redémarrage, <em>Local Server</em> affiche le nom <code>WS01</code>, le fuseau choisi et le Bureau à distance activé.</p>
                 <p class="verify__fail">Le nom n'a pas changé : le redémarrage n'a pas eu lieu. L'adresse est repassée en automatique : la modification n'a pas été validée dans les propriétés de la carte.</p>
@@ -661,7 +661,7 @@ Set-VMProcessor -VMName SRV-FILE01 -Count 2</pre></div><p>Ce sont les commandes 
                 <div class="step"><div class="step__num">6</div><div class="step__body"><strong>Nettoyer</strong><p>Supprimer <code>C:\VM\WS01</code>. Il ne reste que l'image, réutilisable indéfiniment.</p></div></div>
             </div>
 
-            <div class="verify" data-bloc="6">
+            <div class="verify" data-bloc="6" data-constat>
                 <p class="verify__label">Vérifier</p>
                 <p>Constat d'interface : à la fin de Sysprep, la VM passe à l'état <em>Off</em> dans Hyper-V Manager et tu ne la redémarres pas. Après l'isolement, l'explorateur de fichiers montre <code>C:\PARENT\TEST-SYSPREP.vhdx</code> et plus aucun dossier <code>C:\VM\WS01</code>.</p>
                 <p class="verify__fail">Un fichier <code>.avhdx</code> traîne à côté du <code>.vhdx</code> : un point de contrôle existe encore. Le supprimer dans Hyper-V Manager le fusionne dans le disque principal, avant d'isoler l'image.</p>
@@ -909,7 +909,7 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
 <span class="k">New-NetIPAddress</span> <span class="p">-InterfaceAlias</span> <span class="s">"vEthernet (LABOPS)"</span> <span class="p">-IPAddress</span> 172.16.50.1 <span class="p">-PrefixLength</span> 24   <span class="c"># l'hôte = passerelle</span>
 <span class="k">New-NetNat</span> <span class="p">-Name</span> <span class="s">"LABOPS-NAT"</span> <span class="p">-InternalIPInterfaceAddressPrefix</span> 172.16.50.0/24</pre>
             </div>
-            <div class="verify" data-bloc="6">
+            <div class="verify" data-bloc="6" data-constat>
                 <p class="verify__label">Vérifier</p>
                 <p>Constat d'interface : dans le <em>Gestionnaire de commutateur virtuel</em> d'Hyper-V Manager, <code>LABOPS</code> figure dans la liste, de type interne ; sur l'hôte, la carte <code>vEthernet (LABOPS)</code> existe avec l'adresse <code>172.16.50.1</code>. Une VM raccordée à ce commutateur et configurée dans <code>172.16.50.0/24</code> joint l'hôte.</p>
                 <p class="verify__fail">La carte <code>vEthernet (LABOPS)</code> est introuvable : le commutateur n'est pas de type interne, ou <code>New-NetIPAddress</code> vise un autre nom de carte (<code>-InterfaceAlias</code>).</p>
@@ -1026,7 +1026,7 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
 <span class="k">Restore-VMSnapshot</span> <span class="p">-VMName</span> SRV-FILE01 <span class="p">-Name</span> <span class="s">"Avant DFS"</span> <span class="p">-Confirm:$false</span><span class="c">   # revenir</span>
 <span class="k">Remove-VMSnapshot</span> <span class="p">-VMName</span> SRV-FILE01 <span class="p">-Name</span> <span class="s">"Avant DFS"</span><span class="c">             # supprimer = fusionner</span></pre>
             </div>
-            <div class="verify" data-bloc="6">
+            <div class="verify" data-bloc="6" data-constat>
                 <p class="verify__label">Vérifier</p>
                 <p>Après <code>Checkpoint-VM</code>, la commande <code>Get-VMSnapshot -VMName SRV-FILE01</code> liste le point de contrôle <code>Avant DFS</code> ; après <code>Remove-VMSnapshot</code>, il n'y figure plus et le fichier <code>.avhdx</code> correspondant a été fusionné.</p>
                 <p class="verify__fail">Le point n'apparaît pas dans la liste : le nom donné à <code>-SnapshotName</code> n'est pas celui interrogé, ou la VM visée n'est pas la bonne (<code>-VMName</code>).</p>
@@ -1038,9 +1038,9 @@ Differencing C:\PARENT\TEST-SYSPREP.vhdx</pre>
             <div class="exo" data-bloc="7">
                 <p class="exo__label">À toi — figer puis revenir</p>
                 <p>Avant d'appliquer une GPO de test, fige <code>SRV-FILE01</code> sous le nom « Avant GPO ». La GPO se passe mal : reviens en arrière sans qu'une confirmation soit demandée, puis supprime le point de contrôle.</p>
-                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal"><pre class="terminal__code">Checkpoint-VM -Name SRV-FILE01 -SnapshotName "Avant GPO"
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue><pre class="terminal__code">Checkpoint-VM -Name SRV-FILE01 -SnapshotName "Avant GPO"
 Restore-VMSnapshot -VMName SRV-FILE01 -Name "Avant GPO" -Confirm:$false
-Remove-VMSnapshot -VMName SRV-FILE01 -Name "Avant GPO"</pre></div><p>Mêmes cmdlets que dans le terminal ci-dessus, avec un autre nom de point de contrôle.</p></div></details>
+Remove-VMSnapshot -VMName SRV-FILE01 -Name "Avant GPO"</pre></div><p>Mêmes cmdlets que dans le terminal ci-dessus, avec un autre nom de point de contrôle (<em>reconstitué, non testé</em>).</p></div></details>
             </div>
             <div class="exo exo--sans-indice" data-bloc="7">
                 <p class="exo__label">Variante sans indice</p>

@@ -42,6 +42,7 @@
             <li><a class="toc__link" href="#reseau"><span>02</span> Le réseau sur l'hôte</a></li>
             <li><a class="toc__link" href="#ordre"><span>03</span> Construire dans l'ordre</a></li>
             <li><a class="toc__link" href="#competences"><span>04</span> Grille de compétences</a></li>
+            <li><a class="toc__link" href="#missions"><span>05</span> Missions de palier</a></li>
         </ul>
     </aside>
 
@@ -173,6 +174,30 @@ Active                           : True</pre>
         
         </section>
 
+        <section class="panel" id="missions">
+            <p class="chapter__num">Mettre en situation</p>
+            <h2 class="chapter__title">Les missions de palier</h2>
+            <p class="chapter__intro">Réussir les tests dit que tu comprends. Une mission dit que tu sais <strong>faire seul</strong> : pas de commande donnée à l'avance, une panne à trouver sans indice, un document à rendre. Chaque étape se termine par une preuve que tu peux montrer à un recruteur. Les cases se cochent dans ce navigateur, et c'est la dernière condition pour atteindre le palier.</p>
+
+            <div class="lab" data-lab="mission-p1">
+                <p class="lab__label">Mission · palier 01 · Technicien·ne support (N1)</p>
+                <p class="lab__title">Le labo de la petite entreprise</p>
+                <div class="lab__meta"><span><b>Objectif :</b> faire fonctionner un petit réseau, le documenter, puis retrouver une panne que tu n'as pas provoquée, comme au support</span><span><b>Point de départ :</b> les modules du palier 01 lus ; Hyper-V et l'image Sysprep prêts (module <a href="modules/hyperv.html">Hyper-V</a>)</span><span><b>Règle :</b> ne rouvre le cours qu'après avoir cherché 10 minutes</span><span><b>Livrables :</b> une fiche d'adressage, un plan de découpage, un ticket, trois messages</span></div>
+                <ol class="lab__steps">
+                <li><p><strong>Fiche d'adressage.</strong> Sans regarder la section « Le plan » ci-dessus, écris de mémoire le domaine, le réseau, la passerelle, le DNS et la plage DHCP du lab, puis compare. <em>Preuve :</em> un tableau machine / adresse / rôle, avec les écarts corrigés au stylo d'une autre couleur.</p></li>
+                <li><p><strong>Le réseau répond.</strong> Depuis une VM du lab, prouve que la passerelle, puis Internet, répondent, et explique à voix haute pourquoi on teste dans cet ordre. <em>Preuve :</em> les deux sorties de commande, collées dans ta fiche.</p></li>
+                <li><p><strong>Découper sans chevauchement.</strong> Exercice sur papier (le lab Orion lui-même reste un <code>/24</code> plat). Partage <code>172.16.50.0/24</code> en quatre sous-réseaux pour 60 postes, 20 serveurs, 6 postes d'administration et 25 invités, avec 30 % de croissance chaque fois. <em>Preuve :</em> un tableau réseau / masque / première et dernière adresse utilisable / diffusion, vérifié dans le <a href="atelier.html">calculateur IPv4</a> de l'atelier ; aucun chevauchement.</p></li>
+                <li><p><strong>Un serveur Debian dans le lab, sans te couper l'accès.</strong> Appelle-le <code>SRV-DEB01</code> et donne-lui l'adresse fixe <code>172.16.50.45</code> (libre dans le plan), avec la bonne passerelle et le bon DNS. Avant de modifier la configuration réseau, garde une copie du fichier et un point de contrôle, et note comment tu reviens en arrière. <em>Preuve :</em> l'adresse est toujours là après un redémarrage, et tu sais dire à quelle ligne tu aurais retrouvé l'ancienne config.</p></li>
+                <li><p><strong>Une panne que tu n'as pas provoquée.</strong> Un camarade casse une chose sans te dire laquelle (DNS du client, passerelle, pare-feu, service arrêté). Retrouve-la avec la méthode par couches du module <a href="modules/depannage-reseau.html#methode">Dépannage réseau</a>. <em>Preuve :</em> un ticket complet — symptôme, périmètre, diagnostic avec les commandes et leurs sorties, cause, correction vérifiée, prévention — rédigé comme dans <a href="modules/depannage-reseau.html#documenter">« Ce qu'un ticket bien rempli contient »</a>. Objectif : moins de 10 minutes.</p></li>
+                <li><p><strong>Parler à l'utilisateur.</strong> Écris trois messages pour la panne de l'étape précédente : l'accusé de réception, le point d'avancement, la clôture. Pas de jargon, un délai annoncé. <em>Preuve :</em> un camarade, ou toi le lendemain, comprend ce qui s'est passé et ce qu'il doit faire, sans poser de question.</p></li>
+                </ol>
+            </div>
+            <div class="tip">
+                <p class="tip__label">Seul, sans camarade</p>
+                <p>L'étape de la panne ne vaut que si tu ignores ce qui a été cassé : une panne qu'on a soi-même choisie s'apprend, elle ne s'entraîne pas. Un script de panne aléatoire est prévu avec la refonte du site ; d'ici là, fais cette étape avec quelqu'un d'autre.</p>
+            </div>
+        </section>
+
         <div class="sources">
             <p class="sources__label">Pour aller plus loin — sources</p>
             <ul>
@@ -188,7 +213,7 @@ Active                           : True</pre>
     <p><a href="index.html">← Retour au portail</a> · <a href="examens.html">Examens transversaux</a> · <a href="revision.html">Révision du jour</a></p>
 </footer>
 
-<script src="assets/catalogue.js?v=835ec2e5"></script>
+<script src="assets/catalogue.js?v=548e694c"></script>
 <script src="assets/app.js?v=fabe4251"></script>
 <script src="assets/pratique.js?v=6ed4d335"></script>
 </body>

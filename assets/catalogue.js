@@ -1,5 +1,5 @@
-/* Catalogue du site publié : parcours, prérequis et liens entre modules.
-   Généré par site/outils/publie.js — ne pas éditer à la main. */
+/* Catalogue du site : parcours, paliers, prérequis et liens entre modules.
+   Source unique, éditée à la main dans ce dépôt ; `node outils/construit.js` recalcule ensuite les empreintes ?v=. */
 window.CATALOGUE = {
   "parcours": [
     {

@@ -1,0 +1,170 @@
+# Source du glossaire du site — un terme par ligne :
+#   Terme | Forme développée (facultatif) | Définition | Motifs de recherche (facultatif, séparés par ;)
+# Les motifs sont des expressions régulières ; sans motif, on cherche le terme lui-même.
+# Les sigles (majuscules) sont cherchés en respectant la casse. Les lignes « ## » ouvrent un domaine.
+# Les entrées .gloss/.gl des modules sont ajoutées automatiquement si le terme n'est pas déjà ici.
+# Après modification : python3 site/outils/generate-glossaire.py (depuis la racine du dépôt).
+
+## Réseau
+OSI | Open Systems Interconnection | Modèle en 7 couches (physique, liaison, réseau, transport, session, présentation, application) qui sert à raisonner et à dépanner. | OSI
+TCP/IP | | Modèle en 4 couches (accès réseau, Internet, transport, application) qui décrit les protocoles réellement utilisés. | TCP/IP
+Encapsulation | | Chaque couche ajoute son en-tête aux données de la couche du dessus : segment → paquet → trame. | encapsul\w*
+Trame | | Unité de la couche 2 (Ethernet) : adresses MAC source et destination, données, contrôle d'erreur. | trames?
+Paquet | | Unité de la couche 3 : adresses IP source et destination, TTL, données. | paquets?
+Adresse MAC | Media Access Control | Adresse physique de 48 bits d'une carte réseau, écrite en hexadécimal (aa:bb:cc:dd:ee:ff) ; lue par les switchs. | MAC
+Adresse IP | Internet Protocol | Adresse logique d'une interface : 32 bits en IPv4 (4 octets décimaux), 128 bits en IPv6 ; lue par les routeurs. | adresses? IP\b
+IPv4 | | Version 4 d'IP : adresses de 32 bits notées en quatre octets décimaux (172.16.50.10). | IPv4
+IPv6 | | Version 6 d'IP : adresses de 128 bits en hexadécimal, abrégées avec « :: » ; pas de broadcast ni d'ARP (NDP à la place). | IPv6
+Masque de sous-réseau | | Indique quelle partie de l'adresse IP désigne le réseau (bits à 1) et quelle partie l'hôte (bits à 0). | masques? de sous-réseau;masques?\b
+CIDR | Classless Inter-Domain Routing | Notation du masque en nombre de bits réseau après une barre oblique : /24 = 255.255.255.0. | CIDR
+Préfixe | | Partie réseau d'une adresse, ou sa longueur notée /n. | préfixes?
+Sous-réseau | | Découpage d'un réseau en plus petits réseaux en empruntant des bits à la partie hôte. | sous-réseaux?;subnetting
+Broadcast | Diffusion | Adresse qui vise toutes les machines d'un réseau : la dernière du sous-réseau en IPv4, ff:ff:ff:ff:ff:ff en Ethernet. | broadcasts?
+Block size | Pas | Écart entre deux sous-réseaux successifs : 256 moins la valeur de l'octet intéressant du masque. | block size
+VLSM | Variable Length Subnet Mask | Découper un réseau en sous-réseaux de tailles différentes, du plus grand besoin au plus petit. | VLSM
+Passerelle par défaut | Default gateway | Routeur auquel une machine envoie tout ce qui n'est pas dans son réseau local. | passerelles?
+Routeur | | Équipement de couche 3 qui relie des réseaux différents en lisant l'IP de destination et sa table de routage. | routeurs?
+Switch | Commutateur | Équipement de couche 2 qui relie les machines d'un réseau local et envoie chaque trame au bon port d'après la MAC. | switchs?;commutateurs?
+Table de routage | | Liste des réseaux connus d'un routeur ou d'un poste, avec la sortie à prendre pour chacun. | tables? de routage
+Route par défaut | | Route 0.0.0.0/0 utilisée quand aucune route plus précise ne correspond. | routes? par défaut;0\.0\.0\.0/0
+Préfixe le plus long | Longest match | Règle de choix : parmi les routes qui correspondent, la plus précise (masque le plus long) l'emporte. | préfixe le plus long
+Distance administrative | | Crédibilité d'une source de routes chez Cisco (connecté 0, statique 1, OSPF 110) : la plus petite gagne. | distances? administratives?
+TCP | Transmission Control Protocol | Transport fiable avec connexion : poignée de main SYN, SYN-ACK, ACK, accusés de réception, retransmissions. | TCP
+UDP | User Datagram Protocol | Transport sans connexion ni accusé de réception, rapide : DNS, DHCP, voix. | UDP
+Port | | Numéro (0–65535) qui désigne le service visé sur une machine : 22 SSH, 53 DNS, 443 HTTPS. | ports?\b
+Poignée de main TCP | Three-way handshake | Ouverture d'une connexion TCP en trois messages : SYN, SYN-ACK, ACK. | poignée de main;handshake
+ICMP | Internet Control Message Protocol | Protocole de messages de contrôle et d'erreur d'IP, utilisé par ping et traceroute. | ICMP
+DNS | Domain Name System | Annuaire qui traduit les noms (www.exemple.be) en adresses IP, et trouve les services d'un domaine (SRV). | DNS
+Enregistrement A / AAAA | | Enregistrement DNS qui associe un nom à une adresse IPv4 (A) ou IPv6 (AAAA). | AAAA
+Enregistrement SRV | | Enregistrement DNS qui indique quel serveur fournit un service (par exemple les contrôleurs de domaine). | SRV
+DHCP | Dynamic Host Configuration Protocol | Distribue automatiquement IP, masque, passerelle et DNS aux machines, en quatre messages (DORA). | DHCP
+Bail DHCP | | Durée pendant laquelle une adresse est attribuée ; le client tente de le renouveler à 50 %. | bail;baux
+Relais DHCP | ip helper-address | Transmet les requêtes DHCP (broadcast) d'un réseau vers un serveur situé dans un autre réseau. | relais DHCP;helper-address
+VLAN | Virtual LAN | Réseau local virtuel : découpe un switch en plusieurs réseaux isolés au niveau 2. | VLAN
+Trunk | | Lien qui transporte plusieurs VLAN, chaque trame portant une étiquette 802.1Q. | trunks?
+VLAN natif | | VLAN dont les trames passent sans étiquette sur un trunk ; doit être identique des deux côtés. | VLAN natif
+Routage inter-VLAN | | Faire communiquer des VLAN entre eux via un routeur (router-on-a-stick) ou un switch de niveau 3 (SVI). | inter-VLAN
+STP | Spanning Tree Protocol | Protocole qui coupe les boucles d'un réseau de switchs en bloquant des ports redondants. | STP;spanning tree
+OSPF | Open Shortest Path First | Protocole de routage dynamique à état de liens, qui calcule le plus court chemin (coût) dans une zone. | OSPF
+ACL | Access Control List | Liste de règles qui autorise ou refuse des paquets ; lue de haut en bas, avec un refus implicite à la fin. | ACL
+Wireshark | | Analyseur de trafic qui capture les trames et les décode couche par couche. | Wireshark
+Ping | | Commande qui envoie des requêtes ICMP Echo pour tester qu'une machine répond. | ping
+Traceroute | tracert | Commande qui liste les routeurs traversés jusqu'à une destination, en jouant sur le TTL. | traceroute;tracert
+nslookup | | Commande qui interroge un serveur DNS pour résoudre un nom. | nslookup
+Test-NetConnection | | Cmdlet PowerShell qui teste ping, route et ouverture d'un port TCP. | Test-NetConnection
+MTU | Maximum Transmission Unit | Taille maximale d'un paquet sur un lien (1500 octets en Ethernet). | MTU
+QoS | Quality of Service | Ensemble de mécanismes qui donnent la priorité à certains flux (la voix) sur un réseau chargé. | QoS
+Duplex | | Mode d'un lien : full (émet et reçoit en même temps) ou half ; un désaccord des deux côtés cause erreurs et lenteurs. | duplex
+PoE | Power over Ethernet | Alimentation électrique d'un appareil (téléphone, borne Wi-Fi) par le câble réseau. | PoE
+Wi-Fi | IEEE 802.11 | Réseau local sans fil. | Wi-Fi
+## Téléphonie
+VoIP | Voice over IP | Téléphonie sur un réseau IP. | VoIP
+SIP | Session Initiation Protocol | Protocole de signalisation qui établit, modifie et termine les appels (INVITE, 180, 200 OK, BYE). | SIP
+RTP | Real-time Transport Protocol | Transporte la voix elle-même, en UDP, une fois l'appel établi par SIP. | RTP
+Codec | | Algorithme qui numérise et compresse la voix : G.711 (64 kb/s), G.729 (8 kb/s), G.722 (HD). | codecs?
+Gigue | Jitter | Variation du délai d'arrivée des paquets ; compensée par un tampon de gigue. | gigue;jitter
+PBX / IPBX | | Autocommutateur téléphonique d'entreprise, sur IP pour un IPBX (3CX par exemple). | PBX
+Trunk SIP | | Liaison SIP entre l'IPBX et un opérateur pour appeler l'extérieur. | trunk SIP
+## Windows & Active Directory
+Active Directory | AD DS | Annuaire Microsoft qui centralise comptes, ordinateurs, groupes et stratégies d'un domaine. | Active Directory;AD DS
+Domaine | | Ensemble de comptes et d'ordinateurs gérés par les mêmes contrôleurs de domaine (orion.local). | domaines?\b
+Contrôleur de domaine | DC | Serveur qui héberge Active Directory et authentifie les utilisateurs du domaine. | contrôleurs? de domaine
+Forêt | | Ensemble d'un ou plusieurs domaines qui partagent schéma et configuration : la frontière de sécurité d'AD. | forêts?
+Kerberos | | Protocole d'authentification d'AD par tickets (TGT puis tickets de service), sensible à l'heure (5 min). | Kerberos
+TGT | Ticket-Granting Ticket | Ticket Kerberos obtenu à l'ouverture de session, qui sert à demander les tickets de service. | TGT
+LDAP | Lightweight Directory Access Protocol | Protocole d'interrogation d'un annuaire (port 389, 636 en LDAPS). | LDAP
+GPO | Group Policy Object | Stratégie de groupe : réglages appliqués aux ordinateurs et utilisateurs d'un site, domaine ou OU. | GPO
+OU | Organizational Unit | Unité d'organisation : dossier d'AD qui range les objets et reçoit des GPO. | OU\b;unités? d'organisation
+Groupe de sécurité | | Groupe AD qui reçoit des droits ; étendue globale, domaine local ou universelle. | groupes? de sécurité
+NTFS | | Système de fichiers de Windows, avec droits par utilisateur et groupe (ACL). | NTFS
+Droits de partage | | Droits posés sur un dossier partagé ; combinés aux droits NTFS, le plus restrictif l'emporte. | droits de partage;droits du partage;autorisations de partage;partages?
+PowerShell | | Shell et langage de script de Microsoft, qui manipule des objets (cmdlets Verbe-Nom). | PowerShell
+Cmdlet | | Commande PowerShell de la forme Verbe-Nom (Get-Service, New-ADUser). | cmdlets?
+Pipeline | | Enchaînement de commandes où la sortie de l'une devient l’entrée de la suivante (la barre verticale). | pipeline
+Stratégie d'exécution | ExecutionPolicy | Réglage PowerShell qui autorise ou non l'exécution de scripts (Restricted, RemoteSigned…). | ExecutionPolicy;stratégie d'exécution
+WinRM | Windows Remote Management | Service d'administration à distance de Windows (ports 5985/5986), utilisé par PowerShell Remoting. | WinRM
+Sysprep | | Outil qui généralise une installation Windows (nouveau SID au démarrage) pour en faire une image réutilisable. | Sysprep
+iSCSI | | Protocole qui présente un disque distant (LUN) à un serveur à travers le réseau IP. | iSCSI
+LUN | Logical Unit Number | Disque logique présenté par une baie ou une cible iSCSI. | LUN
+Cluster de basculement | Failover cluster | Groupe de serveurs qui reprennent les rôles d'un nœud en panne. | cluster de basculement;clusters?\b
+Quorum | | Majorité de votes nécessaire pour qu'un cluster continue à fonctionner ; évite que deux moitiés travaillent seules. | quorum
+CSV | Cluster Shared Volume | Volume partagé accessible en même temps par tous les nœuds d'un cluster. | CSV
+RAID | Redundant Array of Independent Disks | Regroupement de disques pour la performance ou la tolérance aux pannes (RAID 1, 5, 10…). | RAID
+RDS | Remote Desktop Services | Services Bureau à distance : sessions et applications Windows publiées pour plusieurs utilisateurs. | RDS
+RemoteApp | | Application publiée par RDS qui s'affiche comme une application locale. | RemoteApp
+CAL | Client Access License | Licence d'accès client, par utilisateur ou par périphérique (RDS, Windows Server, Exchange…). | CAL
+IIS | Internet Information Services | Serveur web de Windows. | IIS
+Pool d'applications | | Processus w3wp isolé qui exécute un ou plusieurs sites IIS sous sa propre identité. | pools? d'applications
+Certificat | X.509 | Document signé par une autorité qui lie une clé publique à une identité (un nom de serveur). | certificats?
+PKI | Public Key Infrastructure | Infrastructure à clés publiques : autorités de certification, certificats, listes de révocation. | PKI
+Autorité de certification | CA | Entité qui signe les certificats ; sa racine doit être approuvée par les clients. | autorités? de certification
+SMTP | Simple Mail Transfer Protocol | Protocole d'envoi du courrier entre serveurs (port 25, 587 pour la soumission). | SMTP
+SQL Server | | Moteur de bases de données relationnelles de Microsoft. | SQL Server
+T-SQL | Transact-SQL | Dialecte SQL de SQL Server. | T-SQL
+Modèle de récupération | | Réglage d'une base SQL (SIMPLE, FULL) qui décide si le journal est conservé pour restaurer à un instant précis. | modèles? de récupération
+Journal des transactions | | Fichier .ldf qui trace chaque modification d'une base ; sa sauvegarde permet la restauration à un instant donné. | journal des transactions
+Always On | | Groupes de disponibilité SQL Server : copies synchronisées d'une base sur plusieurs serveurs. | Always On
+SharePoint | | Plateforme Microsoft de sites intranet, documents et listes. | SharePoint
+Exchange | | Serveur de messagerie de Microsoft. | Exchange
+Hyper-V | | Hyperviseur de Microsoft, intégré à Windows et Windows Server. | Hyper-V
+Point de contrôle | Checkpoint | Instantané d'une VM Hyper-V à un moment donné ; ce n'est pas une sauvegarde. | points? de contrôle;checkpoints?
+Disque de différenciation | | Disque virtuel qui n'enregistre que les écarts par rapport à un disque parent. | différenciation
+Commutateur virtuel | | Switch logiciel d'Hyper-V : externe, interne ou privé. | commutateurs? virtuels?;vSwitch
+## Linux & virtualisation
+Linux | | Noyau libre ; une distribution (Debian, Ubuntu) l'assemble avec des outils et des paquets. | Linux
+Debian | | Distribution Linux communautaire, stable, base d'Ubuntu et de Proxmox. | Debian
+Shell | | Interpréteur de commandes (bash) entre l'utilisateur et le système. | shell;bash
+Root | | Superutilisateur de Linux, qui a tous les droits ; on l'utilise via sudo. | root
+sudo | | Exécute une commande avec les droits d'un autre utilisateur, root par défaut. | sudo
+Permissions | rwx | Droits lecture (r=4), écriture (w=2), exécution (x=1) pour le propriétaire, le groupe et les autres. | permissions?;droits rwx
+chmod | | Change les permissions d'un fichier, en octal (chmod 640) ou en symbolique (chmod g+w). | chmod
+chown | | Change le propriétaire (et le groupe) d'un fichier. | chown
+umask | | Masque qui retire des droits aux fichiers et dossiers créés (022 → fichiers 644, dossiers 755). | umask
+Inode | | Structure qui décrit un fichier (droits, propriétaire, blocs) ; le nom n'est qu'un lien vers elle. | inodes?
+Redirection | | Envoie la sortie d'une commande vers un fichier (>, >>) ou lit un fichier en entrée (<) ; 2> pour les erreurs. | redirections?
+Paquet (logiciel) | | Archive d'un logiciel et de ses métadonnées, installée par le gestionnaire (apt et .deb sous Debian). | apt\b;paquets? \.deb
+systemd | | Système d'initialisation et gestionnaire de services de Linux (systemctl, journalctl). | systemd;systemctl
+journalctl | | Commande qui lit le journal de systemd. | journalctl
+cron | | Planificateur de tâches de Linux ; chaque ligne de la crontab donne minute, heure, jour, mois, jour de semaine et commande. | cron;crontab
+SSH | Secure Shell | Connexion à distance chiffrée à un terminal (port 22). | SSH
+LVM | Logical Volume Manager | Couche de gestion de volumes logiques redimensionnables sur des disques physiques. | LVM
+fstab | | Fichier /etc/fstab qui décrit les systèmes de fichiers montés au démarrage. | fstab
+GRUB | | Chargeur de démarrage de Linux. | GRUB
+Expression régulière | Regex | Motif qui décrit un ensemble de chaînes (grep, sed). | expressions? régulières?;regex
+Hyperviseur | | Logiciel qui fait tourner des machines virtuelles : type 1 sur le matériel (Hyper-V, Proxmox), type 2 sur un système (VirtualBox). | hyperviseurs?
+Machine virtuelle | VM | Ordinateur simulé par un hyperviseur, avec son propre système. | machines? virtuelles?
+Proxmox VE | | Plateforme de virtualisation libre basée sur Debian, KVM et LXC. | Proxmox
+LXC | Linux Containers | Conteneurs système de Linux, utilisés par Proxmox. | LXC
+ZFS | | Système de fichiers et gestionnaire de volumes avec instantanés, compression et contrôle d'intégrité. | ZFS
+Conteneur | | Processus isolé qui partage le noyau de l'hôte, lancé à partir d'une image (Docker). | conteneurs?
+Docker | | Outil qui construit des images et lance des conteneurs. | Docker
+Image Docker | | Modèle en lecture seule, en couches, à partir duquel on lance des conteneurs. | images? Docker
+Dockerfile | | Recette de construction d'une image Docker. | Dockerfile
+Docker Compose | | Décrit et lance un ensemble de conteneurs (services, réseaux, volumes) dans un fichier compose.yaml. | compose
+Volume | | Stockage persistant d'un conteneur, qui survit à sa suppression. | volumes?
+Reverse proxy | | Serveur frontal qui reçoit les requêtes web et les répartit vers les bons services internes. | reverse proxy
+## Sécurité
+Pare-feu | Firewall | Filtre le trafic selon des règles (adresses, ports, protocoles). | pare-feu;firewall
+VPN | Virtual Private Network | Tunnel chiffré qui relie un poste ou un site à un réseau distant (WireGuard, IPsec). | VPN
+Chiffrement | | Rend des données illisibles sans la clé : symétrique (même clé) ou asymétrique (paire publique/privée). | chiffr\w+
+Hachage | | Empreinte de taille fixe d'une donnée, non réversible ; sert à stocker les mots de passe et à vérifier l'intégrité. | hach\w+
+TLS | Transport Layer Security | Protocole qui chiffre et authentifie une connexion (HTTPS, LDAPS, SMTPS). | TLS;SSL
+MFA | Multi-Factor Authentication | Authentification qui combine plusieurs facteurs (mot de passe et téléphone). | MFA
+Moindre privilège | | Ne donner à chaque compte que les droits strictement nécessaires. | moindre privilège
+CVE | Common Vulnerabilities and Exposures | Identifiant public d'une vulnérabilité (CVE-2024-…). | CVE
+OWASP | | Fondation qui publie le Top 10 des risques des applications web. | OWASP
+Rançongiciel | Ransomware | Logiciel malveillant qui chiffre les données et exige une rançon. | rançongiciels?;ransomware
+Sauvegarde 3-2-1 | | Trois copies, sur deux supports différents, dont une hors site (et idéalement une hors ligne). | 3-2-1
+## Supervision, cloud & méthode
+Supervision | Monitoring | Collecte de mesures et déclenchement d'alertes sur l'état des serveurs et services. | supervision;monitoring
+Zabbix | | Outil libre de supervision : agents, items, triggers, actions. | Zabbix
+SNMP | Simple Network Management Protocol | Protocole de supervision des équipements réseau (UDP 161, traps en 162). | SNMP
+Syslog | | Protocole et format d'envoi de journaux vers un serveur central (UDP 514). | syslog
+Cloud | | Ressources informatiques louées à la demande chez un fournisseur, payées à l'usage. | cloud
+IaaS / PaaS / SaaS | | Modèles de service cloud : infrastructure (VM), plateforme (base, app gérée), logiciel fini (Microsoft 365). | IaaS;PaaS;SaaS
+Région / zone de disponibilité | | Région Azure = zone géographique ; zone de disponibilité = un ou plusieurs datacenters indépendants d'une région. | zones? de disponibilité
+Entra ID | | Annuaire d'identités cloud de Microsoft (anciennement Azure AD). | Entra ID
+Scrum | | Cadre agile en sprints courts, avec trois responsabilités, cinq événements et trois artefacts. | Scrum
+Product Backlog | | Liste ordonnée de tout ce qui pourrait améliorer le produit, tenue par le Product Owner. | Product Backlog;backlog
+Kanban | | Méthode de flux visualisé en colonnes, avec des limites de travail en cours. | Kanban
+Ticket | | En support : demande ou incident suivi dans un outil (Redmine), avec un statut et un responsable. En Kerberos : preuve d’identité temporaire remise par le contrôleur de domaine. | tickets?

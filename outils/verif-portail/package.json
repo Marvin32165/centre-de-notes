@@ -1,0 +1,16 @@
+{
+  "name": "verif-portail",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Vérifie le site du dépôt cours dans un vrai navigateur (Edge ou Chromium via puppeteer-core) : débordement horizontal, erreurs JS, cohérence catalogue / sommaires / cartes, supports, carte interactive, navigation entre modules, recherche.",
+  "main": "verifie.js",
+  "scripts": {
+    "test": "node verifie.js",
+    "test:shots": "node verifie.js --shots"
+  },
+  "dependencies": {
+    "puppeteer-core": "^25.3.0"
+  },
+  "license": "UNLICENSED",
+  "type": "commonjs"
+}

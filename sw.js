@@ -4,19 +4,19 @@
    - pages : réseau d'abord (toujours la dernière version), cache si le réseau manque ;
    - polices Google : gardées au premier chargement.
    VERSION et FICHIERS sont réécrits par site/outils/construit.js — ne pas éditer à la main. */
-const VERSION = '5a8ff06544';
+const VERSION = '7925938942';
 const FICHIERS = [
   "assets/app.js?v=fabe4251",
   "assets/atelier.js?v=c35298a6",
   "assets/carnet.js?v=69bcfe1d",
   "assets/cartes.js?v=e3c23ad2",
-  "assets/catalogue.js?v=835ec2e5",
+  "assets/catalogue.js?v=548e694c",
   "assets/commandes-ui.js?v=12f19476",
   "assets/commandes.js?v=7087bc5f",
   "assets/dojo.js?v=b46a816e",
   "assets/favicon.svg",
   "assets/glossaire-ui.js?v=178c909e",
-  "assets/glossaire.js?v=ba4c3732",
+  "assets/glossaire.js?v=ef3c79b2",
   "assets/notes.js?v=172c0c32",
   "assets/plan.js?v=5a5966ea",
   "assets/pratique.js?v=6ed4d335",
@@ -65,7 +65,6 @@ const FICHIERS = [
   "index.html",
   "labo.html",
   "manifest.webmanifest",
-  "modules/_template.html",
   "modules/azure.html",
   "modules/ccna-reseau.html",
   "modules/cisco-securite.html",

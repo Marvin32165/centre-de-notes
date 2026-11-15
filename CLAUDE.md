@@ -1,64 +1,61 @@
-# Centre d'apprentissage IT — site publié
+# Centre d'apprentissage IT
 
 Site statique (HTML, CSS et JavaScript natifs, sans dépendance) servi par GitHub Pages. Il réunit des
 modules de cours IT en parcours, avec labs, exercices, scénarios de panne, tests, examens et révision
 espacée. Réponds en français.
 
-## Ce dépôt est une sortie générée
+**Ce dépôt est la seule source du site et sa seule cible de publication.** Les autres dépôts de l'auteur
+servent à autre chose : n'y touche pas. Ce dépôt est **public** : rien de privé ici (mot de passe,
+identifiant, IP réelle, nom réel de personne ou de machine). Le lab de référence **Orion**
+(`orion.local`, `172.16.50.0/24`) est fictif et peut figurer dans les pages.
 
-- **La source est dans le dépôt privé `cours`, dossier `site/`.** Ce dépôt-ci en est la copie publiée,
-  fabriquée par `node site/outils/publie.js <dossier> [--dry]` (lance d'abord `construit.js --verif`,
-  refuse de publier si un lien est cassé ou si un motif sensible apparaît, ne fait aucun `git`).
-- **N'édite pas ici le contenu du site** : la prochaine publication écrase tout, sauf `.git` et ce
-  `CLAUDE.md`. Un correctif urgent fait ici doit être reporté dans la source, puis republié.
-- **Fichiers générés, jamais édités à la main** : `assets/catalogue.js`, `assets/search-index.js`,
-  `assets/glossaire.js`, `assets/commandes.js`, `assets/quiz/*.js` (issus de `assets/quiz-data.js`),
-  `sw.js`. Les `?v=<empreinte>` dans les pages sont recalculés par `construit.js` : un asset modifié à la
-  main garde son ancienne version en cache (le service worker sert `?v=` en cache d'abord).
-- Le dépôt contient seulement : les pages à la racine, `assets/`, `modules/`, `sw.js`,
-  `manifest.webmanifest`, `.nojekyll`, ce fichier.
+## Mise en page
 
-## Ce dépôt est public
+Pages à la racine (`index.html`, `labo.html`, `examens.html`…), `modules/<clé>.html` (un module par
+fichier), `assets/` (scripts, styles, données), `sw.js`, `manifest.webmanifest`, `outils/`, `docs/`.
+Plan de la refonte pédagogique en cours : `docs/PLAN-REFONTE.md` (à lire avant d'écrire du contenu).
 
-Rien de privé ici : ni mot de passe, ni identifiant, ni adresse IP réelle, ni nom de personne ou de
-machine réels, ni chemin du dépôt privé. Le lab de référence **Orion** (`orion.local`, `172.16.50.0/24`)
-est fictif et peut figurer dans les pages.
+## Construire (à lancer après toute modification)
 
-## Ce que contient le site
+```
+node outils/construit.js           # régénère ce qui est généré, recalcule les empreintes ?v=
+node outils/construit.js --verif   # échoue si quelque chose est périmé
+```
+Il régénère `assets/quiz/*.js`, `assets/commandes.js`, `assets/search-index.js`, `assets/glossaire.js` et
+`sw.js`. **Ces fichiers ne s'éditent jamais à la main.** Les questions s'écrivent dans
+`assets/quiz-data.js`, les termes du glossaire dans `outils/glossaire/termes.txt`. Le service worker sert
+les `?v=` en cache d'abord : un asset modifié sans reconstruire garde son ancienne version.
+Python 3 est requis. `outils/verif-portail/` (contrôle dans un navigateur) vient d'un autre
+agencement de dépôt et n'est **pas utilisable tel quel** ici.
 
-- Les modules, parcours et paliers sont décrits dans `assets/catalogue.js`. Ne recopie jamais un compte
+## Contenu
+
+- Modules, parcours et paliers : `assets/catalogue.js` (édité à la main). Ne recopie jamais un compte
   de modules, de chapitres ou de questions : il dérive du catalogue et des fonds de questions.
-- Un module = un fichier `modules/<clé>.html` : chapitres, un test de fin (non compté dans les chapitres),
-  prérequis et liens vers les modules voisins.
-- Composants de contenu existants : `.terminal`, `.verify` (commande, sortie attendue, quoi faire en cas
-  d'écart), `.cmdex` (commande à taper), `.scenario` (panne en QCM à étapes), `.exo` et
-  `<details class="reveal">` (une correction se met toujours dans un `reveal`), `.walk` (pas à pas),
-  `.takeaway`, `.brief`, `.lab` (étapes à cocher, enregistrées dans le navigateur).
-- La progression vit uniquement dans le navigateur de l'apprenant, sous les clés `cai.*`
-  (`cai.progress`, `cai.scores`, `cai.labs`, `cai.srs`, `cai.notes`…). **Ne jamais réinitialiser ces clés.**
-- **Missions de palier** : `.lab[data-lab="mission-pN"]` dont le nombre de `<li>` est égal à
-  `mission.etapes` du palier dans le catalogue ; cocher toutes les étapes est une condition du palier.
+- Un module = chapitres + un test de fin (non compté dans les chapitres) + prérequis + liens voisins.
+- Composants : `.terminal`, `.verify` (commande, sortie attendue, que faire en cas d'écart), `.cmdex`
+  (commande à taper), `.scenario` (panne en QCM à étapes), `.exo` et `<details class="reveal">` (une
+  correction se met toujours dans un `reveal`), `.walk` (pas à pas), `.takeaway`, `.brief`, `.lab`
+  (étapes à cocher, enregistrées dans le navigateur).
+- La progression vit dans le navigateur de l'apprenant, sous les clés `cai.*` (`cai.progress`,
+  `cai.scores`, `cai.labs`, `cai.srs`, `cai.notes`…). **Ne jamais réinitialiser ces clés.**
+- **Missions de palier** : `.lab[data-lab="mission-pN"]` avec autant de `<li>` que `mission.etapes` du
+  palier dans le catalogue ; cocher toutes les étapes est une condition du palier. Seule la mission 1
+  existe (`labo.html#missions`).
+- Les adresses et noms de machine d'un module Windows viennent du plan Orion (`labo.html`).
 
-## Écrire du contenu pour le site
+## Écrire du contenu
 
-Direction de la refonte en cours : passer d'un carnet de TP à un **manuel** (« je montre, on fait
-ensemble, tu fais seul »). Une leçon présente d'abord la matière (pourquoi, modèle, vocabulaire), puis un
-exemple travaillé, une pratique guidée avec « Vérifier », un « À toi » puis une variante sans indice,
-une panne dont la cause n'est pas donnée, enfin un « À retenir ». Les modules finissent par une mission
-qui exige un livrable (ticket, runbook, plan, post-mortem). Le détail des blocs par niveau d'effort est
-dans le dépôt source, `site/rapports/PLAN-REFONTE-2026-11.md`.
+Direction : passer d'un carnet de TP à un **manuel** (« je montre, on fait ensemble, tu fais seul »).
+Une leçon présente la matière (pourquoi, modèle, vocabulaire), puis un exemple travaillé, une pratique
+guidée avec « Vérifier », un « À toi » puis une variante sans indice, une panne dont la cause n'est pas
+donnée, un « À retenir ». Les modules finissent par une mission à livrable. Blocs par niveau d'effort et
+phases : `docs/PLAN-REFONTE.md`.
 
-Règles de fond :
-- **Rien d'inventé.** Pas de commande « plausible », pas de sortie fabriquée : une sortie attendue vient
-  d'une exécution réelle. Une commande reconstituée est signalée comme telle. La refonte pédagogique
-  rédige de la **théorie nouvelle**, permise à condition de citer la source officielle en encadré.
+- **Rien d'inventé.** Les commandes et sorties viennent du module existant ou d'une exécution réelle,
+  jamais d'une supposition ; une commande reconstituée est signalée. La **théorie nouvelle est permise**
+  (c'est l'objet de la refonte) si la **source officielle est citée en encadré**.
 - Un terme nouveau est défini à sa première apparition (infobulle du glossaire).
-- Une adresse ou un nom de machine d'un module Windows vient du plan Orion (`labo.html`).
-- Après toute modification de la source : `node site/outils/construit.js`, puis `--verif`, puis
-  `node site/outils/verif-portail/verifie.js` (contrôle dans un vrai navigateur), le tout dans `cours`.
-
-## Publier
-
-Depuis `cours` : `node site/outils/publie.js <clone de ce dépôt> --dry` pour contrôler, puis sans
-`--dry`, puis `git add -A`, `git commit`, `git push` ici. Ne publie jamais sans accord explicite.
-Branche de travail et règles de commit : celles de la session.
+- Un lot est terminé quand `construit.js --verif` passe et que le site s'ouvre sans erreur dans un
+  navigateur. Un lot vérifié se fusionne dans `main` ; jamais de lot à moitié fini sur `main`.
+- Budget de tokens limité : un script avant un agent, un petit modèle avant un grand, un module à la fois.

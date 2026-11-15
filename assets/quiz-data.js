@@ -2027,7 +2027,7 @@ window.QUIZ_BANK = {
     name: "Réseau & Subnetting",
     file: "subnetting.html",
     title: "Test — Réseau & Subnetting",
-    intro: "Vingt questions de calcul à faire de tête, tirées au hasard parmi soixante. Si tu passes ce test sans papier, le subnetting est acquis.",
+    intro: "Vingt questions de calcul à faire de tête, tirées au hasard dans un fonds plus large. Si tu passes ce test sans papier, le subnetting est acquis.",
     pass: 75,
     questions: [
     {
@@ -2509,6 +2509,38 @@ window.QUIZ_BANK = {
         a: 0,
         why: "Un /26 a 6 bits d'hôte : 2⁶ = 64 adresses, dont deux, le réseau et le broadcast, ne sont attribuables à personne. La doc doit indiquer 62. Compter 64 surestime le segment de deux adresses qui ne sont pas des hôtes.",
         ref: "Chapitre 10"
+    },
+    {
+        lvl: 2,
+        q: "Dans une agence, le Wi-Fi invité, les postes et le serveur de fichiers sont tous dans <code>192.168.1.0/24</code>. Un visiteur ouvre un partage du serveur. Quelle est la correction de fond ?",
+        c: ["Un sous-réseau par usage, puis des règles de filtrage entre eux", "Un masque plus long sur le seul serveur de fichiers, qui reste dans le même réseau que les invités", "Une adresse IP différente pour chaque invité", "Un second pare-feu devant le routeur de la box, sans toucher au plan d'adressage"],
+        a: 0,
+        why: "Un seul segment n'a aucun point de passage où filtrer : invité et serveur se joignent directement. Il faut des sous-réseaux séparés, puis un pare-feu ou des ACL entre eux. Changer les adresses ou le masque d'une seule machine ne crée aucune frontière entre populations.",
+        ref: "Chapitre 01"
+    },
+    {
+        lvl: 1,
+        q: "Le dernier octet d'un masque s'écrit <code>11110000</code>. Quelle valeur décimale, et quel préfixe si les trois premiers octets sont pleins ?",
+        c: ["240, soit /28", "224, soit /27", "240, soit /24", "248, soit /29"],
+        a: 0,
+        why: "128 + 64 + 32 + 16 = 240, soit quatre bits à 1 : 24 + 4 = <strong>/28</strong>. 224 correspond à trois bits (/27), 248 à cinq bits (/29), et le préfixe compte aussi les trois octets pleins.",
+        ref: "Chapitre 02"
+    },
+    {
+        lvl: 2,
+        q: "Quel masque générique faut-il écrire pour viser tout le réseau <code>172.16.12.48/28</code> dans une ACL ?",
+        c: ["<code>0.0.0.15</code>", "<code>0.0.0.16</code>", "<code>0.0.0.240</code>", "<code>0.0.0.7</code>"],
+        a: 0,
+        why: "/28 = <code>255.255.255.240</code> ; 255 − 240 = 15 (block size 16, moins 1). <code>0.0.0.16</code> reprend le block size sans retrancher 1 ; <code>0.0.0.240</code> est le dernier octet du masque lui-même ; <code>0.0.0.7</code> correspond à un /29.",
+        ref: "Chapitre 08"
+    },
+    {
+        lvl: 2,
+        q: "Un abonné reçoit <code>2001:db8:5:f0::/60</code>. Combien de réseaux locaux en /64 peut-il créer ?",
+        c: ["16", "256", "4", "65 536"],
+        a: 0,
+        why: "64 − 60 = 4 bits, donc 2<sup>4</sup> = <strong>16</strong> réseaux, de <code>…:f0::/64</code> à <code>…:ff::/64</code>. 256 est le nombre de /64 d'un /56, et 65 536 celui d'un /48.",
+        ref: "Chapitre 09"
     }]
 },
 

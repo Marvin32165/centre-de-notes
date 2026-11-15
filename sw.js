@@ -4,23 +4,23 @@
    - pages : réseau d'abord (toujours la dernière version), cache si le réseau manque ;
    - polices Google : gardées au premier chargement.
    VERSION et FICHIERS sont réécrits par site/outils/construit.js — ne pas éditer à la main. */
-const VERSION = '99e149aeb3';
+const VERSION = 'adff8f8f4c';
 const FICHIERS = [
   "assets/app.js?v=fabe4251",
   "assets/atelier.js?v=c35298a6",
   "assets/carnet.js?v=69bcfe1d",
   "assets/cartes.js?v=e3c23ad2",
-  "assets/catalogue.js?v=ccfeab05",
+  "assets/catalogue.js?v=44004775",
   "assets/commandes-ui.js?v=12f19476",
   "assets/commandes.js?v=7087bc5f",
   "assets/dojo.js?v=b46a816e",
   "assets/favicon.svg",
   "assets/glossaire-ui.js?v=178c909e",
-  "assets/glossaire.js?v=a0326c06",
+  "assets/glossaire.js?v=0b418351",
   "assets/notes.js?v=172c0c32",
   "assets/plan.js?v=5a5966ea",
   "assets/pratique.js?v=6ed4d335",
-  "assets/quiz-data.js?v=158f73bf",
+  "assets/quiz-data.js?v=adc48d78",
   "assets/quiz.js?v=87192477",
   "assets/quiz/azure.js?v=42079444",
   "assets/quiz/ccna-reseau.js?v=de311779",
@@ -46,12 +46,12 @@ const FICHIERS = [
   "assets/quiz/sharepoint.js?v=71b346df",
   "assets/quiz/sql-server.js?v=58fa7d06",
   "assets/quiz/storage-clustering.js?v=c6ebdd85",
-  "assets/quiz/subnetting.js?v=4de16b88",
+  "assets/quiz/subnetting.js?v=813bc728",
   "assets/quiz/voip.js?v=7a05186a",
   "assets/quiz/windows-server.js?v=f7ac0523",
   "assets/quiz/zabbix-windows.js?v=50232a45",
   "assets/revision.js?v=843cfd26",
-  "assets/search-index.js?v=b86aa880",
+  "assets/search-index.js?v=307e019d",
   "assets/search.js?v=80a32003",
   "assets/serie.js?v=3e1cada5",
   "assets/simulateurs.js?v=b2610493",

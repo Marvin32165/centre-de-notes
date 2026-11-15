@@ -22,6 +22,10 @@ Sous-réseau | | Découpage d'un réseau en plus petits réseaux en empruntant d
 Broadcast | Diffusion | Adresse qui vise toutes les machines d'un réseau : la dernière du sous-réseau en IPv4, ff:ff:ff:ff:ff:ff en Ethernet. | broadcasts?
 Block size | Pas | Écart entre deux sous-réseaux successifs : 256 moins la valeur de l'octet intéressant du masque. | block size
 VLSM | Variable Length Subnet Mask | Découper un réseau en sous-réseaux de tailles différentes, du plus grand besoin au plus petit. | VLSM
+Octet | Byte | Groupe de 8 bits, de valeur 0 à 255 ; une adresse IPv4 en compte quatre. | octets?
+Masque générique | Wildcard mask | Inverse d'un masque de sous-réseau (255 moins chaque octet) utilisé par OSPF et les ACL Cisco : 0 = le bit doit correspondre, 1 = peu importe. | masques? génériques?;wildcard
+SLAAC | Stateless Address Autoconfiguration | Autoconfiguration d'une adresse IPv6 par la machine elle-même ; elle exige un réseau local en /64. | SLAAC
+Chevauchement | Overlap | Deux blocs d'adresses qui se recouvrent en partie : un plan d'adressage doit n'en contenir aucun. | chevauch\w*
 Passerelle par défaut | Default gateway | Routeur auquel une machine envoie tout ce qui n'est pas dans son réseau local. | passerelles?
 Routeur | | Équipement de couche 3 qui relie des réseaux différents en lisant l'IP de destination et sa table de routage. | routeurs?
 Switch | Commutateur | Équipement de couche 2 qui relie les machines d'un réseau local et envoie chaque trame au bon port d'après la MAC. | switchs?;commutateurs?

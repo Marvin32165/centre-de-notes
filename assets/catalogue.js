@@ -210,7 +210,7 @@ window.CATALOGUE = {
       "icon": "/24",
       "desc": "Le module qui fait enfin « cliquer » les sous-réseaux : binaire, masques, CIDR, VLSM pas à pas, calcul mental, masques génériques, découpage IPv6 — et des générateurs d'exercices illimités qui corrigent en expliquant.",
       "level": 1,
-      "duree": "2 h 30",
+      "duree": "6 h",
       "chapters": 10,
       "prereq": [
         "reseau-bases"

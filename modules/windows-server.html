@@ -1002,6 +1002,78 @@ Serveurs DNS. . . . . . . . . . . . . .: 172.16.50.1</pre>
             <h2 class="chapter__title">Le serveur de fichiers : partages et droits NTFS</h2>
             <p class="chapter__intro">Le TP final pose des contraintes précises : un dossier par service, chacun accessible à son seul groupe en lecture et écriture, un dossier Public pour tous, <strong>sans aucun Deny</strong> et en s'appuyant sur l'héritage. Deux couches de droits s'appliquent : celles du <strong>partage</strong> et celles du <strong>système de fichiers</strong> (NTFS).</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Calculer le droit effectif d'un accès par le réseau à partir du droit de partage et du droit NTFS.</li>
+                    <li>Poser les droits d'un dossier de service avec <code>icacls</code> : couper l'héritage en copiant, donner Modify au groupe, retirer <em>Users</em>.</li>
+                    <li>Justifier l'absence de <code>Deny</code> et expliquer un refus qui suit un ajout de groupe.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#annuaire">Organiser l'annuaire</a> pour les groupes (DEV-GRP, ACC-GRP) · 40 min · SRV-FILE01 (<code>172.16.50.20</code>) joint au domaine, SRV-AD01 allumé.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Donner à chaque service ses dossiers, et rien de plus</h3>
+                <p>Un service ne doit voir que ses propres dossiers : la comptabilité ne lit pas ceux du développement. Quand on donne des droits « au cas où », au fil des demandes, le serveur finit ouvert à tout le monde, ou bien un blocage posé trop vite touche quelqu'un qu'on n'avait pas prévu.</p>
+                <p>Dans Orion, SRV-FILE01 héberge <code>D:\DEPARTMENTS</code> : un dossier par service, un groupe par service. La méthode est toujours la même (un partage large, des droits fins sur le dossier, donnés à des groupes), et elle se vérifie en quelques commandes.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Partage, NTFS, héritage et jeton</h3>
+                <p>Un <strong>partage</strong> publie un dossier sur le réseau (protocole SMB). Les droits <strong>NTFS</strong> sont portés par le dossier lui-même, sous forme d'une liste d'entrées de contrôle d'accès : une entrée associe un utilisateur ou un groupe à un droit. Un dossier reçoit par défaut les entrées de son parent : c'est l'<strong>héritage</strong>. Quand un utilisateur ouvre une session, Windows construit son <strong>jeton d'accès</strong>, qui contient l'identité de l'utilisateur et celle de tous ses groupes ; c'est avec ce jeton que chaque droit est comparé.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Couche</th><th>Portée</th><th>Dans le lab Orion</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Droit de partage</strong></td><td>Posé sur le partage, ne joue que pour un accès par le réseau</td><td><em>Change</em> pour <code>ORION\Domain Users</code> sur <code>DEPARTMENTS</code></td></tr>
+                            <tr><td><strong>Droit NTFS</strong></td><td>Posé sur le dossier, vaut en local comme par le réseau</td><td><em>Modify</em> pour <code>DEV-GRP</code> sur <code>Development</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Notation icacls</th><th>Sens</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>(OI)</code></td><td><em>Object inherit</em> : s'applique aux fichiers contenus</td></tr>
+                            <tr><td><code>(CI)</code></td><td><em>Container inherit</em> : s'applique aux sous-dossiers</td></tr>
+                            <tr><td><code>(IO)</code></td><td><em>Inherit only</em> : ne s'applique pas au dossier lui-même, seulement à ce qu'il contient</td></tr>
+                            <tr><td><code>M</code> / <code>F</code> / <code>RX</code></td><td>Modifier / Contrôle total / Lecture et exécution</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3>Le droit effectif</h3>
+                <p>Pour un accès <strong>par le réseau</strong>, Windows calcule le droit du partage et le droit NTFS séparément, puis applique <strong>le plus restrictif des deux</strong>. Pratique courante : partage large (<em>Change</em> pour les utilisateurs du domaine), droits fins en NTFS. Le calcul détaillé, avec exercices, est dans le module <a href="storage-clustering.html">Stockage &amp; clustering</a>.</p>
+                <div class="tip">
+                    <p class="tip__label">Pourquoi « pas de Deny »</p>
+                    <p>Un <code>Deny</code> explicite l'emporte sur tout <code>Allow</code> et se propage aux sous-dossiers par héritage (seul un <code>Allow</code> explicite bat un <code>Deny</code> hérité) : il finit par bloquer quelqu'un qu'on n'avait pas prévu (un admin membre du mauvais groupe). Il suffit de ne <strong>pas accorder</strong> : sans permission, pas d'accès.</p>
+                </div>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/icacls" rel="noopener">Microsoft Learn — icacls</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/smbshare/new-smbshare" rel="noopener">Microsoft Learn — New-SmbShare</a> · <a href="https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens" rel="noopener">Microsoft Learn — Access tokens</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Le dossier Development, du besoin au droit effectif</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le besoin</p>
+                        <p class="walk__head">Development pour DEV-GRP seulement</p>
+                        <p>Les membres de DEV-GRP lisent et écrivent dans <code>D:\DEPARTMENTS\Development</code>. Personne d'autre n'y accède, et on s'interdit tout <code>Deny</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le raisonnement</p>
+                        <p class="walk__head">Un partage large, un NTFS précis</p>
+                        <p>Le partage <code>DEPARTMENTS</code> donne <em>Change</em> à Domain Users : il laisse passer tout le monde, sans rien décider. Le tri se fait en NTFS : on coupe l'héritage en gardant une copie (<code>/inheritancelevel:d</code>), on donne <em>Modify</em> à DEV-GRP en <code>(OI)(CI)</code>, on donne à <code>CREATOR OWNER</code> le contrôle total sur ce qu'il crée (<code>(IO)</code>), puis on retire <em>Users</em> et <em>Authenticated Users</em>, que la copie avait conservés.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le calcul</p>
+                        <p class="walk__head">Trois personnes, trois droits effectifs</p>
+                        <p>Un membre de DEV-GRP : <em>Change</em> au partage, <em>Modify</em> en NTFS, donc il modifie. Un utilisateur d'un autre service : <em>Change</em> au partage, mais aucune entrée NTFS pour lui, donc rien. Un administrateur : il passe par <code>BUILTIN\Administrators</code>, contrôle total.</p>
+                        <p class="walk__change">C'est le droit NTFS, pas le partage, qui décide de qui entre.</p>
+                    </li>
+                </ol>
+            </div>
+
+            
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-FILE01 (script du TP final, extrait)</span></div>
                 <pre class="terminal__code"><span class="k">New-Item</span> <span class="p">-Path</span> <span class="s">"D:\DEPARTMENTS\Development"</span> <span class="p">-ItemType</span> Directory <span class="p">-Force</span>
@@ -1011,24 +1083,7 @@ Serveurs DNS. . . . . . . . . . . . . .: 172.16.50.1</pre>
 <span class="k">icacls</span> <span class="s">"D:\DEPARTMENTS\Development"</span> /grant <span class="s">"CREATOR OWNER:(OI)(CI)(IO)F"</span>
 <span class="k">icacls</span> <span class="s">"D:\DEPARTMENTS\Development"</span> /remove <span class="s">"BUILTIN\Users"</span> <span class="s">"Authenticated Users"</span></pre>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Notation icacls</th><th>Sens</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>(OI)</code></td><td><em>Object inherit</em> : s'applique aux fichiers contenus</td></tr>
-                        <tr><td><code>(CI)</code></td><td><em>Container inherit</em> : s'applique aux sous-dossiers</td></tr>
-                        <tr><td><code>(IO)</code></td><td><em>Inherit only</em> : ne s'applique pas au dossier lui-même, seulement à ce qu'il contient</td></tr>
-                        <tr><td><code>M</code> / <code>F</code> / <code>RX</code></td><td>Modifier / Contrôle total / Lecture et exécution</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <h3>Le droit effectif</h3>
-            <p>Pour un accès <strong>par le réseau</strong>, Windows calcule le droit du partage et le droit NTFS séparément, puis applique <strong>le plus restrictif des deux</strong>. Pratique courante : partage large (<em>Change</em> pour les utilisateurs du domaine), droits fins en NTFS. Le calcul détaillé, avec exercices, est dans le module <a href="storage-clustering.html">Stockage &amp; clustering</a>.</p>
-            <div class="tip">
-                <p class="tip__label">Pourquoi « pas de Deny »</p>
-                <p>Un <code>Deny</code> explicite l'emporte sur tout <code>Allow</code> et se propage aux sous-dossiers par héritage (seul un <code>Allow</code> explicite bat un <code>Deny</code> hérité) : il finit par bloquer quelqu'un qu'on n'avait pas prévu (un admin membre du mauvais groupe). Il suffit de ne <strong>pas accorder</strong> : sans permission, pas d'accès.</p>
-            </div>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Les droits sont-ils ceux voulus ?</p>
             <div class="terminal">
@@ -1043,10 +1098,34 @@ NT AUTHORITY\SYSTEM:(OI)(CI)(F)
 BUILTIN\Administrators:(OI)(CI)(F)</pre>
                 <p class="verify__fail">Un utilisateur du bon groupe est refusé : il a été ajouté au groupe <strong>après</strong> son ouverture de session. Le jeton n'est recalculé qu'à la prochaine ouverture de session.</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Partage large, NTFS précis, droit effectif = le plus restrictif des deux. Couper l'héritage avec copie (<code>/inheritancelevel:d</code>), donner aux groupes, retirer <em>Users</em>, jamais de Deny. Un changement de groupe ne compte qu'après une nouvelle ouverture de session.</p>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — le dossier Accounting</p>
+                <p>Le service comptabilité (groupe <code>ACC-GRP</code>) a besoin de <code>D:\DEPARTMENTS\Accounting</code> : modification pour son seul groupe, sans <code>Deny</code>. Le partage <code>DEPARTMENTS</code> existe déjà. Écris les commandes, sans regarder le script de Development.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-FILE01</span></div>
+                <pre class="terminal__code"><span class="k">New-Item</span> <span class="p">-Path</span> <span class="s">"D:\DEPARTMENTS\Accounting"</span> <span class="p">-ItemType</span> Directory <span class="p">-Force</span>
+<span class="k">icacls</span> <span class="s">"D:\DEPARTMENTS\Accounting"</span> /inheritancelevel:d
+<span class="k">icacls</span> <span class="s">"D:\DEPARTMENTS\Accounting"</span> /grant <span class="s">"ORION\ACC-GRP:(OI)(CI)M"</span>
+<span class="k">icacls</span> <span class="s">"D:\DEPARTMENTS\Accounting"</span> /grant <span class="s">"CREATOR OWNER:(OI)(CI)(IO)F"</span>
+<span class="k">icacls</span> <span class="s">"D:\DEPARTMENTS\Accounting"</span> /remove <span class="s">"BUILTIN\Users"</span> <span class="s">"Authenticated Users"</span></pre>
+            </div><p><em>reconstitué, non testé</em> : c'est le script de Development avec le dossier et le groupe changés (ACC-GRP existe dans l'annuaire du lab). Vérifie avec <code>icacls "D:\DEPARTMENTS\Accounting"</code> : une seule entrée de groupe, celle d'ACC-GRP.</p></div></details>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p><code>D:\DEPARTMENTS\Public</code> doit être lisible par tous les utilisateurs du domaine, sans qu'ils puissent y écrire, alors que le partage <code>DEPARTMENTS</code> leur donne <em>Change</em>. Quel droit NTFS poses-tu, et quel est leur droit effectif ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-FILE01</span></div>
+                <pre class="terminal__code"><span class="k">icacls</span> <span class="s">"D:\DEPARTMENTS\Public"</span> /grant <span class="s">"ORION\Domain Users:(OI)(CI)RX"</span></pre>
+            </div><p><em>reconstitué, non testé</em> : même syntaxe que pour Development, avec <code>RX</code> (lecture et exécution) du tableau. Droit effectif : <em>Change</em> au partage, <em>RX</em> en NTFS ; le plus restrictif l'emporte, donc lecture seule.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — Development s'ouvre pour la comptabilité</p>
+                <p>Un utilisateur d'Accounting, qui n'est pas dans DEV-GRP, ouvre <code>\\SRV-FILE01\DEPARTMENTS\Development</code> et lit les fichiers. Le script du chapitre avait été lancé, mais interrompu avant sa dernière commande <code>icacls</code>.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le partage est large exprès (<em>Change</em> pour Domain Users) : le tri se fait en NTFS, donc on lit <code>icacls "D:\DEPARTMENTS\Development"</code> et on cherche qui d'autre que DEV-GRP y figure. <strong>Cause :</strong> couper l'héritage avec copie (<code>/inheritancelevel:d</code>) garde les entrées héritées, dont <code>BUILTIN\Users</code> et <code>Authenticated Users</code> : tant que la ligne <code>/remove</code> n'a pas tourné, elles donnent accès à tout le monde. <strong>Correctif :</strong> <code>icacls "D:\DEPARTMENTS\Development" /remove "BUILTIN\Users" "Authenticated Users"</code>, puis relire <code>icacls</code>. On ne corrige pas par un <code>Deny</code>.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -1059,6 +1138,14 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
                     <div class="scenario__why"><p>Les groupes d'un utilisateur sont lus à l'ouverture de session et placés dans son <strong>jeton</strong> (et son ticket Kerberos). Tant qu'il ne se reconnecte pas, il garde la liste de 8 h. <code>whoami /groups</code> sur le poste montre les groupes du jeton actuel.</p></div>
                 </div>
             </div>
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Partage large, NTFS précis, droit effectif = le plus restrictif des deux.</li>
+                    <li>Couper l'héritage avec copie (<code>/inheritancelevel:d</code>), donner aux groupes, retirer <em>Users</em>, jamais de Deny.</li>
+                    <li>Un changement de groupe ne compte qu'après une nouvelle ouverture de session (le jeton est ancien).</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 09 -->
@@ -1067,16 +1154,71 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
             <h2 class="chapter__title">DFS Namespace</h2>
             <p class="chapter__intro">Le TP DFS du cours part d'un problème réel : les utilisateurs accèdent à <code>\\SRV-FILE01\DEPARTMENTS</code>, et le jour où le serveur change de nom, tous les raccourcis cassent. Un <strong>espace de noms DFS</strong> leur donne un chemin qui ne dépend d'aucun serveur : <code>\\orion.local\shares</code>.</p>
 
-            <div class="cards">
-                <div class="card">
-                    <h3>Namespace (DFS-N)</h3>
-                    <p>Un chemin <strong>logique</strong> unique ; chaque dossier pointe vers un ou plusieurs partages réels (cibles). On peut déplacer un partage sans changer ce que voient les utilisateurs. C'est ce que fait le TP.</p>
-                </div>
-                <div class="card">
-                    <h3>Réplication (DFS-R)</h3>
-                    <p>Synchronise le <strong>contenu</strong> de dossiers entre serveurs. Combinée à plusieurs cibles, elle donne de la tolérance de panne. Le TP l'exclut volontairement.</p>
-                </div>
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Distinguer DFS-N de DFS-R et dire ce que chacun apporte.</li>
+                    <li>Créer un espace de noms basé sur le domaine et un dossier DFS qui pointe vers un partage réel.</li>
+                    <li>Vérifier le chemin unique depuis un client et dire où se règlent les droits.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#fichiers">Le serveur de fichiers</a> et <a href="#dns">DNS en pratique</a> · 30 min · SRV-FILE01 (<code>172.16.50.20</code>) avec ses dossiers, CLIENT-WIN11 qui utilise le DNS du domaine.</p>
             </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Un chemin qui survit au changement de serveur</h3>
+                <p>Quand des dizaines de raccourcis, de lecteurs réseau et de documents contiennent <code>\\SRV-FILE01\DEPARTMENTS</code>, remplacer ou renommer ce serveur oblige à tout corriger. Le coût vient du fait que le chemin porte le nom d'une machine.</p>
+                <p>Dans Orion, un espace de noms DFS donne à tous le même chemin, <code>\\orion.local\shares</code>, et c'est lui qui sait quel partage réel se cache derrière. On change la cible, pas les raccourcis.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Espace de noms, cible et réplication</h3>
+                <div class="cards">
+                    <div class="card">
+                        <h3>Namespace (DFS-N)</h3>
+                        <p>Un chemin <strong>logique</strong> unique ; chaque dossier pointe vers un ou plusieurs partages réels (cibles). On peut déplacer un partage sans changer ce que voient les utilisateurs. C'est ce que fait le TP.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Réplication (DFS-R)</h3>
+                        <p>Synchronise le <strong>contenu</strong> de dossiers entre serveurs. Combinée à plusieurs cibles, elle donne de la tolérance de panne. Le TP l'exclut volontairement.</p>
+                    </div>
+                </div>
+                <p>Un espace de noms a une <strong>racine</strong> (<code>\\orion.local\shares</code>), qui contient des <strong>dossiers</strong> ; chaque dossier a une ou plusieurs <strong>cibles</strong>, c'est-à-dire des partages réels. Il existe deux types d'espace de noms :</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Type</th><th>Chemin</th><th>À retenir</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Basé sur le domaine</strong> (<em>Domain-based</em>)</td><td><code>\\orion.local\shares</code></td><td>Le nom est celui du domaine : il ne dépend d'aucun serveur. C'est le choix du TP (<code>DomainV2</code>).</td></tr>
+                            <tr><td><strong>Autonome</strong> (<em>Stand-alone</em>)</td><td><code>\\SRV-FILE01\shares</code></td><td>Le nom contient celui du serveur : on retrouve le problème d'origine.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>DFS n'ajoute aucun droit : les droits d'accès restent ceux des partages et des dossiers cibles, réglés comme au chapitre précédent.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/storage/dfs-namespaces/dfs-overview" rel="noopener">Microsoft Learn — DFS Namespaces overview</a> · <a href="https://learn.microsoft.com/en-us/windows-server/storage/dfs-namespaces/choose-a-namespace-type" rel="noopener">Microsoft Learn — Choose a namespace type</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/dfsn/new-dfsnroot" rel="noopener">Microsoft Learn — New-DfsnRoot</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Remplacer un chemin lié à un serveur</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le besoin</p>
+                        <p class="walk__head">Un chemin qui ne nomme aucune machine</p>
+                        <p>Les utilisateurs ouvrent <code>\\SRV-FILE01\DEPARTMENTS\Public</code>. Si SRV-FILE01 change de nom, chaque raccourci casse.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la conception</p>
+                        <p class="walk__head">Une racine, puis un dossier par ressource</p>
+                        <p>On crée la racine <code>\\orion.local\shares</code> (type domaine) qui pointe vers un petit partage <code>shares</code>, puis le dossier <code>Public</code> dont la cible est le partage réel <code>\\SRV-FILE01\DEPARTMENTS\Public</code>. Les utilisateurs n'ouvrent plus que <code>\\orion.local\shares\Public</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le déplacement</p>
+                        <p class="walk__head">Seule la cible change</p>
+                        <p>Le jour où Public déménage sur un autre serveur, on modifie la cible du dossier DFS. Le chemin <code>\\orion.local\shares\Public</code> reste le même pour tous.</p>
+                        <p class="walk__change">Le chemin est stable, la cible est remplaçable.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-FILE01 (script du TP final)</span></div>
                 <pre class="terminal__code"><span class="k">Install-WindowsFeature</span> FS-DFS-Namespace <span class="p">-IncludeManagementTools</span>
@@ -1085,7 +1227,7 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
 <span class="k">New-DfsnRoot</span> <span class="p">-Path</span> <span class="s">"\\orion.local\shares"</span> <span class="p">-TargetPath</span> <span class="s">"\\SRV-FILE01\shares"</span> <span class="p">-Type</span> DomainV2
 <span class="k">New-DfsnFolder</span> <span class="p">-Path</span> <span class="s">"\\orion.local\shares\Public"</span> <span class="p">-TargetPath</span> <span class="s">"\\SRV-FILE01\DEPARTMENTS\Public"</span></pre>
             </div>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Le chemin unique fonctionne-t-il ?</p>
             <div class="terminal">
@@ -1099,9 +1241,34 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
 \\orion.local\shares\Public   \\SRV-FILE01\DEPARTMENTS\Public     Online</pre>
                 <p class="verify__fail"><code>\\orion.local\shares</code> introuvable depuis le client : le client n'utilise pas le DNS du domaine, ou le namespace a été créé en <em>Stand-alone</em> au lieu de <em>Domain-based</em>.</p>
             </div>
-            <div class="takeaway">
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — publier Development dans l'espace de noms</p>
+                <p>La racine <code>\\orion.local\shares</code> existe et contient <code>Public</code>. Ajoute un dossier <code>Development</code> dont la cible est <code>\\SRV-FILE01\DEPARTMENTS\Development</code>, et dis quelle commande confirme qu'il est en ligne.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-FILE01</span></div>
+                <pre class="terminal__code"><span class="k">New-DfsnFolder</span> <span class="p">-Path</span> <span class="s">"\\orion.local\shares\Development"</span> <span class="p">-TargetPath</span> <span class="s">"\\SRV-FILE01\DEPARTMENTS\Development"</span>
+<span class="k">Get-DfsnFolderTarget</span> <span class="p">-Path</span> <span class="s">"\\orion.local\shares\Development"</span></pre>
+            </div><p><em>reconstitué, non testé</em> : c'est la commande du dossier Public avec un autre nom. <code>Get-DfsnFolderTarget</code> doit afficher l'état <code>Online</code>.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Une utilisatrice de la comptabilité ouvre <code>\\orion.local\shares\Development</code> et obtient « Accès refusé ». Un collègue propose de « régler les droits dans DFS ». Que réponds-tu, et où corriges-tu si l'accès doit vraiment lui être donné ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>DFS ne porte pas de droits : l'espace de noms ne fait que rediriger vers la cible. Les droits restent ceux du partage et des droits NTFS de <code>D:\DEPARTMENTS\Development</code> sur SRV-FILE01. Ici le refus est le comportement voulu : Development n'est ouvert qu'à DEV-GRP. Si l'accès devait être donné, on ajouterait le bon groupe sur le dossier cible, pas dans DFS.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le chemin DFS reste introuvable</p>
+                <p>Depuis CLIENT-WIN11, <code>\\orion.local\shares</code> répond « introuvable ». Pourtant <code>\\SRV-FILE01\shares</code>, ouvert directement, s'affiche normalement.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le chemin direct marche, donc le serveur et le partage sont sains ; c'est la résolution du nom <code>orion.local</code> ou le type de l'espace de noms qui est en cause. On regarde le DNS du client, puis le type de l'espace de noms dans la console DFS Management. <strong>Causes possibles :</strong> le client n'utilise pas le DNS du domaine, ou l'espace de noms a été créé en <em>Stand-alone</em> au lieu de <em>Domain-based</em>. <strong>Correctif :</strong> pointer le client sur le DNS des contrôleurs de domaine, ou recréer la racine en type <code>DomainV2</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p>DFS-N = un chemin stable (<code>\\domaine\racine\dossier</code>) qui pointe vers des partages réels ; DFS-R = copie du contenu entre serveurs. Les droits restent ceux des partages cibles.</p>
+                <ul>
+                    <li>DFS-N = un chemin stable (<code>\\domaine\racine\dossier</code>) qui pointe vers des partages réels ; DFS-R = copie du contenu entre serveurs.</li>
+                    <li>Espace de noms basé sur le domaine : le nom ne contient aucun serveur.</li>
+                    <li>Les droits restent ceux des partages et dossiers cibles.</li>
+                </ul>
             </div>
         </section>
 
@@ -1111,19 +1278,63 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
             <h2 class="chapter__title">Les stratégies de groupe (GPO)</h2>
             <p class="chapter__intro">Les GPO appliquent des réglages à des milliers de postes et d'utilisateurs depuis un seul endroit : sécurité, lecteurs réseau, fond d'écran, restrictions. Le TP final en demande quatre ; ce chapitre explique comment elles s'appliquent, et comment vérifier qu'elles le font.</p>
 
-            <h3>Où et dans quel ordre</h3>
-            <p>Une GPO est un objet de l'annuaire qu'on <strong>lie</strong> à un site, au domaine ou à une OU. Elle s'applique aux utilisateurs et ordinateurs contenus dans ce conteneur, dans l'ordre <strong>L-S-D-OU</strong> : locale, site, domaine, puis OU de la plus haute à la plus proche. En cas de conflit, <strong>la dernière appliquée gagne</strong> — donc l'OU la plus proche.</p>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Réglage</th><th>Effet</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong>Enforced</strong> (appliquée) sur un lien</td><td>Elle gagne même contre une GPO plus proche, et traverse un blocage</td></tr>
-                        <tr><td><strong>Block Inheritance</strong> sur une OU</td><td>Les GPO des niveaux supérieurs ne descendent plus (sauf Enforced)</td></tr>
-                        <tr><td><strong>Filtrage de sécurité</strong></td><td>Restreindre la GPO à un groupe (par défaut : Authenticated Users)</td></tr>
-                        <tr><td>Partie <strong>Computer</strong> / <strong>User</strong></td><td>S'applique à l'ordinateur au démarrage, à l'utilisateur à l'ouverture de session, puis en arrière-plan toutes les 90 minutes environ (avec un décalage aléatoire de 0 à 30 minutes)</td></tr>
-                    </tbody>
-                </table>
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Prédire quelle GPO l'emporte selon l'ordre L-S-D-OU, <em>Enforced</em> et <em>Block Inheritance</em>.</li>
+                    <li>Créer une GPO et la lier à l'OU qui contient les bons objets, utilisateurs ou ordinateurs.</li>
+                    <li>Vérifier ce qui s'applique réellement avec <code>gpupdate</code> et <code>gpresult</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#annuaire">Organiser l'annuaire</a> (les OU) et <a href="#dns">DNS en pratique</a> (le poste doit joindre un DC) · 40 min · SRV-AD01, CLIENT-WIN11 joint au domaine, l'OU <code>ORION-DPT</code>.</p>
             </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Régler mille postes depuis un seul endroit</h3>
+                <p>Interdire le Panneau de configuration, fixer un fond d'écran ou une longueur de mot de passe poste par poste ne tient pas à l'échelle, et personne ne sait ensuite ce qui est réellement appliqué. Une stratégie de groupe décrit le réglage une fois, et les machines et utilisateurs visés le reçoivent.</p>
+                <p>Le revers est qu'une GPO mal placée ne fait rien, ou fait tout autre chose que prévu, sans message d'erreur. Savoir où elle est liée et quelle autre la contredit est la moitié du métier.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <p>Une GPO est d'abord un <strong>objet</strong> de l'annuaire, avec deux parties : <em>Computer</em> et <em>User</em>. Elle ne s'applique à personne tant qu'elle n'est pas <strong>liée</strong> à un site, au domaine ou à une OU : c'est le lien qui la fait agir sur les objets situés dessous.</p>
+                <h3>Où et dans quel ordre</h3>
+                <p>Une GPO est un objet de l'annuaire qu'on <strong>lie</strong> à un site, au domaine ou à une OU. Elle s'applique aux utilisateurs et ordinateurs contenus dans ce conteneur, dans l'ordre <strong>L-S-D-OU</strong> : locale, site, domaine, puis OU de la plus haute à la plus proche. En cas de conflit, <strong>la dernière appliquée gagne</strong> — donc l'OU la plus proche.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Réglage</th><th>Effet</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Enforced</strong> (appliquée) sur un lien</td><td>Elle gagne même contre une GPO plus proche, et traverse un blocage</td></tr>
+                            <tr><td><strong>Block Inheritance</strong> sur une OU</td><td>Les GPO des niveaux supérieurs ne descendent plus (sauf Enforced)</td></tr>
+                            <tr><td><strong>Filtrage de sécurité</strong></td><td>Restreindre la GPO à un groupe (par défaut : Authenticated Users)</td></tr>
+                            <tr><td>Partie <strong>Computer</strong> / <strong>User</strong></td><td>S'applique à l'ordinateur au démarrage, à l'utilisateur à l'ouverture de session, puis en arrière-plan toutes les 90 minutes environ (avec un décalage aléatoire de 0 à 30 minutes)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/previous-versions/windows/desktop/policy/group-policy-hierarchy" rel="noopener">Microsoft Learn — Group Policy Hierarchy</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/grouppolicy/new-gplink" rel="noopener">Microsoft Learn — New-GPLink</a> · <a href="https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/gpupdate" rel="noopener">Microsoft Learn — gpupdate</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Deux GPO qui se contredisent : laquelle gagne ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · la situation (cas d'école)</p>
+                        <p class="walk__head">Un réglage posé à deux endroits</p>
+                        <p>Une GPO liée au domaine laisse l'utilisateur changer son fond d'écran. <code>GPO_User_Restrictions</code>, liée à l'OU <code>ORION-DPT</code>, le lui interdit. Sacha est dans <code>ORION-DPT</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · l'ordre</p>
+                        <p class="walk__head">Local, site, domaine, puis OU</p>
+                        <p>Les GPO s'appliquent dans cet ordre et la dernière appliquée gagne en cas de conflit. L'OU passe après le domaine : l'interdiction l'emporte, Sacha ne peut pas changer son fond d'écran.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · les exceptions</p>
+                        <p class="walk__head">Enforced et Block Inheritance</p>
+                        <p>Si la GPO du domaine était <em>Enforced</em>, elle gagnerait malgré la plus proche. Si l'OU bloquait l'héritage, la GPO du domaine ne descendrait plus, sauf si elle est <em>Enforced</em>.</p>
+                        <p class="walk__change">Pour savoir ce qui gagne, on suit l'ordre, puis on cherche un <em>Enforced</em>.</p>
+                    </li>
+                </ol>
+            </div>
+
             <h3>Les GPO du TP final</h3>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — restrictions utilisateur (script du TP)</span></div>
@@ -1142,7 +1353,7 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
                     </tbody>
                 </table>
             </div>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>La GPO s'applique-t-elle vraiment ?</p>
             <div class="terminal">
@@ -1158,7 +1369,7 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
     GPO_Drive_Map</pre>
                 <p class="verify__fail">La GPO apparaît dans « filtrés » ou pas du tout : l'utilisateur n'est pas dans l'OU où elle est liée (une GPO <em>User</em> liée à une OU qui ne contient que des ordinateurs ne fait rien), le filtrage de sécurité l'exclut, ou le client ne joint pas le DC (DNS).</p>
             </div>
-            <div class="cmdex" data-accept="New-GPLink (-Name )?&quot;?GPO_Drive_Map&quot;? -Target &quot;?OU=ORION-DPT,DC=orion,DC=local&quot;?" data-hint="New-GPLink, avec -Name et -Target.">
+            <div class="cmdex" data-bloc="7" data-accept="New-GPLink (-Name )?&quot;?GPO_Drive_Map&quot;? -Target &quot;?OU=ORION-DPT,DC=orion,DC=local&quot;?" data-hint="New-GPLink, avec -Name et -Target.">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>Lie la GPO <code>GPO_Drive_Map</code> à l'OU <code>OU=ORION-DPT,DC=orion,DC=local</code>.</p>
                 <details class="reveal">
@@ -1166,10 +1377,18 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
                     <div class="reveal__body"><p><code>New-GPLink -Name "GPO_Drive_Map" -Target "OU=ORION-DPT,DC=orion,DC=local"</code>. Créer la GPO (<code>New-GPO</code>) ne suffit pas : tant qu'elle n'est liée nulle part, elle ne s'applique à personne.</p></div>
                 </details>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Une GPO s'applique par son <strong>lien</strong>, dans l'ordre local → site → domaine → OU, la plus proche gagnant. Les réglages <em>User</em> visent des utilisateurs, <em>Computer</em> des machines. <code>gpresult /r</code> dit ce qui s'applique vraiment.</p>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Une GPO liée au domaine est <em>Enforced</em> et interdit le Panneau de configuration. <code>GPO_User_Restrictions</code>, liée à <code>ORION-DPT</code>, l'autorise. Que voit un utilisateur de <code>ORION-DPT</code> ? Et si l'on retire <em>Enforced</em> ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Avec <em>Enforced</em>, la GPO du domaine gagne même contre une GPO plus proche : le Panneau de configuration est interdit. Sans <em>Enforced</em>, l'ordre L-S-D-OU s'applique : la GPO de l'OU, appliquée en dernier, gagne et l'autorise.</p></div></details>
             </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le lecteur X: n'arrive pas pour un utilisateur</p>
+                <p>La GPO <code>GPO_Drive_Map</code> est liée à <code>OU=ORION-DPT</code>, où se trouve <code>sso</code>. Sur son poste, après <code>gpupdate /force</code>, il n'a pas de lecteur X:. <code>gpresult /r /scope user</code> range <code>GPO_Drive_Map</code> parmi les objets <strong>filtrés</strong>, alors que <code>GPO_User_Restrictions</code> s'applique bien.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le lien est bon (la GPO est vue), donc ce n'est ni l'OU ni le DNS. Une GPO « filtrée » est écartée pour cet utilisateur : on ouvre le rapport complet (<code>gpresult /h C:\Temp\rapport.html</code>) pour lire la raison, puis le filtrage de sécurité de la GPO dans la console. <strong>Cause :</strong> le filtrage de sécurité (par défaut Authenticated Users) a été restreint à un groupe dont <code>sso</code> ne fait pas partie. <strong>Correctif :</strong> ajouter le groupe de <code>sso</code> (ou rétablir Authenticated Users) dans le filtrage, puis <code>gpupdate /force</code> et relire <code>gpresult</code>.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -1182,6 +1401,14 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
                     <div class="scenario__why"><p>La partie <em>User</em> d'une GPO s'applique aux <strong>utilisateurs</strong> situés sous son lien, la partie <em>Computer</em> aux <strong>ordinateurs</strong>. <code>New-GPLink -Name "GPO_Drive_Map" -Target "OU=ORION-DPT,DC=orion,DC=local"</code>, puis <code>gpresult /r /scope user</code> sur le client. (Le <em>loopback</em> permet l'inverse, mais c'est un cas particulier.)</p></div>
                 </div>
             </div>
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Une GPO s'applique par son <strong>lien</strong>, dans l'ordre local, site, domaine, OU, la plus proche gagnant ; <em>Enforced</em> et <em>Block Inheritance</em> sont les exceptions.</li>
+                    <li>Les réglages <em>User</em> visent des utilisateurs, <em>Computer</em> des machines : on lie l'objet à l'OU qui contient les bons comptes.</li>
+                    <li><code>gpupdate /force</code> puis <code>gpresult /r</code> (ou <code>/h</code>) disent ce qui s'applique vraiment, et ce qui est filtré.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 11 -->
@@ -1190,44 +1417,116 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
             <h2 class="chapter__title">Sécuriser les comptes et le serveur</h2>
             <p class="chapter__intro">La gestion des comptes est la première ligne de défense d'un domaine : qui peut se connecter, avec quels privilèges, et ce qu'on garde comme trace. Ce chapitre reprend les notes de sécurité du cours.</p>
 
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Mesure</th><th>Où</th><th>Ce qu'elle empêche</th></tr></thead>
-                    <tbody>
-                        <tr><td>Mots de passe longs (12 à 16 caractères minimum), complexité, historique</td><td>Default Domain Policy → <em>Password Policy</em></td><td>Mots de passe devinés ou réutilisés</td></tr>
-                        <tr><td>Verrouillage après N échecs, pour une durée donnée</td><td>Default Domain Policy → <em>Account Lockout Policy</em></td><td>La force brute</td></tr>
-                        <tr><td><strong>Comptes séparés</strong> : un compte standard pour le quotidien, un compte d'administration distinct</td><td>Organisation</td><td>Qu'un mail piégé lu en administrateur compromette le domaine</td></tr>
-                        <tr><td><strong>Windows LAPS</strong> : mot de passe d'administrateur local unique par machine, stocké dans AD et renouvelé seul</td><td>GPO + <code>Update-LapsADSchema</code></td><td>Le mouvement latéral avec un mot de passe local identique partout</td></tr>
-                        <tr><td>MFA sur les accès sensibles</td><td>Selon l'outil</td><td>L'usage d'un mot de passe volé</td></tr>
-                        <tr><td>Moindre privilège, Server Core, pare-feu actif</td><td>Chaque serveur</td><td>La surface d'attaque inutile</td></tr>
-                    </tbody>
-                </table>
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Placer une politique de mots de passe là où elle vaut pour les comptes du domaine, et dire quand utiliser une stratégie affinée.</li>
+                    <li>Nommer les mesures de protection des comptes (comptes séparés, LAPS, moindre privilège) et ce que chacune empêche.</li>
+                    <li>Repérer dans le journal <em>Security</em> les événements 4625, 4740 et 4728.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#gpo">Les stratégies de groupe</a> et <a href="#annuaire">Organiser l'annuaire</a> · 35 min · SRV-AD01 et CLIENT-WIN11, un compte standard et un compte d'administration.</p>
             </div>
-            <h3>Les journaux qui comptent</h3>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>ID</th><th>Journal</th><th>Événement</th></tr></thead>
-                    <tbody>
-                        <tr><td>4624</td><td>Security</td><td>Ouverture de session réussie</td></tr>
-                        <tr><td>4625</td><td>Security</td><td>Échec d'ouverture de session — en rafale, une tentative de force brute</td></tr>
-                        <tr><td>4740</td><td>Security (sur le DC)</td><td>Compte verrouillé</td></tr>
-                        <tr><td>4720 / 4728</td><td>Security</td><td>Compte utilisateur créé / membre ajouté à un groupe de sécurité global (4732 : domaine local, 4756 : universel)</td></tr>
-                    </tbody>
-                </table>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Les comptes, première cible d'une attaque</h3>
+                <p>Un attaquant n'a pas besoin de casser un serveur s'il obtient un mot de passe : un compte deviné, un administrateur qui lit un mail piégé, un mot de passe local identique sur toutes les machines. Dans un domaine, un seul compte privilégié compromis ouvre tout le reste.</p>
+                <p>La défense a deux volets : limiter ce qu'un compte peut faire s'il est volé, et garder assez de traces pour voir une tentative. Orion applique les deux sur ses contrôleurs de domaine et ses postes.</p>
             </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Mesure</th><th>Où</th><th>Ce qu'elle empêche</th></tr></thead>
+                        <tbody>
+                            <tr><td>Mots de passe longs (12 à 16 caractères minimum), complexité, historique</td><td>Default Domain Policy → <em>Password Policy</em></td><td>Mots de passe devinés ou réutilisés</td></tr>
+                            <tr><td>Verrouillage après N échecs, pour une durée donnée</td><td>Default Domain Policy → <em>Account Lockout Policy</em></td><td>La force brute</td></tr>
+                            <tr><td><strong>Comptes séparés</strong> : un compte standard pour le quotidien, un compte d'administration distinct</td><td>Organisation</td><td>Qu'un mail piégé lu en administrateur compromette le domaine</td></tr>
+                            <tr><td><strong>Windows LAPS</strong> : mot de passe d'administrateur local unique par machine, stocké dans AD et renouvelé seul</td><td>GPO + <code>Update-LapsADSchema</code></td><td>Le mouvement latéral avec un mot de passe local identique partout</td></tr>
+                            <tr><td>MFA sur les accès sensibles</td><td>Selon l'outil</td><td>L'usage d'un mot de passe volé</td></tr>
+                            <tr><td>Moindre privilège, Server Core, pare-feu actif</td><td>Chaque serveur</td><td>La surface d'attaque inutile</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3>Les journaux qui comptent</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>ID</th><th>Journal</th><th>Événement</th></tr></thead>
+                        <tbody>
+                            <tr><td>4624</td><td>Security</td><td>Ouverture de session réussie</td></tr>
+                            <tr><td>4625</td><td>Security</td><td>Échec d'ouverture de session — en rafale, une tentative de force brute</td></tr>
+                            <tr><td>4740</td><td>Security (sur le DC)</td><td>Compte verrouillé</td></tr>
+                            <tr><td>4720 / 4728</td><td>Security</td><td>Compte utilisateur créé / membre ajouté à un groupe de sécurité global (4732 : domaine local, 4756 : universel)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Une <strong>stratégie de mots de passe affinée</strong> (FGPP) est une politique distincte, attachée à un groupe ou à un utilisateur précis : elle sert à exiger plus pour les administrateurs sans durcir toute l'entreprise. <strong>LAPS</strong> donne à chaque machine un mot de passe d'administrateur local propre, stocké dans l'annuaire et renouvelé automatiquement.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/password-policy" rel="noopener">Microsoft Learn — Password Policy</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/activedirectory/new-adfinegrainedpasswordpolicy" rel="noopener">Microsoft Learn — New-ADFineGrainedPasswordPolicy</a> · <a href="https://learn.microsoft.com/en-us/windows-server/identity/laps/laps-overview" rel="noopener">Microsoft Learn — Windows LAPS overview</a> · <a href="https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625" rel="noopener">Microsoft Learn — Event 4625</a> · <a href="https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4740" rel="noopener">Microsoft Learn — Event 4740</a> · <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/appendix-l--events-to-monitor" rel="noopener">Microsoft Learn — Appendix L : Events to monitor</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Un compte bloqué : remonter à l'origine</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · l'appel</p>
+                        <p class="walk__head">« Mon compte est bloqué »</p>
+                        <p>Sacha (<code>sso</code>) ne peut plus ouvrir de session après plusieurs mots de passe erronés. La politique de verrouillage de la Default Domain Policy a fait son travail.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le contrôleur de domaine</p>
+                        <p class="walk__head">L'événement 4740</p>
+                        <p>Sur le DC, le journal <em>Security</em> contient un 4740 pour <code>sso</code> : il confirme le verrouillage et nomme l'ordinateur d'où venaient les tentatives (<em>Caller Computer Name</em>).</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la machine d'origine</p>
+                        <p class="walk__head">Les 4625 de ce poste</p>
+                        <p>Sur cette machine, les 4625 listent les échecs : quelques-uns espacés, c'est une faute de frappe ; une rafale sur un même compte ressemble à une force brute ou à un programme qui garde un ancien mot de passe.</p>
+                        <p class="walk__change">Le 4740 dit qui et d'où ; les 4625 disent combien et à quel rythme.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Les échecs d'ouverture de session sont-ils visibles ?</p>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — les 20 derniers échecs d'ouverture de session</span></div>
                 <pre class="terminal__code"><span class="k">Get-WinEvent</span> <span class="p">-FilterHashtable</span> @{ LogName = <span class="s">'Security'</span>; Id = 4625 } <span class="p">-MaxEvents</span> 20 |
 <span class="k">Select-Object</span> TimeCreated, @{ n = <span class="s">'Compte'</span>; e = { <span class="p">$_.Properties[5].Value</span> } }</pre>
             </div>
+                <p class="verify__sub">Constat attendu</p>
+                <p>Après un mot de passe volontairement erroné saisi sur CLIENT-WIN11, la commande, lancée <strong>sur ce poste</strong>, liste un événement récent à l'heure de l'essai, avec le nom du compte.</p>
+                <p class="verify__fail">Rien n'apparaît : l'événement 4625 est journalisé sur la machine où la tentative a eu lieu, pas forcément sur le DC. Relance la commande sur le poste où tu as saisi le mot de passe.</p>
+            </div>
             <p>Lire les journaux un par un ne passe pas à l'échelle : on les centralise (SIEM) ou on fait surveiller les ID critiques par un outil de supervision (module <a href="zabbix-windows.html">Zabbix &amp; Windows</a>). Et une <strong>sauvegarde jamais restaurée n'est qu'une hypothèse</strong> : la tester fait partie de la sécurité (module <a href="dpm.html">DPM</a>).</p>
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — exiger plus pour les administrateurs</p>
+                <p>Les mots de passe des comptes du domaine doivent faire 12 caractères minimum, mais ceux du groupe des administrateurs du domaine 16. Où poses-tu chaque règle, et avec quoi ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>La règle générale va dans la <strong>Default Domain Policy</strong>, liée au domaine : c'est la seule politique de mots de passe qui vaut pour les comptes du domaine. L'exigence plus forte pour un groupe précis passe par une <strong>stratégie de mots de passe affinée</strong>, créée avec <code>New-ADFineGrainedPasswordPolicy</code> et attachée au groupe. Une GPO liée à une OU ne ferait rien pour ces comptes.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un collègue a mis une GPO « mots de passe de 14 caractères » sur l'OU des serveurs. Sacha, compte du domaine, peut pourtant encore choisir un mot de passe de 8 caractères. Explique pourquoi et dis ce qu'il faut faire.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Une politique de mots de passe liée à une OU ne s'applique qu'aux comptes <em>locaux</em> des ordinateurs de cette OU, pas aux comptes du domaine. Pour tous les comptes du domaine, on modifie la Default Domain Policy ; pour un groupe précis, on crée une stratégie affinée.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — un seul mot de passe ouvre tous les postes (scénario fictif)</p>
+                <p>Le mot de passe de l'administrateur local d'un poste du lab est découvert. En quelques heures, le même compte ouvre une session sur plusieurs autres postes et serveurs : le journal <em>Security</em> montre des 4624 successifs sur des machines différentes pour ce compte local. Tous les postes viennent de la même image.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> un même compte local qui réussit partout n'est pas une série d'attaques indépendantes : le mot de passe est le même sur toutes les machines. <strong>Cause :</strong> l'administrateur local a le même mot de passe partout, ce qui permet le mouvement latéral d'une machine à l'autre. <strong>Correctif :</strong> <strong>Windows LAPS</strong>, qui donne à chaque machine un mot de passe d'administrateur local unique, stocké dans AD et renouvelé seul (<code>Update-LapsADSchema</code> puis une GPO), et la séparation des comptes d'administration.</p></div></details>
+            </div>
+
             <div class="takeaway takeaway--warn">
                 <p class="takeaway__label">Piège</p>
                 <p>Une politique de mots de passe placée dans une GPO liée à une <strong>OU</strong> ne change rien pour les comptes du domaine : elle ne s'applique qu'aux comptes <em>locaux</em> des ordinateurs de cette OU. Pour les comptes du domaine, une seule politique : celle liée au domaine (Default Domain Policy). Pour exiger plus d'un groupe précis (les administrateurs), on utilise une <strong>stratégie de mots de passe affinée</strong> (FGPP, <code>New-ADFineGrainedPasswordPolicy</code>).</p>
             </div>
-            <div class="takeaway">
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p>Politique de mots de passe et de verrouillage dans la Default Domain Policy, comptes d'administration séparés, LAPS pour les administrateurs locaux, et les ID 4625 / 4740 sous surveillance.</p>
+                <ul>
+                    <li>Politique de mots de passe et de verrouillage dans la Default Domain Policy ; une stratégie affinée (FGPP) pour un groupe précis.</li>
+                    <li>Comptes d'administration séparés, LAPS pour les administrateurs locaux, moindre privilège.</li>
+                    <li>Journal <em>Security</em> : 4625 en rafale (force brute), 4740 sur le DC (verrouillage), 4728 (ajout à un groupe global).</li>
+                </ul>
             </div>
         </section>
 
@@ -1521,7 +1820,7 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
 <script src="../assets/catalogue.js?v=40c03489"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/windows-server.js?v=8fa3263e"></script>
+<script src="../assets/quiz/windows-server.js?v=b1f49e5e"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 </body>

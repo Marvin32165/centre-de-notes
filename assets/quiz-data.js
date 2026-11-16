@@ -3545,6 +3545,46 @@ window.QUIZ_BANK = {
         a: 2,
         why: "Le maître de schéma est seul à pouvoir modifier le schéma ; s'il est arrêté, rien ne se voit au quotidien, sauf une extension impossible.",
         ref: "Chapitre 04"
+    },
+    {
+        lvl: 2,
+        q: "Un utilisateur déjà connecté est ajouté à DEV-GRP, dont les droits NTFS sont corrects, mais il reste refusé sur Development. Quelle explication le module donne-t-il ?",
+        c: ["Son jeton d'accès, construit à l'ouverture de session, ne contient pas encore le nouveau groupe", "Les droits NTFS de DEV-GRP ne sont pas encore copiés sur SRV-FILE01", "Le partage DEPARTMENTS doit être recréé pour reconnaître un nouveau membre", "Un Deny hérité bloque d'office tous les nouveaux membres d'un groupe"],
+        a: 0,
+        why: "Les groupes sont lus à l'ouverture de session et placés dans le jeton. Tant que l'utilisateur ne rouvre pas sa session, il garde l'ancienne liste. Les droits NTFS du groupe sont justes, et le module interdit les Deny.",
+        ref: "Chapitre 08"
+    },
+    {
+        lvl: 1,
+        q: "Pour que <code>\\\\orion.local\\shares</code> ne dépende d'aucun serveur, quel type d'espace de noms DFS crée-t-on ?",
+        c: ["Autonome (<em>Stand-alone</em>), hébergé sur SRV-FILE01", "Basé sur le domaine (<em>Domain-based</em>, type <code>DomainV2</code>)", "Un espace de noms DFS-R, qui copie les dossiers", "Un simple partage SMB nommé orion.local"],
+        a: 1,
+        why: "Un espace de noms basé sur le domaine porte le nom du domaine, pas celui d'un serveur. Un espace autonome garde le nom du serveur dans le chemin ; DFS-R copie du contenu, il ne crée pas de chemin logique.",
+        ref: "Chapitre 09"
+    },
+    {
+        lvl: 2,
+        q: "Quelle commande ajoute le dossier <code>Public</code> à l'espace de noms, avec le partage réel de SRV-FILE01 pour cible ?",
+        c: ["<code>New-DfsnRoot -Path \"\\\\orion.local\\shares\\Public\" -Type DomainV2</code>", "<code>New-SmbShare -Name Public -Path D:\\DFSRoot</code>", "<code>New-DfsnFolder -Path \"\\\\orion.local\\shares\\Public\" -TargetPath \"\\\\SRV-FILE01\\DEPARTMENTS\\Public\"</code>", "<code>Get-DfsnFolderTarget -Path \"\\\\orion.local\\shares\\Public\"</code>"],
+        a: 2,
+        why: "<code>New-DfsnFolder</code> crée le dossier DFS et lui donne sa cible. <code>New-DfsnRoot</code> crée la racine, <code>New-SmbShare</code> un partage, et <code>Get-DfsnFolderTarget</code> ne fait que lire.",
+        ref: "Chapitre 09"
+    },
+    {
+        lvl: 2,
+        q: "Pourquoi sépare-t-on un compte standard pour le quotidien d'un compte d'administration distinct ?",
+        c: ["Pour qu'un mail piégé lu avec le compte du quotidien ne compromette pas des droits d'administration", "Pour que le compte standard puisse déléguer le contrôle des OU", "Pour éviter d'avoir à définir une politique de mots de passe", "Parce que Windows interdit à un administrateur d'ouvrir une session"],
+        a: 0,
+        why: "Un compte de tous les jours qui lit du courrier ou navigue ne doit pas porter de privilèges : s'il est compromis, le domaine ne l'est pas. La séparation ne remplace pas la politique de mots de passe.",
+        ref: "Chapitre 11"
+    },
+    {
+        lvl: 2,
+        q: "Plusieurs postes issus de la même image ont le même mot de passe d'administrateur local, et un seul poste compromis suffit à ouvrir tous les autres. Quelle mesure vise ce risque ?",
+        c: ["Une stratégie de mots de passe affinée sur Domain Users", "Windows LAPS, avec un mot de passe local unique par machine, stocké dans AD", "Un seuil de verrouillage plus bas dans la Default Domain Policy", "L'événement 4625 envoyé dans un outil de supervision"],
+        a: 1,
+        why: "LAPS donne à chaque machine son propre mot de passe d'administrateur local, renouvelé seul : le mouvement latéral avec un mot de passe identique n'est plus possible. Les autres mesures ne changent pas le fait que le mot de passe est partagé.",
+        ref: "Chapitre 11"
     }
     ]
 },

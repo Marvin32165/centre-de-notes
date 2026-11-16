@@ -165,6 +165,16 @@ Redirecteur DNS | Forwarder | Serveur vers lequel un DNS transfère les question
 Autorisation DHCP | | Inscription d'un serveur DHCP dans Active Directory : sans elle, un serveur DHCP d'un domaine ne distribue aucun bail. | serveur autorisé;non autorisé;autoriser dans AD
 Réservation DHCP | | Association fixe d'une adresse IP à une adresse MAC dans une étendue : l'appareil reçoit toujours la même adresse. | réservations?
 Option DHCP | | Paramètre distribué avec le bail : 3 = passerelle, 6 = serveurs DNS, 15 = nom de domaine. | options? DHCP
+Jeton d'accès | Access token | Liste, construite à l'ouverture de session, de l'identité de l'utilisateur et de tous ses groupes ; les droits sont comparés à elle, d'où un changement de groupe qui ne joue qu'à la prochaine session. | jetons? d'accès
+Héritage NTFS | | Un dossier reçoit par défaut les droits de son parent ; on peut le couper en gardant une copie (icacls /inheritancelevel:d). | héritage NTFS;inheritancelevel
+Droit effectif | | Droit réellement obtenu par le réseau : le plus restrictif entre le droit de partage et le droit NTFS. | droits? effectifs?
+Espace de noms DFS | DFS-N | Chemin logique stable (\\orion.local\shares) dont chaque dossier pointe vers des partages réels, les cibles. | espaces? de noms DFS;DFS-N
+Lien de GPO | | Rattachement d'une GPO à un site, au domaine ou à une OU : sans lien, la GPO ne s'applique à personne. | liens? de GPO;New-GPLink
+Enforced | | Option d'un lien de GPO : elle gagne même contre une GPO plus proche et traverse Block Inheritance. | Enforced
+Block Inheritance | | Réglage d'une OU qui empêche les GPO des niveaux supérieurs de descendre, sauf celles en Enforced. | Block Inheritance
+FGPP | Fine-Grained Password Policy | Stratégie de mots de passe affinée, attachée à un groupe ou à un utilisateur précis plutôt qu'à tout le domaine. | FGPP;stratégies? de mots de passe affinées?
+LAPS | Local Administrator Password Solution | Mot de passe d'administrateur local unique par machine, stocké dans AD et renouvelé seul ; limite le mouvement latéral. | LAPS
+
 ## Linux & virtualisation
 Linux | | Noyau libre ; une distribution (Debian, Ubuntu) l'assemble avec des outils et des paquets. | Linux
 Debian | | Distribution Linux communautaire, stable, base d'Ubuntu et de Proxmox. | Debian

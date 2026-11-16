@@ -4,7 +4,7 @@
    - pages : réseau d'abord (toujours la dernière version), cache si le réseau manque ;
    - polices Google : gardées au premier chargement.
    VERSION et FICHIERS sont réécrits par site/outils/construit.js — ne pas éditer à la main. */
-const VERSION = '81b461db88';
+const VERSION = '85ae0da54b';
 const FICHIERS = [
   "assets/app.js?v=fabe4251",
   "assets/atelier.js?v=c35298a6",
@@ -16,11 +16,11 @@ const FICHIERS = [
   "assets/dojo.js?v=b46a816e",
   "assets/favicon.svg",
   "assets/glossaire-ui.js?v=178c909e",
-  "assets/glossaire.js?v=e383e81f",
+  "assets/glossaire.js?v=5627ef11",
   "assets/notes.js?v=172c0c32",
   "assets/plan.js?v=5a5966ea",
   "assets/pratique.js?v=6ed4d335",
-  "assets/quiz-data.js?v=871cdf53",
+  "assets/quiz-data.js?v=8d32c165",
   "assets/quiz.js?v=87192477",
   "assets/quiz/azure.js?v=42079444",
   "assets/quiz/ccna-reseau.js?v=de311779",
@@ -48,10 +48,10 @@ const FICHIERS = [
   "assets/quiz/storage-clustering.js?v=c6ebdd85",
   "assets/quiz/subnetting.js?v=813bc728",
   "assets/quiz/voip.js?v=7a05186a",
-  "assets/quiz/windows-server.js?v=8fa3263e",
+  "assets/quiz/windows-server.js?v=b1f49e5e",
   "assets/quiz/zabbix-windows.js?v=50232a45",
   "assets/revision.js?v=843cfd26",
-  "assets/search-index.js?v=8251ee9e",
+  "assets/search-index.js?v=01f17c42",
   "assets/search.js?v=80a32003",
   "assets/serie.js?v=3e1cada5",
   "assets/simulateurs.js?v=b2610493",

@@ -1710,6 +1710,78 @@ window.QUIZ_BANK = {
         ref: "Chapitre 15"
     },
     {
+        lvl: 2,
+        q: "Quel critère de <code>find</code> sélectionne les fichiers dont le nom finit par <code>.log</code> <strong>ou</strong> par <code>.txt</code> ?",
+        c: ["<code>-name \"*.log\" -name \"*.txt\"</code>, qui exige les deux noms à la fois", "<code>\\( -name \"*.log\" -or -name \"*.txt\" \\)</code>", "<code>-name \"*.log,*.txt\"</code>", "<code>-name *.log|*.txt</code>"],
+        a: 1,
+        why: "Deux <code>-name</code> côte à côte sont reliés par un ET implicite : aucun fichier n'a deux noms. Le OU s'écrit <code>-or</code>, avec des parenthèses échappées pour grouper l'expression, comme dans l'exemple du chapitre.",
+        ref: "Chapitre 11"
+    },
+    {
+        lvl: 3,
+        q: "Tu tapes <code>find ~ -delete -name \"*.bak\"</code> en pensant supprimer seulement les <code>.bak</code>. Que se passe-t-il ?",
+        c: ["Seuls les <code>.bak</code> sont supprimés : l'ordre des options ne compte pas", "Rien n'est supprimé : <code>-delete</code> a besoin d'un <code>-ok</code> avant lui", "<code>find</code> supprime tout ce qu'il parcourt sous <code>~</code> : l'expression est évaluée dans l'ordre", "<code>find</code> refuse la commande avec une erreur de syntaxe"],
+        a: 2,
+        why: "<code>find</code> évalue la ligne comme une expression de gauche à droite : <code>-delete</code> placé avant le critère s'applique à tout ce qui est parcouru. On met l'action en dernier, après avoir listé sans action (source : find(1)).",
+        ref: "Chapitre 11"
+    },
+    {
+        lvl: 1,
+        q: "Tu as tapé <code>export formation=\"Linux\"</code> dans un terminal. Que faut-il faire pour que la variable existe aussi dans les prochains terminaux de ton compte ?",
+        c: ["Rien : <code>export</code> la rend permanente", "Ajouter la ligne <code>export</code> dans <code>~/.bashrc</code>", "Redémarrer le service réseau", "Ajouter la ligne dans <code>/etc/passwd</code>"],
+        a: 1,
+        why: "<code>export</code> transmet la variable aux processus lancés par ce shell, mais elle disparaît avec lui. Un nouveau terminal relit <code>~/.bashrc</code> : c'est là qu'on écrit la ligne pour un seul utilisateur.",
+        ref: "Chapitre 12"
+    },
+    {
+        lvl: 1,
+        q: "Dans <code>PS1='\\u@\\h:\\w\\$ '</code>, quel code affiche le répertoire courant ?",
+        c: ["<code>\\u</code>", "<code>\\h</code>", "<code>\\$</code>", "<code>\\w</code>"],
+        a: 3,
+        why: "<code>\\w</code> affiche le répertoire courant (<code>~</code> pour le dossier personnel). <code>\\u</code> est l'utilisateur, <code>\\h</code> le nom d'hôte et <code>\\$</code> le <code>$</code> ou le <code>#</code> de root.",
+        ref: "Chapitre 12"
+    },
+    {
+        lvl: 2,
+        q: "<code>help find</code> ne trouve aucune aide. Pourquoi, et quelle commande répond ?",
+        c: ["<code>help</code> ne couvre que les commandes internes ; <code>find</code> est externe, donc <code>find --help</code> ou <code>man find</code>", "<code>find</code> n'a pas de manuel : il faut chercher sur internet", "<code>help</code> est réservé à root", "<code>help</code> n'accepte que les commandes de plus de quatre lettres"],
+        a: 0,
+        why: "<code>help</code> documente les commandes internes du shell. Pour un programme externe, on utilise <code>--help</code> ou <code>man</code>. <code>type find</code> confirme qu'il est externe.",
+        ref: "Chapitre 13"
+    },
+    {
+        lvl: 3,
+        q: "Sur un poste géré par NetworkManager, tu ajoutes <code>nameserver 8.8.8.8</code> à la main dans <code>/etc/resolv.conf</code>. Plus tard, la ligne a disparu. Où régler le DNS de façon durable ?",
+        c: ["Dans <code>/etc/hosts</code>", "Dans <code>/etc/nsswitch.conf</code>", "Dans la connexion NetworkManager, avec <code>nmcli con mod … ipv4.dns</code>", "Il n'y a pas de solution : le fichier est en lecture seule"],
+        a: 2,
+        why: "NetworkManager (comme un client DHCP ou <code>resolvconf</code>) réécrit <code>/etc/resolv.conf</code> à partir de sa propre configuration. Le DNS se déclare à la source : <code>ipv4.dns</code> avec <code>nmcli</code>, ou <code>dns-nameservers</code> avec <code>resolvconf</code> (source : Debian Wiki, resolv.conf).",
+        ref: "Chapitre 14"
+    },
+    {
+        lvl: 1,
+        q: "Quelle commande vérifie que le serveur SSH écoute bien sur le port 22 ?",
+        c: ["<code>ip r</code>", "<code>hostname -I</code>", "<code>ss -tuln</code>", "<code>curl -I localhost</code>"],
+        a: 2,
+        why: "<code>ss -tuln</code> liste les ports TCP et UDP en écoute : on y cherche le port 22. <code>ip r</code> affiche les routes, <code>hostname -I</code> les adresses de la machine.",
+        ref: "Chapitre 15"
+    },
+    {
+        lvl: 2,
+        q: "Quelle paire de commandes génère une clé SSH <code>ed25519</code> sur le poste client et la diffuse sur le serveur ?",
+        c: ["<code>ssh-keygen -t ed25519</code> puis <code>ssh-copy-id -i ~/.ssh/id_ed25519.pub user@serveur</code>", "<code>ssh-keygen -t ed25519</code> puis <code>scp ~/.ssh/id_ed25519 user@serveur:~/</code>", "<code>ssh-copy-id</code> sur le serveur, puis <code>ssh-keygen</code> sur le client", "<code>ssh-keygen -t rsa</code> : <code>ed25519</code> n'existe pas dans OpenSSH"],
+        a: 0,
+        why: "On génère la paire sur le client, puis on diffuse la clé <strong>publique</strong> (<code>.pub</code>) avec <code>ssh-copy-id</code>. Copier le fichier sans <code>.pub</code> enverrait la clé privée, qui ne quitte jamais le poste.",
+        ref: "Chapitre 15"
+    },
+    {
+        lvl: 1,
+        q: "Dans <code>deb http://ftp.fr.debian.org/debian trixie main</code>, que désigne <code>trixie</code> ?",
+        c: ["Le nom du miroir", "Le nom de code de la version de Debian", "Le composant du dépôt", "L'architecture du processeur"],
+        a: 1,
+        why: "Après l'adresse du miroir vient la suite, c'est-à-dire le nom de code de la version (<code>trixie</code>, ou <code>trixie-updates</code>, <code>trixie-security</code>), puis les composants (<code>main</code>, <code>contrib</code>…).",
+        ref: "Chapitre 16"
+    },
+    {
         lvl: 1,
         q: "Deux réflexes à avoir avant de valider un <code>rm -rf</code> ?",
         c: ["Relire toute la commande avant d'appuyer sur Entrée", "Vérifier le dossier courant avec <code>pwd</code>", "Lancer d'abord la commande avec <code>sudo</code> pour tester", "Ajouter <code>-y</code> pour confirmer automatiquement"],

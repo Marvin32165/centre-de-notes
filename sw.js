@@ -4,7 +4,7 @@
    - pages : réseau d'abord (toujours la dernière version), cache si le réseau manque ;
    - polices Google : gardées au premier chargement.
    VERSION et FICHIERS sont réécrits par site/outils/construit.js — ne pas éditer à la main. */
-const VERSION = '9c2b7ed5c6';
+const VERSION = '46da2f0a76';
 const FICHIERS = [
   "assets/app.js?v=fabe4251",
   "assets/atelier.js?v=c35298a6",
@@ -12,15 +12,15 @@ const FICHIERS = [
   "assets/cartes.js?v=e3c23ad2",
   "assets/catalogue.js?v=a8bae127",
   "assets/commandes-ui.js?v=12f19476",
-  "assets/commandes.js?v=7087bc5f",
+  "assets/commandes.js?v=69986c37",
   "assets/dojo.js?v=b46a816e",
   "assets/favicon.svg",
   "assets/glossaire-ui.js?v=178c909e",
-  "assets/glossaire.js?v=ba0b0fac",
+  "assets/glossaire.js?v=a6887736",
   "assets/notes.js?v=172c0c32",
   "assets/plan.js?v=5a5966ea",
   "assets/pratique.js?v=6ed4d335",
-  "assets/quiz-data.js?v=adc178c8",
+  "assets/quiz-data.js?v=f0a17ca3",
   "assets/quiz.js?v=87192477",
   "assets/quiz/azure.js?v=42079444",
   "assets/quiz/ccna-reseau.js?v=de311779",
@@ -34,7 +34,7 @@ const FICHIERS = [
   "assets/quiz/hyperv.js?v=e54518cf",
   "assets/quiz/iis.js?v=4e325514",
   "assets/quiz/itil.js?v=0ef43a99",
-  "assets/quiz/linux-debian.js?v=c41a1bbf",
+  "assets/quiz/linux-debian.js?v=ddd5693c",
   "assets/quiz/monitoring-zabbix.js?v=ffe3b1fe",
   "assets/quiz/powershell.js?v=22c13ac0",
   "assets/quiz/proxmox.js?v=962260d9",
@@ -51,7 +51,7 @@ const FICHIERS = [
   "assets/quiz/windows-server.js?v=f7ac0523",
   "assets/quiz/zabbix-windows.js?v=50232a45",
   "assets/revision.js?v=843cfd26",
-  "assets/search-index.js?v=b78657dd",
+  "assets/search-index.js?v=6bf44f35",
   "assets/search.js?v=80a32003",
   "assets/serie.js?v=3e1cada5",
   "assets/simulateurs.js?v=b2610493",

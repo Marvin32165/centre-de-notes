@@ -180,6 +180,12 @@ systemd | | Système d'initialisation et gestionnaire de services de Linux (syst
 journalctl | | Commande qui lit le journal de systemd. | journalctl
 cron | | Planificateur de tâches de Linux ; chaque ligne de la crontab donne minute, heure, jour, mois, jour de semaine et commande. | cron;crontab
 SSH | Secure Shell | Connexion à distance chiffrée à un terminal (port 22). | SSH
+Variable d'environnement | | Variable du shell marquée par export : elle est transmise aux processus que ce shell lance. | variables? d'environnement
+PATH | | Liste de dossiers, séparés par « : », où le shell cherche les commandes externes. | PATH
+Commande interne | Builtin | Commande codée dans le shell lui-même (cd, echo), sans fichier exécutable séparé. | commandes? internes?;builtins?
+Dépôt (APT) | | Serveur qui publie des paquets ; les dépôts utilisés sont listés dans sources.list. | dépôts?
+Clé publique / clé privée | | Paire de clés SSH : la privée reste sur le poste, la publique se copie dans authorized_keys du serveur. | clés? publiques?;clés? privées?
+ed25519 | | Algorithme de clé SSH à clés courtes, type généré par défaut par ssh-keygen. | ed25519
 LVM | Logical Volume Manager | Couche de gestion de volumes logiques redimensionnables sur des disques physiques. | LVM
 fstab | | Fichier /etc/fstab qui décrit les systèmes de fichiers montés au démarrage. | fstab
 GRUB | | Chargeur de démarrage de Linux. | GRUB

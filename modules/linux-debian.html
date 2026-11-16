@@ -1640,6 +1640,52 @@ EOF</pre>
             <p class="chapter__num">11</p>
             <h2 class="chapter__title">find — rechercher des fichiers avec précision</h2>
             <p class="chapter__intro"><code>find</code> parcourt une arborescence et filtre par nom, type, taille, date ou permissions — et peut agir directement sur les résultats trouvés.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Retrouver des fichiers par nom, type, taille ou date de modification avec <code>find</code>.</li>
+                    <li>Combiner deux critères avec <code>-or</code> et des parenthèses échappées.</li>
+                    <li>Agir sur les résultats avec <code>-exec</code>, <code>-ok</code> ou <code>-delete</code>, en listant d'abord ce qui sera touché.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap3">Les chemins de base</a> et <a href="#chap7">Utilisateurs, permissions &amp; lecture de ls -l</a> · 30 min · un terminal Debian.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi chercher autrement qu'à la main</h3>
+                <p>Un disque qui se remplit, un fichier de configuration dont on ne se rappelle plus l'emplacement, des fichiers temporaires à nettoyer : parcourir les dossiers un à un ne mène nulle part. On décrit ce qu'on cherche (un nom, une taille, une date) et le système fait le tri.</p>
+                <p>Le même outil peut ensuite agir sur ce qu'il a trouvé, d'où un risque : une suppression en masse mal ciblée ne se rattrape pas. Le réflexe est de lister d'abord, d'agir ensuite.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Chemin, critères, action : l'anatomie d'une recherche</h3>
+                <p>Une commande <code>find</code> se lit comme une <strong>expression</strong> évaluée de gauche à droite pour chaque fichier rencontré : un chemin de départ, puis des <strong>critères</strong> (<code>-name</code>, <code>-type</code>, <code>-size</code>…) qui doivent tous être vrais, puis une <strong>action</strong>. Sans action, <code>find</code> se contente d'afficher les chemins trouvés.</p>
+                <p>Comme tout est évalué dans l'ordre, une action placée avant les critères s'applique à tout ce qui est parcouru. <code>-ok</code> fonctionne comme <code>-exec</code> mais demande confirmation pour chaque fichier. Un <strong>lien symbolique</strong> (<code>-type l</code>) est un fichier qui pointe vers un autre chemin (voir le chapitre sur les liens).</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/findutils/find.1.en.html" rel="noopener">find(1)</a> (évaluation de la ligne de commande comme une expression ; avertissement sur <code>-delete</code> placé en premier).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Nettoyer les fichiers <code>.tmp</code> de <code>/tmp</code> sans rien perdre d'autre</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · formuler le critère</p>
+                        <p class="walk__head"><code>-name "*.tmp"</code></p>
+                        <p>On vise les fichiers dont le nom finit par <code>.tmp</code>. Les guillemets empêchent le shell de développer <code>*</code> lui-même : c'est <code>find</code> qui doit recevoir le motif.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · lister sans agir</p>
+                        <p class="walk__head"><code>find /tmp -name "*.tmp"</code></p>
+                        <p>Sans action, <code>find</code> affiche simplement les chemins. On relit la liste : est-ce bien ce qu'on veut supprimer ?</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · ajouter l'action en dernier</p>
+                        <p class="walk__head"><code>find /tmp -name "*.tmp" -exec rm {} \;</code></p>
+                        <p>L'action vient après les critères, et <code>{}</code> est remplacé par chaque chemin trouvé.</p>
+                        <p class="walk__change">En remplaçant <code>-exec rm {} \;</code> par <code>-ok rm {} \;</code>, chaque suppression demande confirmation.</p>
+                    </li>
+                </ol>
+            </div>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Syntaxe</span></div>
                 <pre class="terminal__code"><span class="k">find</span> [chemin] [critères] [action]</pre>
@@ -1676,6 +1722,42 @@ EOF</pre>
                 <p class="takeaway__label">-exec vs -delete</p>
                 <p><code>-exec ... rm {} \;</code> lance une commande <code>rm</code> par fichier trouvé (plus lent mais flexible) ; <code>-delete</code> est l'option native de <code>find</code>, plus rapide pour une simple suppression.</p>
             </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Lance <code>find /tmp -name "*.tmp"</code> avant l'action : la liste affichée est exactement celle que tu veux supprimer. Après <code>-exec rm {} \;</code>, relance la même commande sans action : plus aucun chemin ne s'affiche.</p>
+                <p class="verify__fail">Si la liste contient des fichiers que tu veux garder, resserre les critères (<code>-type f</code>, <code>-mtime +30</code>) avant d'ajouter l'action. Si <code>find</code> répond « paths must precede expression », le motif <code>*.tmp</code> a été développé par le shell : mets-le entre guillemets.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — gros fichiers de journaux</p>
+                <p>Liste les fichiers ordinaires de <code>/var/log</code> qui pèsent plus de 10 Mo, sans rien supprimer.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Les critères sont <code>-type f</code> et <code>-size +10M</code> (tableau ci-dessus), sans action : <code>find</code> affiche les chemins trouvés.</p>
+                <div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — reconstitué, non testé</span></div>
+                <pre class="terminal__code"><span class="k">find</span> /var/log <span class="p">-type f -size +10M</span></pre></div></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Dans ton dossier personnel, trouve les fichiers dont le nom finit par <code>.bak</code> <strong>ou</strong> par <code>.old</code>, modifiés il y a plus de 30 jours, puis demande confirmation avant de supprimer chacun.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Un OU logique entre deux noms, entre parenthèses échappées, puis <code>-mtime +30</code>, puis <code>-ok</code> pour la confirmation :</p>
+                <div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — reconstitué, non testé</span></div>
+                <pre class="terminal__code"><span class="k">find</span> ~ \( <span class="p">-name</span> <span class="s">"*.bak"</span> <span class="p">-or -name</span> <span class="s">"*.old"</span> \) <span class="p">-mtime +30 -ok</span> rm {} \;</pre></div></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — find se plaint d'un chemin</p>
+                <p>Dans un dossier qui contient deux fichiers <code>a.tmp</code> et <code>b.tmp</code>, tu tapes <code>find /tmp -name *.tmp</code> sans guillemets. <code>find</code> répond par une erreur qui cite <code>b.tmp</code> et parle d'un motif sans guillemets ; depuis un dossier sans fichier <code>.tmp</code>, la même commande fonctionne.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> relancer la commande depuis un dossier sans <code>.tmp</code> : le comportement change, donc le shell intervient avant <code>find</code>. <strong>Cause :</strong> sans guillemets, le shell développe <code>*.tmp</code> en noms de fichiers du dossier courant et <code>find</code> reçoit ces noms au lieu du motif. <strong>Correctif :</strong> écrire <code>-name "*.tmp"</code>, entre guillemets.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Une commande <code>find</code> = chemin, critères, puis action ; sans action, elle liste.</li>
+                    <li>On liste d'abord, on agit ensuite ; <code>-ok</code> demande confirmation, <code>-exec</code> et <code>-delete</code> non.</li>
+                    <li>Le motif <code>-name</code> se met entre guillemets, et un OU s'écrit avec <code>\( … -or … \)</code>.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 12 -->
@@ -1683,6 +1765,60 @@ EOF</pre>
             <p class="chapter__num">12</p>
             <h2 class="chapter__title">Variables &amp; personnalisation du prompt</h2>
             <p class="chapter__intro">Le shell garde des informations en mémoire dans des variables — dont certaines pilotent l'apparence même du terminal.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Créer une variable, l'exporter, et vérifier avec <code>env</code> qu'elle est visible des autres processus.</li>
+                    <li>Rendre un réglage permanent en l'ajoutant à <code>~/.bashrc</code>.</li>
+                    <li>Modifier l'invite de commande avec <code>PS1</code> et ses codes <code>\u</code>, <code>\h</code>, <code>\w</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap8">Redirections &amp; pipes</a> (pour <code>&gt;&gt;</code>) et <a href="#chap5">Lire &amp; éditer des fichiers</a> · 30 min · un terminal Debian.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi le shell a une mémoire</h3>
+                <p>Un administrateur retape sans cesse les mêmes valeurs : un chemin, un nom de serveur, un réglage. Une variable les range sous un nom et les rend disponibles aux commandes et aux scripts, sans copier-coller. C'est aussi par des variables que le système transmet son contexte aux programmes qu'il lance.</p>
+                <p>Le piège classique : un réglage tapé dans le terminal disparaît à la fermeture de la fenêtre. Il faut savoir où l'écrire pour qu'il survive.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Portée d'une variable : shell, environnement, fichier de démarrage</h3>
+                <p>Une variable créée avec <code>nom=valeur</code> vit dans le <strong>shell courant</strong> seulement. Une <strong>variable d'environnement</strong> est une variable marquée par <code>export</code> : elle est transmise aux processus que ce shell lance. Dans les deux cas, elle disparaît avec le shell. Pour qu'un réglage revienne à chaque nouveau terminal, on l'écrit dans un <strong>fichier de démarrage</strong> : un shell interactif qui n'est pas un shell de connexion lit <code>~/.bashrc</code> au lancement.</p>
+                <div class="table-wrap"><table>
+                    <thead><tr><th>Où est la valeur ?</th><th>Visible des autres processus</th><th>Survit à la fermeture</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>nom=valeur</code></td><td>non</td><td>non</td></tr>
+                        <tr><td><code>export nom=valeur</code></td><td>oui</td><td>non</td></tr>
+                        <tr><td>ligne <code>export</code> dans <code>~/.bashrc</code></td><td>oui</td><td>oui (relue à chaque terminal)</td></tr>
+                    </tbody>
+                </table></div>
+                <p>L'invite de commande n'est qu'une variable particulière : <code>PS1</code>, relue par le shell à chaque affichage, dont les codes comme <code>\u</code> sont remplacés par l'utilisateur, l'hôte, le répertoire.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/bash/bash.1.en.html" rel="noopener">bash(1)</a> (environnement hérité par les commandes et <code>export</code> ; fichiers de démarrage, <code>~/.bashrc</code> ; <code>PS1</code> et section PROMPTING).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Une variable visible des autres processus</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · créer sans exporter</p>
+                        <p class="walk__head"><code>formation="Linux"</code></p>
+                        <p>La variable existe dans ce shell : <code>echo $formation</code> affiche <code>Linux</code>. Mais <code>env | grep formation</code> ne renvoie rien, car <code>env</code> est un autre processus.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · exporter</p>
+                        <p class="walk__head"><code>export formation="Linux"</code></p>
+                        <p>La variable entre dans l'environnement : <code>env | grep formation</code> affiche maintenant la ligne.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · rendre permanent</p>
+                        <p class="walk__head">La ligne <code>export</code> dans <code>~/.bashrc</code></p>
+                        <p>Sans cela, la variable disparaît à la fermeture du terminal ; <code>source ~/.bashrc</code> relit le fichier dans le shell courant.</p>
+                        <p class="walk__change">Avec <code>unset formation</code>, la variable disparaît de la session en cours, pas du fichier.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>Créer, exporter, afficher une variable</h3>
             <div class="terminal">
@@ -1722,6 +1858,41 @@ EOF</pre>
                 <p class="tip__label">Ajouter de la couleur</p>
                 <p>Syntaxe : <code>\[\033[ATTRIBUT;COULEURm\]</code>. Exemple : <code>PS1='\[\033[32m\]\u@\h\[\033[0m\] '</code> affiche <code>utilisateur@hôte</code> en vert. Toujours réinitialiser avec <code>\033[0m</code> à la fin.</p>
             </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après <code>export formation="Linux"</code>, <code>env | grep formation</code> affiche la ligne <code>formation=Linux</code>. Ouvre un nouveau terminal : la variable n'y est plus, sauf si la ligne <code>export</code> est dans <code>~/.bashrc</code>.</p>
+                <p class="verify__fail">Si <code>env | grep formation</code> ne renvoie rien, la variable n'a pas été exportée. Si elle manque dans un nouveau terminal, la ligne n'est pas dans <code>~/.bashrc</code> ou le fichier n'a pas été relu (<code>source ~/.bashrc</code>).</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — une variable d'environnement</p>
+                <p>Crée une variable <code>cours</code> de valeur <code>Debian</code>, rends-la visible des autres processus et prouve-le.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>On exporte, puis on cherche la variable dans <code>env</code>.</p>
+                <div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — reconstitué, non testé</span></div>
+                <pre class="terminal__code"><span class="k">export</span> cours=<span class="s">"Debian"</span>
+<span class="k">env</span> | <span class="k">grep</span> cours</pre></div></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Fais afficher ton invite en vert sous la forme <code>utilisateur@hôte</code>, suivie d'un espace, puis explique pourquoi la couleur doit être réinitialisée à la fin.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>C'est l'exemple du conseil « Ajouter de la couleur » : <code>PS1='\[\033[32m\]\u@\h\[\033[0m\] '</code>. Sans <code>\033[0m</code>, la couleur verte s'applique aussi à tout ce qui s'écrit ensuite.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le prompt est revenu à l'ancien</p>
+                <p>Tu as tapé <code>PS1='\u@\h:\w\$ '</code> : l'invite change aussitôt. Le lendemain, tu ouvres un nouveau terminal et l'invite d'origine est de retour.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> se demander où la valeur a été écrite : seulement dans le shell courant. <strong>Cause :</strong> une variable créée au clavier disparaît avec le shell, et le nouveau terminal relit <code>~/.bashrc</code>, qui ne contient rien à ce sujet. <strong>Correctif :</strong> ajouter la ligne au fichier (<code>echo "PS1='\u@\h:\w\$ '" &gt;&gt; ~/.bashrc</code>), puis <code>source ~/.bashrc</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li><code>nom=valeur</code> reste dans le shell courant ; <code>export</code> la transmet aux autres processus ; seule une ligne dans <code>~/.bashrc</code> la fait revenir à chaque terminal.</li>
+                    <li><code>echo</code> n'interprète <code>\n</code> et <code>\t</code> qu'avec <code>-e</code>.</li>
+                    <li><code>PS1</code> définit l'invite : <code>\u</code> utilisateur, <code>\h</code> hôte, <code>\w</code> répertoire, <code>\$</code> le <code>$</code> ou le <code>#</code>.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 13 -->
@@ -1729,6 +1900,52 @@ EOF</pre>
             <p class="chapter__num">13</p>
             <h2 class="chapter__title">Commandes internes/externes, PATH &amp; aide</h2>
             <p class="chapter__intro">D'où vient une commande, comment la retrouver, et comment obtenir de l'aide dessus.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Dire avec <code>type</code> si une commande est interne au shell ou externe.</li>
+                    <li>Expliquer pourquoi un script du dossier courant se lance avec <code>./</code> en lisant <code>$PATH</code>.</li>
+                    <li>Choisir la bonne aide : <code>help</code>, <code>--help</code> ou <code>man</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap7">Utilisateurs, permissions &amp; lecture de ls -l</a> (pour <code>chmod +x</code>) et <a href="#chap12">Variables &amp; personnalisation du prompt</a> · 25 min · un terminal Debian.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi une commande « n'est pas trouvée »</h3>
+                <p>« commande introuvable » est l'un des messages les plus fréquents au terminal. Il n'est pas toujours une faute de frappe : le programme peut exister, mais dans un dossier où le shell ne regarde pas. Savoir d'où vient une commande évite de tâtonner.</p>
+                <p>Même question pour l'aide : selon que la commande est interne ou externe, ce n'est pas la même commande d'aide qui répond.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Interne ou externe : qui exécute la commande</h3>
+                <p>Une commande <strong>interne</strong> (<em>builtin</em>) est codée dans le shell, qui l'exécute lui-même. Une commande <strong>externe</strong> est un fichier exécutable sur le disque : le shell le cherche, dans l'ordre, dans chacun des dossiers listés par la variable <code>PATH</code>, séparés par <code>:</code>, et lance le premier trouvé.</p>
+                <p>Le dossier courant ne figure pas dans <code>PATH</code> par défaut : un script placé là n'est donc pas trouvé par son seul nom, et il faut donner un chemin (<code>./script.sh</code>) pour que le shell n'ait plus rien à chercher. Une valeur vide dans <code>PATH</code> désignerait le dossier courant, mais ce n'est pas le réglage normal.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/bash/bash.1.en.html" rel="noopener">bash(1)</a> (variable <code>PATH</code> : liste de dossiers séparés par <code>:</code> ; builtin <code>type</code>) · <a href="https://manpages.debian.org/stable/man-db/man.1.en.html" rel="noopener">man(1)</a> (<code>whatis</code>).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Pourquoi <code>ma_commande.sh</code> échoue alors que <code>./ma_commande.sh</code> marche</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · lire où le shell cherche</p>
+                        <p class="walk__head"><code>echo $PATH</code></p>
+                        <p>La liste de dossiers ne contient pas le dossier courant.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · rendre le script exécutable et le lancer avec un chemin</p>
+                        <p class="walk__head"><code>chmod +x ma_commande.sh</code> puis <code>./ma_commande.sh</code></p>
+                        <p>Avec <code>./</code>, le chemin est explicite : le shell n'a plus à chercher dans <code>PATH</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · constater l'échec sans chemin</p>
+                        <p class="walk__head"><code>ma_commande.sh</code></p>
+                        <p>Le shell parcourt <code>PATH</code>, n'y trouve rien et répond « commande introuvable ».</p>
+                        <p class="walk__change">Avec <code>export PATH=$PATH:/root</code>, ce dossier est ajouté à la recherche, pour cette session seulement.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>Commandes internes vs externes</h3>
             <p>Une commande <strong>interne</strong> (builtin) fait partie du shell lui-même (ex : <code>cd</code>, <code>echo</code>). Une commande <strong>externe</strong> est un fichier binaire ou script séparé, cherché dans les dossiers de <code>$PATH</code>.</p>
@@ -1764,7 +1981,33 @@ ma_commande.sh                      <span class="c"># échoue : "commande introu
                 </tbody>
             </table></div>
 
-            <div class="takeaway">
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p><code>type echo</code> annonce une commande interne du shell, <code>type bash</code> un chemin comme <code>/usr/bin/bash</code> (externe). <code>./ma_commande.sh</code> s'exécute après <code>chmod +x</code>, alors que <code>ma_commande.sh</code> seul répond « commande introuvable ».</p>
+                <p class="verify__fail">Si <code>./ma_commande.sh</code> répond « Permission denied », le bit <code>x</code> manque : <code>chmod +x</code>. Si <code>help</code> ne connaît pas la commande, c'est une externe : essaie <code>--help</code> ou <code>man</code>.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — interne ou externe ?</p>
+                <p>Détermine, pour <code>cd</code> et pour <code>find</code>, s'il s'agit d'une commande interne ou externe, puis dis quelle commande d'aide employer pour chacune.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>type cd</code> et <code>type find</code> donnent la réponse : <code>cd</code> est interne (aide avec <code>help cd</code>), <code>find</code> est un exécutable externe (aide avec <code>find --help</code> ou <code>man find</code>).</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu as écrit un script <code>sauvegarde.sh</code> dans <code>~/scripts</code> et tu veux le lancer depuis n'importe quel dossier, uniquement pour la session en cours, sans le copier ailleurs. Que fais-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Ajouter ce dossier à la recherche, après avoir rendu le script exécutable :</p>
+                <div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — reconstitué, non testé</span></div>
+                <pre class="terminal__code"><span class="k">chmod</span> +x ~/scripts/sauvegarde.sh
+<span class="k">export</span> PATH=$PATH:~/scripts</pre></div></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — « commande introuvable » alors que le fichier est là</p>
+                <p>Un script <code>ma_commande.sh</code> est bien présent dans le dossier courant (<code>ls</code> le montre). Tu tapes son nom : le shell répond « commande introuvable ». En tapant <code>./ma_commande.sh</code>, il s'exécute.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> la seule différence est le chemin ; afficher <code>echo $PATH</code>. <strong>Cause :</strong> le dossier courant ne figure pas dans <code>PATH</code>, donc le shell ne regarde pas là. <strong>Correctif :</strong> lancer avec <code>./</code> (ou un chemin complet), ou ajouter le dossier à <code>PATH</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
                 <p><code>type commande</code> répond en un mot : interne au shell, ou binaire externe. Une commande externe n'est trouvée que si son dossier figure dans <code>$PATH</code> — d'où le <code>./script.sh</code> obligatoire pour un script du dossier courant. Et l'aide dépend du type : <code>help</code> pour une interne, <code>--help</code> ou <code>man</code> pour une externe.</p>
             </div>
@@ -1775,6 +2018,52 @@ ma_commande.sh                      <span class="c"># échoue : "commande introu
             <p class="chapter__num">14</p>
             <h2 class="chapter__title">Configurer le réseau</h2>
             <p class="chapter__intro">Sans réseau, pas de mises à jour ni d'installation de logiciels. On configure l'IP, la passerelle et le DNS.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Lire l'état du réseau avec <code>ip a</code> et <code>ip r</code>, et distinguer un réglage temporaire (<code>ip</code>) d'un réglage permanent.</li>
+                    <li>Écrire un bloc <code>iface … inet static</code> dans <code>/etc/network/interfaces</code>, ou passer par <code>nmcli</code> si NetworkManager gère la carte.</li>
+                    <li>Diagnostiquer dans l'ordre adresse, passerelle, IP publique puis nom, et expliquer pourquoi <code>/etc/resolv.conf</code> peut être réécrit.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap2">Premiers pas post-install</a> (pour <code>sudo</code>) et <a href="#chap5">Lire &amp; éditer des fichiers</a> · 40 min · une Debian avec une carte réseau, et le plan d'adresses de ton lab (les adresses ci-dessous sont des exemples).</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi le réseau se configure en trois temps</h3>
+                <p>Un serveur sans adresse fixe, sans passerelle ou sans résolution de noms est injoignable ou incapable de se mettre à jour. Lorsque « internet ne marche pas », les causes sont très différentes : adresse absente, route manquante, DNS en panne. Les distinguer évite de refaire toute la configuration au hasard.</p>
+                <p>Il faut aussi savoir ce qui survit à un redémarrage : un test rapide en ligne de commande n'est pas une configuration.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Adresse, passerelle, DNS : trois rôles, trois endroits</h3>
+                <p>Une machine a besoin de trois informations : son <strong>adresse IP</strong> avec son masque (qui je suis, sur quel réseau), une <strong>passerelle par défaut</strong> (le routeur vers l'extérieur) et un <strong>serveur DNS</strong> (le service qui traduit un nom en adresse). Les commandes <code>ip</code> modifient la configuration <strong>active</strong> du noyau, immédiatement mais sans écriture sur le disque ; le fichier <code>/etc/network/interfaces</code> (ou le profil NetworkManager) est relu au démarrage du service réseau.</p>
+                <p>Le fichier <code>/etc/resolv.conf</code> est particulier : sur beaucoup de machines, il est <strong>généré</strong> par un autre programme (NetworkManager, le client DHCP, ou le paquet <code>resolvconf</code> qui le remplace par un lien symbolique). Une ligne <code>nameserver</code> ajoutée à la main est alors écrasée à la prochaine mise à jour de ce programme ; on déclare le DNS dans la source (<code>dns-nameservers</code> avec <code>resolvconf</code>, ou <code>ipv4.dns</code> avec <code>nmcli</code>), comme dans les exemples plus bas.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/ifupdown/interfaces.5.en.html" rel="noopener">interfaces(5)</a> · <a href="https://manpages.debian.org/stable/iproute2/ip.8.en.html" rel="noopener">ip(8)</a> · <a href="https://wiki.debian.org/resolv.conf" rel="noopener">Debian Wiki — resolv.conf</a> (qui réécrit ce fichier : NetworkManager, <code>dhclient</code>, <code>resolvconf</code>).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">« Je n'ai plus internet » : trouver quel maillon casse</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · l'adresse</p>
+                        <p class="walk__head"><code>ip a</code></p>
+                        <p>L'interface porte-t-elle une adresse (par exemple <code>192.168.1.10/24</code>) ? Sinon, le problème est local : bloc <code>iface</code> ou connexion NetworkManager.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la passerelle puis l'IP publique</p>
+                        <p class="walk__head"><code>ip r</code> puis <code>ping 8.8.8.8</code></p>
+                        <p>Une ligne <code>default via …</code> doit exister. Si <code>ping 8.8.8.8</code> répond, le chemin vers l'extérieur fonctionne.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le nom</p>
+                        <p class="walk__head"><code>ping debian.org</code></p>
+                        <p>Si l'étape 2 passe et celle-ci échoue, le réseau est bon : c'est le DNS, donc <code>/etc/resolv.conf</code> et la source qui le génère.</p>
+                        <p class="walk__change">Un échec dès l'étape 1 ou 2 rend inutile de toucher au DNS : on remonte dans l'ordre, jamais l'inverse.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>IP statique — /etc/network/interfaces</h3>
             <p>On vérifie d'abord l'existant avec <code>ip a</code> (l'équivalent de <code>ipconfig</code> sous Windows) et <code>ip r</code> (table de routage), puis on édite le fichier des interfaces. Ici l'interface s'appelle <code>ens33</code> :</p>
@@ -1802,7 +2091,7 @@ iface ens33 inet <span class="k">static</span>
             </div>
 
             <h3>DNS — /etc/resolv.conf</h3>
-            <p>Le DNS traduit <code>www.google.fr</code> en adresse IP. S'il manque, on ajoute <code>nameserver 8.8.8.8</code> dans <code>/etc/resolv.conf</code>, puis on teste avec <code>ping www.google.fr</code>. La ligne <code>dns-nameservers</code> du fichier <code>interfaces</code> n'est prise en compte que si le paquet <code>resolvconf</code> (ou <code>openresolv</code>) est installé ; sans lui, c'est <code>/etc/resolv.conf</code> qui compte.</p>
+            <p>Le DNS traduit <code>www.google.fr</code> en adresse IP. S'il manque, on ajoute <code>nameserver 8.8.8.8</code> dans <code>/etc/resolv.conf</code>, puis on teste avec <code>ping www.google.fr</code>. La ligne <code>dns-nameservers</code> du fichier <code>interfaces</code> n'est prise en compte que si le paquet <code>resolvconf</code> (ou <code>openresolv</code>) est installé ; sans lui, c'est <code>/etc/resolv.conf</code> qui compte. Attention : sur une machine où NetworkManager, un client DHCP ou <code>resolvconf</code> gère ce fichier, la ligne ajoutée à la main peut être réécrite plus tard ; la bonne source est alors la configuration de l'interface.</p>
             <div class="takeaway takeaway--warn">
                 <p class="takeaway__label">Diagnostic express</p>
                 <p>Si <code>ping 8.8.8.8</code> fonctionne mais pas <code>ping www.google.fr</code>, le réseau est bon : c'est le <strong>DNS</strong> qui est en cause → vérifier <code>/etc/resolv.conf</code>.</p>
@@ -1839,9 +2128,27 @@ iface ens33 inet <span class="k">static</span>
 <span class="k">sudo nmcli</span> con up <span class="s">"Wired connection 1"</span>                  <span class="c"># appliquer</span></pre>
             </div>
             <p>Règle : <strong>un seul</strong> gestionnaire par interface. Une carte déclarée dans <code>/etc/network/interfaces</code> est ignorée par NetworkManager.</p>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p><code>ip</code> pour voir et tester (temporaire), <code>/etc/network/interfaces</code> (ou <code>nmcli</code> sur un poste avec bureau) pour rendre permanent, <code>/etc/resolv.conf</code> pour le DNS. Diagnostic dans l'ordre : adresse (<code>ip a</code>), passerelle (<code>ip r</code>), IP publique (<code>ping 8.8.8.8</code>), puis nom (<code>ping debian.org</code>).</p>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après <code>sudo systemctl restart networking</code>, <code>ip a</code> montre l'adresse écrite dans le fichier sur ton interface, <code>ip r</code> une ligne <code>default via</code> vers ta passerelle, <code>ping 8.8.8.8</code> répond, puis <code>ping debian.org</code> aussi.</p>
+                <p class="verify__fail">Pas d'adresse : relis le nom d'interface (<code>ens33</code> ou autre) dans le fichier. <code>ping 8.8.8.8</code> répond mais pas le nom : vérifie le DNS (<code>/etc/resolv.conf</code>, ou <code>dns-nameservers</code> si <code>resolvconf</code> est installé). En SSH, une erreur dans le fichier coupe ta propre session : garde un accès console.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — passer de l'essai au permanent</p>
+                <p>Tu as testé une adresse avec <code>ip addr add</code> et elle convient. Que dois-tu écrire, et où, pour qu'elle survive au redémarrage de ton serveur géré par <code>/etc/network/interfaces</code> ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Un bloc <code>auto</code> / <code>iface … inet static</code> avec <code>address</code>, <code>netmask</code> et <code>gateway</code> dans <code>/etc/network/interfaces</code> (voir l'exemple du chapitre), puis <code>sudo systemctl restart networking</code> et <code>ip a</code> pour vérifier.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Sur un poste avec bureau, ton collègue veut une adresse fixe et un DNS précis sur la connexion « Wired connection 1 ». Quel outil utilises-tu, et pourquoi ne pas modifier <code>/etc/network/interfaces</code> ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>nmcli</code> : <code>nmcli con mod</code> avec <code>ipv4.method manual</code>, <code>ipv4.addresses</code>, <code>ipv4.gateway</code>, <code>ipv4.dns</code>, puis <code>nmcli con up</code>. Il faut <strong>un seul</strong> gestionnaire par interface : NetworkManager ignore une carte déclarée dans <code>/etc/network/interfaces</code>, et inversement.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le DNS « saute » après un moment</p>
+                <p>Un serveur ne résolvait plus les noms ; tu as ajouté <code>nameserver 8.8.8.8</code> dans <code>/etc/resolv.conf</code> et <code>ping debian.org</code> a fonctionné. Plus tard (redémarrage, renouvellement d'adresse), les noms ne se résolvent plus et la ligne a disparu du fichier.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> relire <code>/etc/resolv.conf</code> : sa présentation (commentaire d'en-tête, lien symbolique) indique s'il est généré. <strong>Cause :</strong> un autre programme (NetworkManager, client DHCP, <code>resolvconf</code>) réécrit ce fichier à partir de sa propre configuration. <strong>Correctif :</strong> déclarer le DNS à la source : <code>dns-nameservers</code> dans le bloc <code>iface</code> (avec <code>resolvconf</code> installé) ou <code>ipv4.dns</code> avec <code>nmcli</code>.</p></div></details>
             </div>
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
@@ -1855,6 +2162,15 @@ iface ens33 inet <span class="k">static</span>
                     <div class="scenario__why"><p>Les changements faits avec <code>ip</code> sont <strong>immédiats mais temporaires</strong>. Pour qu'ils survivent, on écrit le bloc <code>iface ens33 inet static</code> dans <code>/etc/network/interfaces</code>, puis <code>sudo systemctl restart networking</code> (attention : en SSH, une erreur dans le fichier coupe la session).</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <p><code>ip</code> pour voir et tester (temporaire), <code>/etc/network/interfaces</code> (ou <code>nmcli</code> sur un poste avec bureau) pour rendre permanent, <code>/etc/resolv.conf</code> pour le DNS. Diagnostic dans l'ordre : adresse (<code>ip a</code>), passerelle (<code>ip r</code>), IP publique (<code>ping 8.8.8.8</code>), puis nom (<code>ping debian.org</code>).</p>
+                <ul>
+                    <li>Un seul gestionnaire de réseau par interface.</li>
+                    <li><code>/etc/resolv.conf</code> est souvent généré : le DNS se règle à la source, pas par une ligne ajoutée à la main.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 15 -->
@@ -1862,6 +2178,52 @@ iface ens33 inet <span class="k">static</span>
             <p class="chapter__num">15</p>
             <h2 class="chapter__title">Réseau &amp; SSH au quotidien</h2>
             <p class="chapter__intro">Diagnostiquer le réseau et prendre la main à distance.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Diagnostiquer le réseau avec <code>ip</code>, <code>ss -tuln</code> et <code>dig</code>, puis ouvrir une session distante avec <code>ssh</code> et copier un fichier avec <code>scp</code>.</li>
+                    <li>Générer une paire de clés <code>ed25519</code> et diffuser la clé publique avec <code>ssh-copy-id</code>.</li>
+                    <li>Expliquer pourquoi la clé privée reste sur le poste et pourquoi <code>~/.ssh</code> doit être en <code>700</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap14">Configurer le réseau</a> et <a href="#chap7">Utilisateurs, permissions &amp; lecture de ls -l</a> · 40 min · deux machines (ou une machine et une VM) qui se joignent par le réseau.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi administrer à distance, et sans mot de passe</h3>
+                <p>Un serveur n'a ni écran ni clavier à portée : on l'administre depuis son poste. SSH ouvre ce terminal distant dans un canal chiffré, ce que ne faisaient pas les anciens outils comme Telnet, où tout passait en clair.</p>
+                <p>Taper un mot de passe à chaque connexion est pénible et exposé aux devinettes d'un attaquant. Une paire de clés prouve qui tu es sans rien transmettre de secret par le réseau.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Clé privée, clé publique, serveur : qui détient quoi</h3>
+                <p>Une paire de clés se compose d'une clé <strong>privée</strong>, qui reste sur ton poste, et d'une clé <strong>publique</strong>, que tu copies sur chaque serveur dans <code>~/.ssh/authorized_keys</code>. À la connexion, le serveur vérifie que tu possèdes la clé privée correspondante, sans qu'elle soit envoyée. <code>ed25519</code> et <code>rsa</code> sont deux algorithmes de clé : <code>ed25519</code> donne des clés courtes de taille fixe et c'est le type que génère <code>ssh-keygen</code> quand on n'en précise pas ; <code>rsa</code> reste utile pour d'anciens serveurs.</p>
+                <p>Côté serveur, le service <code>sshd</code> lit <code>/etc/ssh/sshd_config</code>. Par défaut, l'authentification par mot de passe y est autorisée (<code>PasswordAuthentication yes</code>) et la connexion directe de <code>root</code> n'est permise que par clé (<code>PermitRootLogin prohibit-password</code>). Une fois la connexion par clé vérifiée, désactiver le mot de passe est une mesure de durcissement courante ; on garde alors une session ouverte pour corriger en cas d'erreur.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/openssh-client/ssh-keygen.1.en.html" rel="noopener">ssh-keygen(1)</a> (type par défaut Ed25519, fichiers <code>id_ed25519</code> et <code>id_rsa</code>) · <a href="https://manpages.debian.org/stable/openssh-server/sshd_config.5.en.html" rel="noopener">sshd_config(5)</a> (valeurs par défaut de <code>PasswordAuthentication</code> et <code>PermitRootLogin</code>).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Passer d'une connexion par mot de passe à une connexion par clé</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · générer la paire sur le poste client</p>
+                        <p class="walk__head"><code>ssh-keygen -t ed25519</code></p>
+                        <p>Deux fichiers apparaissent dans <code>~/.ssh</code> : la clé privée <code>id_ed25519</code> (elle ne bouge pas) et la clé publique <code>id_ed25519.pub</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · diffuser la clé publique</p>
+                        <p class="walk__head"><code>ssh-copy-id -i ~/.ssh/id_ed25519.pub user@serveur</code></p>
+                        <p>Le mot de passe est demandé une dernière fois : la clé publique est ajoutée dans <code>~/.ssh/authorized_keys</code> du serveur.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · se reconnecter</p>
+                        <p class="walk__head"><code>ssh user@serveur</code></p>
+                        <p>La session s'ouvre sans mot de passe (seule la phrase secrète de la clé, si tu en as fixé une, est demandée).</p>
+                        <p class="walk__change">Avec une clé RSA (<code>-t rsa -b 4096</code>), seul le nom du fichier change : <code>id_rsa.pub</code>.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="table-wrap"><table>
                 <thead><tr><th>Commande</th><th>Action</th></tr></thead>
@@ -1890,11 +2252,11 @@ iface ens33 inet <span class="k">static</span>
 
             <h3>Se connecter sans mot de passe (authentification par clé)</h3>
             <p>SSH combine deux types de cryptographie : <strong>asymétrique</strong> (clé publique/privée) pour authentifier le serveur et l'utilisateur et convenir d'une clé de session (échange Diffie-Hellman), puis <strong>symétrique</strong> (plus rapide) avec cette clé pour chiffrer le reste de la session. On génère une paire de clés côté client et on diffuse la clé publique sur le serveur :</p>
-            <div class="terminal">
-                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — côté client</span></div>
-                <pre class="terminal__code"><span class="k">ssh-keygen</span> <span class="p">-t</span> rsa <span class="p">-b</span> 4096 <span class="p">-f</span> ~/.ssh/id_rsa   <span class="c"># génère la paire (privée + .pub) — version du cours</span>
-<span class="k">ssh-keygen</span> <span class="p">-t</span> ed25519                       <span class="c"># le choix recommandé aujourd'hui : clé courte, rapide et sûre</span>
-<span class="k">ssh-copy-id</span> <span class="p">-i</span> ~/.ssh/id_rsa.pub user@serveur <span class="c"># diffuse la clé publique (dans ~/.ssh/authorized_keys du serveur)</span></pre>
+            <div class="terminal" data-reconstitue>
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — côté client (ordre et nom de clé adaptés : reconstitué, non testé)</span></div>
+                <pre class="terminal__code"><span class="k">ssh-keygen</span> <span class="p">-t</span> ed25519                       <span class="c"># le choix recommandé aujourd'hui : clé courte, rapide et sûre (~/.ssh/id_ed25519 + .pub)</span>
+<span class="k">ssh-keygen</span> <span class="p">-t</span> rsa <span class="p">-b</span> 4096 <span class="p">-f</span> ~/.ssh/id_rsa   <span class="c"># alternative RSA, pour un serveur ancien qui n'accepte pas ed25519</span>
+<span class="k">ssh-copy-id</span> <span class="p">-i</span> ~/.ssh/id_ed25519.pub user@serveur <span class="c"># diffuse la clé publique (dans ~/.ssh/authorized_keys du serveur)</span></pre>
             </div>
             <div class="takeaway takeaway--warn">
                 <p class="takeaway__label">Permissions du dossier .ssh</p>
@@ -1904,6 +2266,39 @@ iface ens33 inet <span class="k">static</span>
                 <p class="tip__label">Transfert de fichiers</p>
                 <p><code>wget url</code> / <code>curl -O url</code> téléchargent un fichier ; <code>scp -r dossier user@hôte:/dest</code> copie récursivement via SSH. Pour un transfert interactif façon explorateur, un client SFTP (FileZilla, WinSCP) se connecte sur le port 22 — le même service que SSH.</p>
             </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Sur le serveur, <code>systemctl status ssh</code> indique un service actif et <code>ss -tuln</code> montre le port 22 en écoute. Depuis le client, <code>ssh apprenant@192.168.1.10</code> ouvre la session ; après <code>ssh-copy-id</code>, elle s'ouvre sans demander le mot de passe du compte.</p>
+                <p class="verify__fail">Si le mot de passe est encore demandé après <code>ssh-copy-id</code>, vérifie sur le serveur les droits de <code>~/.ssh</code> (<code>700</code>) et de <code>authorized_keys</code> (<code>600</code>). Si la connexion est refusée, le service ne tourne pas ou le port 22 n'est pas ouvert.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — préparer l'accès par clé</p>
+                <p>Tu configures l'accès d'un administrateur à un nouveau serveur. Sur quel poste génères-tu la paire de clés, quel fichier part sur le serveur, et dans quel fichier du serveur arrive-t-il ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>La paire se génère sur le <strong>poste client</strong>. Seule la clé <strong>publique</strong> (<code>.pub</code>) va sur le serveur, où <code>ssh-copy-id</code> la range dans <code>~/.ssh/authorized_keys</code> ; la clé privée n'en bouge jamais.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Sur le serveur, quelles commandes <code>chmod</code> règlent les droits de <code>~/.ssh</code> et de <code>~/.ssh/authorized_keys</code>, et pourquoi sont-elles nécessaires ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>chmod 700 ~/.ssh</code> et <code>chmod 600 ~/.ssh/authorized_keys</code>. Sinon, avec <code>StrictModes</code> (actif par défaut), le serveur ignore les clés dont les droits sont trop larges.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la clé est ignorée</p>
+                <p>Tu as exécuté <code>ssh-copy-id</code> sans erreur, mais <code>ssh</code> redemande le mot de passe du compte. Sur le serveur, <code>ls -ld ~/.ssh</code> affiche des droits ouverts au groupe et aux autres.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> la clé est bien arrivée, donc le problème est du côté des droits : relire <code>ls -ld ~/.ssh</code> sur le serveur. <strong>Cause :</strong> <code>StrictModes</code>, actif par défaut, fait ignorer les clés quand <code>~/.ssh</code> est modifiable par d'autres que le propriétaire. <strong>Correctif :</strong> <code>chmod 700 ~/.ssh</code> et <code>chmod 600 ~/.ssh/authorized_keys</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>La clé <strong>privée</strong> ne quitte jamais le poste ; la <code>.pub</code> se range dans <code>~/.ssh/authorized_keys</code> du serveur.</li>
+                    <li><code>ssh-keygen -t ed25519</code> est le choix courant ; <code>rsa</code> sert aux serveurs anciens.</li>
+                    <li><code>~/.ssh</code> en <code>700</code>, <code>authorized_keys</code> en <code>600</code>, sinon la clé est ignorée.</li>
+                    <li>Ne désactive le mot de passe dans <code>sshd_config</code> qu'après avoir testé la clé, avec une session de secours ouverte.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 16 -->
@@ -1911,6 +2306,52 @@ iface ens33 inet <span class="k">static</span>
             <p class="chapter__num">16</p>
             <h2 class="chapter__title">Installer des logiciels (APT)</h2>
             <p class="chapter__intro">APT est le « magasin d'applications » de Debian, en ligne de commande. Les logiciels viennent de serveurs appelés dépôts (ou miroirs).</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Lire une ligne de <code>sources.list</code> : type, miroir, nom de code et composants.</li>
+                    <li>Installer, mettre à jour et désinstaller un paquet avec <code>apt</code>, en distinguant <code>remove</code> de <code>purge</code>.</li>
+                    <li>Relier une erreur courante d'APT à sa cause (réseau, DNS, heure, nom de code).</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap2">Premiers pas post-install</a> (pour <code>sudo</code>) et <a href="#chap14">Configurer le réseau</a> · 30 min · une Debian qui a accès à internet.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi un gestionnaire de paquets</h3>
+                <p>Installer un logiciel en le téléchargeant sur un site et en le copiant à la main oblige à gérer soi-même ses dépendances et ses mises à jour de sécurité. Un gestionnaire de paquets le fait pour tous les logiciels de la machine, à partir de sources déclarées et contrôlées.</p>
+                <p>Quand une installation échoue, la cause est presque toujours dans la chaîne qui mène au dépôt : réseau, DNS, heure, ligne de source. Savoir la remonter évite de réinstaller au hasard.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Dépôt, nom de code, composant : ce que dit une ligne de source</h3>
+                <p>Un <strong>dépôt</strong> est un serveur qui publie des paquets. Une ligne de <code>sources.list</code> en donne le <strong>type</strong> (<code>deb</code> : paquets binaires), l'<strong>adresse</strong> du miroir, la <strong>suite</strong> (le nom de code de la version, comme <code>trixie</code>, ou une suite dérivée : <code>-updates</code>, <code>-security</code>) et les <strong>composants</strong> (<code>main</code>, <code>contrib</code>…). APT ne contacte pas ces serveurs à chaque commande : <code>apt update</code> télécharge leur index et le met en cache localement, puis <code>apt install</code> et <code>apt upgrade</code> travaillent d'après cet index. C'est pourquoi on relance <code>apt update</code> après avoir modifié les sources.</p>
+                <p>Chaque index est <strong>signé</strong> et daté : une horloge très en retard ou en avance fait refuser un index jugé « pas encore valide ».</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/apt/sources.list.5.en.html" rel="noopener">sources.list(5)</a> (format une ligne et format deb822) · <a href="https://manpages.debian.org/stable/apt/apt.8.en.html" rel="noopener">apt(8)</a> · <a href="https://wiki.debian.org/SourcesList" rel="noopener">Debian Wiki — SourcesList</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Installer un logiciel proprement</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · rafraîchir l'index</p>
+                        <p class="walk__head"><code>sudo apt update</code></p>
+                        <p>APT interroge les dépôts de <code>sources.list</code> ; rien n'est installé ni modifié sur le système.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · chercher et inspecter</p>
+                        <p class="walk__head"><code>apt search nom</code> puis <code>apt show paquet</code></p>
+                        <p>On vérifie que le paquet existe dans l'index et ce qu'il contient avant de l'installer.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · installer</p>
+                        <p class="walk__head"><code>sudo apt install paquet</code></p>
+                        <p>APT installe le paquet et ses dépendances.</p>
+                        <p class="walk__change">Pour défaire : <code>sudo apt remove</code> garde la configuration, <code>sudo apt purge</code> la supprime aussi, puis <code>sudo apt autoremove</code> nettoie les dépendances devenues inutiles.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>sources.list — d'où viennent les paquets</h3>
             <p>Les dépôts sont listés dans <code>/etc/apt/sources.list</code> (format « une ligne ») ou dans des fichiers <code>.sources</code> sous <code>/etc/apt/sources.list.d/</code> (format <strong>deb822</strong>, en blocs <code>Types:</code> / <code>URIs:</code> / <code>Suites:</code> / <code>Components:</code>, encouragé depuis Debian 13 ; <code>sudo apt modernize-sources</code> convertit l'ancien). Exemple au format classique pour Debian 13 :</p>
@@ -1956,7 +2397,30 @@ iface ens33 inet <span class="k">static</span>
                     <tr><td><code>does not have a Release file</code></td><td>mauvais nom de code</td><td>vérifier avec <code>lsb_release -a</code></td></tr>
                 </tbody>
             </table></div>
-            <div class="takeaway">
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après <code>sudo apt update</code>, la commande se termine sans erreur de téléchargement. <code>apt show paquet</code> décrit le paquet, et après <code>sudo apt install paquet</code>, <code>apt list --installed</code> le contient.</p>
+                <p class="verify__fail">« Unable to locate package » : paquet absent des dépôts déclarés, relis suite et composants. « Could not resolve » : problème DNS (chapitre précédent). « Release file … not valid yet » : l'heure est fausse.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — lire une ligne de source</p>
+                <p>Dans la ligne <code>deb http://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware</code>, nomme le miroir, la suite et ce que contient le composant <code>main</code>.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Le miroir est <code>security.debian.org</code> (mises à jour de sécurité), la suite <code>trixie-security</code> (nom de code <code>trixie</code>, dépôt de sécurité) et <code>main</code> contient les paquets 100 % libres.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu veux supprimer un logiciel <strong>et</strong> ses fichiers de configuration, puis nettoyer les dépendances qui ne servent plus. Quelles commandes <code>apt</code>, dans quel ordre ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>sudo apt purge paquet</code> (supprime le paquet et sa configuration), puis <code>sudo apt autoremove</code> (dépendances inutiles). <code>remove</code> seul conserverait la configuration.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — apt update refuse l'index</p>
+                <p>Sur une VM restaurée depuis une ancienne sauvegarde, <code>sudo apt update</code> échoue avec un message qui dit que le fichier <code>Release</code> n'est « pas encore valide » (<code>not valid yet</code>). Le réseau et le DNS fonctionnent.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le réseau est bon, donc la cause est ailleurs : comparer l'heure de la machine (<code>timedatectl</code>) à l'heure réelle. <strong>Cause :</strong> l'horloge est en retard, l'index signé paraît daté du futur. <strong>Correctif :</strong> vérifier que la synchronisation NTP est active ; à défaut, <code>sudo date -s "YYYY-MM-DD HH:MM:SS"</code>, puis relancer <code>apt update</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
                 <p>Utiliser un miroir proche (<strong>deb.debian.org</strong> redirige vers le plus proche ; ou un miroir national comme <strong>ftp.fr.debian.org</strong>, <strong>ftp.be.debian.org</strong>), ne jamais omettre le dépôt <strong>security</strong>, et toujours faire <code>apt update</code> après avoir modifié <code>sources.list</code>.</p>
             </div>
@@ -2794,7 +3258,7 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
 <script src="../assets/catalogue.js?v=a8bae127"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/linux-debian.js?v=c41a1bbf"></script>
+<script src="../assets/quiz/linux-debian.js?v=ddd5693c"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 <script src="../assets/atelier.js?v=c35298a6"></script>

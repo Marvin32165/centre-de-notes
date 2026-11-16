@@ -29,7 +29,7 @@
         </div>
         <div class="hero__facts">
             <span class="fact fact--n2"><b>Niveau</b> Intermédiaire</span>
-            <span class="fact"><b>Durée</b> ≈ 6 h + une journée de TP</span>
+            <span class="fact"><b>Durée</b> ≈ 8 h 45 + une journée de TP</span>
             <span class="fact"><b>Chapitres</b> 13</span>
             <span class="fact"><b>Test</b> 20 questions</span>
             <span class="fact"><b>Prérequis</b> <a href="hyperv.html">Hyper-V</a> · <a href="reseau-bases.html">Réseau : les bases</a></span>
@@ -1536,7 +1536,29 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
             <h2 class="chapter__title">Dépanner Active Directory</h2>
             <p class="chapter__intro">Presque toutes les pannes d'AD tombent dans trois familles : le <strong>DNS</strong>, l'<strong>heure</strong> et la <strong>réplication</strong>. Ces commandes les isolent en quelques minutes.</p>
 
-            <div class="table-wrap">
+            
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Classer une panne d'Active Directory dans l'une des trois familles : DNS, heure ou réplication.</li>
+                    <li>Choisir la commande qui isole la cause : <code>nltest</code>, <code>w32tm</code>, <code>repadmin</code>, <code>dcdiag</code>, <code>Test-ComputerSecureChannel</code>.</li>
+                    <li>Raconter ce qui se passe à l'ouverture d'une session de domaine, du DNS au jeton d'accès, pour savoir à quelle étape une panne se situe.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#second-dc">Le second contrôleur de domaine</a> (la réplication), <a href="#dns">DNS en pratique</a> et <a href="#gpo">Les stratégies de groupe</a> · 40 min · SRV-AD01, SRV-AD02 et CLIENT-WIN11 joint au domaine.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Une panne d'AD se dépanne par familles, pas au hasard</h3>
+                <p>Un utilisateur qui ne peut plus ouvrir de session, un compte créé qui n'apparaît pas sur l'autre contrôleur, une GPO qui ne s'applique pas : trois symptômes très différents, et pourtant la cause est presque toujours la même petite poignée. Tester au hasard coûte une heure ; tester dans le bon ordre en coûte cinq minutes.</p>
+                <p>Ce chapitre ne t'apprend pas de nouvelles briques : il te donne la carte des pannes et les commandes qui permettent de trancher, du poste jusqu'au contrôleur de domaine.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Les trois familles, et la commande de chacune</h3>
+                <p>Trois mécanismes font tenir un domaine, et chacun a sa panne type. Le <strong>DNS</strong> permet au poste de <em>trouver</em> un contrôleur, grâce aux enregistrements SRV. L'<strong>heure</strong> permet à Kerberos de <em>l'authentifier</em> : un ticket porte un horodatage, et un écart de plus de 5 minutes le fait refuser. La <strong>réplication</strong> fait que tous les contrôleurs <em>partagent</em> les mêmes données, annuaire et SYSVOL. Un poste dont le <strong>canal sécurisé</strong> avec le domaine est rompu (le mot de passe de son compte machine ne correspond plus) forme un quatrième cas, à part.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/fr-fr/windows-server/identity/ad-ds/manage/dc-locator" rel="noopener">Microsoft Learn — Localisation d'un contrôleur de domaine (SRV DNS)</a> · <a href="https://learn.microsoft.com/fr-fr/windows/security/threat-protection/security-policy-settings/maximum-tolerance-for-computer-clock-synchronization" rel="noopener">Microsoft Learn — Tolérance maximale de synchronisation de l'horloge Kerberos</a> · <a href="https://learn.microsoft.com/fr-fr/windows-server/identity/ad-ds/get-started/replication/active-directory-replication-concepts" rel="noopener">Microsoft Learn — Concepts de la réplication AD</a></p>
+<div class="table-wrap">
                 <table>
                     <thead><tr><th>Symptôme</th><th>Commande</th><th>Piste</th></tr></thead>
                     <tbody>
@@ -1566,15 +1588,9 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
                     </tbody>
                 </table>
             </div>
-            <div class="cmdex" data-accept="nltest /dsgetdc:orion\.local;;Get-ADDomainController -Discover( -DomainName orion\.local)?( -Service .*)?" data-hint="nltest, avec l&#x27;option qui « obtient un DC ».">
-                <p class="cmdex__label">À toi de taper</p>
-                <p>Depuis un poste, vérifie qu'un contrôleur de domaine du domaine <code>orion.local</code> est trouvé.</p>
-                <details class="reveal">
-                    <summary>Voir la solution</summary>
-                    <div class="reveal__body"><p><code>nltest /dsgetdc:orion.local</code> : il interroge le DNS (enregistrements SRV), contacte le DC trouvé et affiche son nom. En PowerShell avec les outils RSAT : <code>Get-ADDomainController -Discover</code>.</p></div>
-                </details>
             </div>
-            <div class="walk">
+
+<div class="walk" data-bloc="5">
                 <p class="walk__label">Pas à pas</p>
                 <p class="walk__title">Ce qui se passe quand sso ouvre une session sur CLIENT-WIN11</p>
                 <ol class="walk__steps">
@@ -1622,11 +1638,46 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
                     </li>
                 </ol>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Pour AD, toujours dans cet ordre : le <strong>DNS</strong> (nltest, SRV), l'<strong>heure</strong> (w32tm), la <strong>réplication</strong> (repadmin), puis <code>dcdiag</code>. Les trois premières causes représentent l'immense majorité des pannes.</p>
+
+            <div class="verify" data-bloc="6">
+                <p class="verify__label">Vérifier</p>
+                <p>Le domaine est-il en bonne santé, dans l'ordre DNS, heure, réplication ?</p>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Invite de commandes — SRV-AD01</span></div>
+                <pre class="terminal__code"><span class="k">nltest</span> /dsgetdc:orion.local
+<span class="k">w32tm</span> /query /status
+<span class="k">repadmin</span> /replsummary</pre>
             </div>
-            <div class="scenario scenario--quick">
+                <p class="verify__sub">Sortie attendue de repadmin /replsummary</p>
+            <pre class="verify__out">Source DSA          largest delta    fails/total %   error
+SRV-AD01                 03m:12s    0 /   5    0
+SRV-AD02                 02m:48s    0 /   5    0</pre>
+                <p>Les deux autres commandes se lisent ainsi : <code>nltest</code> nomme un contrôleur de domaine trouvé (sinon, le DNS du poste est en cause), et <code>w32tm /query /status</code> donne la source de temps et la dernière synchronisation réussie, à comparer à l'heure du DC.</p>
+                <p class="verify__fail">Des échecs de réplication : vérifier que chaque DC se résout dans le DNS de l'autre, que l'heure est la même (Kerberos, écart maximal de 5 minutes), et lancer <code>repadmin /showrepl</code> pour le détail.</p>
+            </div>
+
+<div class="cmdex" data-bloc="7" data-accept="nltest /dsgetdc:orion\.local;;Get-ADDomainController -Discover( -DomainName orion\.local)?( -Service .*)?" data-hint="nltest, avec l&#x27;option qui « obtient un DC ».">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>Depuis un poste, vérifie qu'un contrôleur de domaine du domaine <code>orion.local</code> est trouvé.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>nltest /dsgetdc:orion.local</code> : il interroge le DNS (enregistrements SRV), contacte le DC trouvé et affiche son nom. En PowerShell avec les outils RSAT : <code>Get-ADDomainController -Discover</code>.</p></div>
+                </details>
+            </div>
+
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un collègue crée le compte <code>nbrun</code> sur SRV-AD01. Dix minutes plus tard, il n'apparaît pas sur SRV-AD02. Quelle commande lances-tu en premier, et quelles causes testes-tu ensuite ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>repadmin /showrepl</code> pour le détail, après <code>repadmin /replsummary</code> qui dit entre quels DC la réplication échoue. Les causes à tester ensuite, dans l'ordre : le DNS (chaque DC se résout-il chez l'autre ?), l'heure (<code>w32tm /query /status</code>, écart de moins de 5 minutes), puis le pare-feu (RPC, 135 et les ports hauts).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — plus aucune session sur un seul poste (scénario fictif)</p>
+                <p>Depuis ce matin, sso ne peut plus ouvrir de session sur CLIENT-WIN11 : le mot de passe est refusé alors qu'il est correct, et aucun verrouillage n'a eu lieu. Les autres postes et SRV-AD01 fonctionnent. CLIENT-WIN11 est une VM qu'on a laissée éteinte deux jours, puis rallumée.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> un seul poste touché, pas de verrouillage : on écarte le compte et le contrôleur, on regarde le poste. Une VM qui était éteinte peut avoir une horloge décalée : on lit <code>w32tm /query /status</code> et on compare à l'heure du DC. <strong>Cause :</strong> l'écart d'heure dépasse 5 minutes, et Kerberos refuse l'authentification (étape 3 du pas à pas). <strong>Correctif :</strong> resynchroniser l'heure du poste (<code>w32tm /resync</code>) puis relancer l'ouverture de session. Si le message avait parlé de relation d'approbation, on serait passé à <code>Test-ComputerSecureChannel -Repair</code>.</p></div></details>
+            </div>
+
+<div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
                     <p class="scenario__q">Une VM poste, restaurée d'un point de contrôle d'il y a trois semaines, refuse toute ouverture de session : « la relation d'approbation entre cette station de travail et le domaine principal a échoué ». Quelle commande lances-tu (en administrateur local) ?</p>
@@ -1638,13 +1689,83 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
                     <div class="scenario__why"><p>Un poste change le mot de passe de son <strong>compte machine</strong> tous les 30 jours par défaut. Le point de contrôle a remis un ancien mot de passe, que le DC ne reconnaît plus. <code>Test-ComputerSecureChannel</code> renvoie <code>False</code> ; avec <code>-Repair</code> et un compte autorisé, il réinitialise le canal entre le poste et son domaine, sans sortir du domaine.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Pour AD, toujours dans cet ordre : le <strong>DNS</strong> (<code>nltest</code>, SRV), l'<strong>heure</strong> (<code>w32tm</code>), la <strong>réplication</strong> (<code>repadmin</code>), puis <code>dcdiag</code>. Les trois premières causes représentent l'immense majorité des pannes.</li>
+                    <li>Kerberos refuse un écart d'heure de plus de 5 minutes ; un canal sécurisé rompu se répare avec <code>Test-ComputerSecureChannel -Repair</code>.</li>
+                    <li>Un pare-feu qui bloque une partie des ports donne des pannes « à moitié » : jonction qui marche, GPO ou réplication qui échouent.</li>
+                </ul>
+            </div>
         </section>
 
+        
         <!-- 13 -->
         <section class="chapter" id="tp-final">
             <p class="chapter__num">13</p>
             <h2 class="chapter__title">Le TP final, en lab guidé</h2>
             <p class="chapter__intro">Le projet de fin du cours, transposé sur le <a href="../labo.html">lab Orion</a> : trois serveurs et un client, tout ce qui précède, et une erreur volontaire à trouver. Chaque étape se vérifie avant la suivante.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Monter le domaine <code>orion.local</code> dans l'ordre des dépendances (AD, DNS, DHCP, fichiers, DFS, GPO) en prouvant chaque brique avant la suivante.</li>
+                    <li>Choisir, pour chaque brique, la commande qui prouve qu'elle marche.</li>
+                    <li>Retrouver une erreur de configuration volontaire à partir du seul symptôme côté client.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> tous les chapitres précédents, en particulier <a href="#depanner-ad">Dépanner Active Directory</a> · une journée · le <a href="../labo.html">lab Orion</a> : trois serveurs (SRV-AD01, SRV-AD02, SRV-FILE01) et CLIENT-WIN11.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Prouver qu'on sait monter un domaine, pas seulement le suivre</h3>
+                <p>Faire chaque chapitre isolément ne prouve pas qu'on sait enchaîner. Un vrai déploiement s'écrit dans un ordre où chaque brique repose sur la précédente, et une erreur posée au début se voit à la fin, loin de sa cause. Le TP final reproduit cette situation, avec une erreur volontaire à retrouver.</p>
+                <p>La méthode vaut plus que le résultat : on ne passe à l'étape suivante qu'après avoir <em>vu</em> la preuve de la précédente. C'est elle qui rend la panne finale facile à localiser.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>L'ordre des dépendances et la preuve de chaque brique</h3>
+                <p>Le DNS sert à trouver les contrôleurs, les contrôleurs servent à authentifier et à répliquer, et tout ce qui vient ensuite (DHCP autorisé, partages, DFS, GPO) s'appuie sur ce socle. Monter dans un autre ordre oblige à défaire.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Brique</th><th>Elle repose sur</th><th>Preuve avant de continuer</th></tr></thead>
+                        <tbody>
+                            <tr><td>Forêt <code>orion.local</code> (SRV-AD01)</td><td>adresse fixe, DNS, nom</td><td><code>Get-ADDomain</code></td></tr>
+                            <tr><td>Second contrôleur (SRV-AD02)</td><td>forêt, DNS joignable</td><td><code>repadmin /replsummary</code> sans échec</td></tr>
+                            <tr><td>Annuaire : OU, groupes, délégation</td><td>un domaine qui répond</td><td>jsmith crée un compte dans Development, et échoue ailleurs</td></tr>
+                            <tr><td>DNS : alias, zone inverse</td><td>zone intégrée à AD</td><td>résolution directe et inverse, et cache vidé au bon endroit</td></tr>
+                            <tr><td>DHCP autorisé</td><td>AD, DNS</td><td>le client obtient un bail, avec le bon DNS</td></tr>
+                            <tr><td>Fichiers, puis DFS</td><td>groupes, DNS, domaine</td><td>deux utilisateurs de services différents</td></tr>
+                            <tr><td>GPO</td><td>OU qui contiennent les bons objets</td><td><code>gpresult /r</code> sur le client</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="note">Source : <a href="https://learn.microsoft.com/fr-fr/windows-server/identity/ad-ds/manage/dc-locator" rel="noopener">Microsoft Learn — Localisation d'un contrôleur de domaine (SRV DNS)</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Pas à pas</p>
+                <p class="walk__title">Relier une panne finale à la brique qui en est la cause</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · CLIENT-WIN11</p>
+                        <p class="walk__head">Le symptôme</p>
+                        <p>Le client est dans le domaine, mais l'ouverture de session échoue avec « aucun serveur d'ouverture de session disponible ».</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le tableau des dépendances</p>
+                        <p class="walk__head">Remonter la chaîne</p>
+                        <p>Pour ouvrir une session, le poste doit trouver un DC, donc interroger le bon DNS, donc l'avoir reçu d'une configuration réseau : adresse fixe ou DHCP.</p>
+                        <p class="walk__change">La preuve la moins chère se trouve au bout de la chaîne, côté client.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · CLIENT-WIN11</p>
+                        <p class="walk__head">Une commande tranche</p>
+                        <p><code>ipconfig /all</code> montre quel DNS le client a reçu. Si ce n'est pas un contrôleur de domaine, la cause est dans l'étendue DHCP, pas dans l'annuaire.</p>
+                        <p class="walk__change">Ce sont les preuves de chaque étape qui permettent d'écarter les autres briques sans les tester.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="lab" data-lab="ws-tp-final">
                 <p class="lab__label">Lab guidé</p>
@@ -1661,10 +1782,39 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
                 <li><p><strong>GPO</strong> : restrictions, fond d'écran, lecteur X: (chapitre 10). Vérifier : <code>gpresult /r</code> et <code>gpresult /h</code> sur le client.</p></li>
                 </ol>
             </div>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Le domaine monté tient-il ensemble ?</p>
+                <p class="verify__sub">Constat attendu</p>
+                <p>Sur CLIENT-WIN11, <code>ipconfig /all</code> montre un bail DHCP avec les contrôleurs de domaine comme DNS, <code>nltest /dsgetdc:orion.local</code> nomme un DC, et <code>gpresult /r</code> liste les GPO appliquées. Sur SRV-AD01, <code>repadmin /replsummary</code> ne montre aucun échec.</p>
+                <p class="verify__fail">Une de ces preuves manque : reviens à la brique du tableau qui la produit, et ne continue pas avant de l'avoir.</p>
+            </div>
             <p>Les scripts complets du cours sont dans <code>windows-serveur/exercices/labo-final/</code> : à relire <strong>après</strong> avoir fait le lab, pour comparer.</p>
-            <div class="takeaway">
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — l'ordre de montée</p>
+                <p>Un collègue propose d'installer DHCP et de créer les GPO avant de promouvoir SRV-AD02. Que lui réponds-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>L'ordre n'est pas interdit pour DHCP, mais il fait perdre la preuve : on veut d'abord un second contrôleur qui réplique (<code>repadmin /replsummary</code>), car DHCP autorisé et GPO écrivent dans l'annuaire et se retrouveraient sur un seul DC. Le tableau des dépendances donne l'ordre qui garde chaque preuve utile.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le client obtient bien une adresse, mais <code>nltest /dsgetdc:orion.local</code> échoue. Dans quel ordre vérifies-tu les briques, et laquelle suspectes-tu en premier ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>On part du client : <code>ipconfig /all</code> pour lire le DNS reçu, puis <code>Resolve-DnsName</code> vers le contrôleur de domaine, puis <code>nltest</code>. La première suspecte est l'option DNS de l'étendue DHCP : le bail est correct, mais le DNS distribué ne connaît pas <code>orion.local</code>.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le client a une adresse mais ne trouve pas le domaine</p>
+                <p>Après la montée du lab, CLIENT-WIN11 obtient une adresse de l'étendue <code>.100–.199</code>, mais refuse toute ouverture de session de domaine. <code>Get-ADDomain</code> et <code>repadmin /replsummary</code> sont corrects sur les contrôleurs.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> les contrôleurs vont bien, le client a une adresse : le défaut est entre les deux. <code>ipconfig /all</code> sur le client montre le DNS reçu. <strong>Cause probable :</strong> l'option DNS de l'étendue DHCP pointe vers la passerelle (<code>172.16.50.1</code>) au lieu des contrôleurs, comme dans le chapitre DHCP. <strong>Correctif :</strong> <code>Set-DhcpServerv4OptionValue -ScopeId 172.16.50.0 -DnsServer 172.16.50.10,172.16.50.11</code>, puis <code>ipconfig /renew</code> et <code>nltest /dsgetdc:orion.local</code> sur le client.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p>Le TP final valide tout le module : si chaque étape a été vérifiée avec sa commande, l'erreur volontaire se trouve en une commande — <code>ipconfig /all</code> sur le client.</p>
+                <ul>
+                    <li>On monte le domaine dans l'ordre des dépendances, et chaque brique se prouve par une commande avant la suivante.</li>
+                    <li>Si chaque étape a été vérifiée, l'erreur volontaire se trouve en une commande : <code>ipconfig /all</code> sur le client.</li>
+                    <li>Le TP final est une synthèse : ses étapes renvoient chacune à un chapitre du module.</li>
+                </ul>
             </div>
         </section>
 
@@ -1680,6 +1830,24 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
             <div class="gl"><b>LAPS</b><span>Mot de passe d'administrateur local unique et renouvelé, stocké dans AD.</span></div>
             <div class="gl"><b>DSRM</b><span>Mode de restauration des services d'annuaire, et son mot de passe.</span></div>
         </div>
+
+        <section class="brief" id="livrable" data-bloc="10">
+            <p class="brief__label">Livrable du module</p>
+            <div class="lab" data-lab="livrable-windows-server">
+                <p class="lab__label">Livrable · runbook et panne diagnostiquée</p>
+                <p class="lab__title">Un runbook de mise en service d'<code>orion.local</code>, et une panne retrouvée sans indice</p>
+                <div class="lab__meta"><span><b>Objectif :</b> prouver que tu sais mettre en service un domaine et le dépanner</span><span><b>Point de départ :</b> le lab Orion monté (SRV-AD01, SRV-AD02, SRV-FILE01, CLIENT-WIN11)</span><span><b>Durée :</b> ≈ 1 h 30</span></div>
+                <ol class="lab__steps">
+                    <li><p><strong>Tableau des machines</strong> : pour chaque serveur, son rôle, son adresse du plan Orion et son ordre de mise en service. Aucun mot de passe dedans.</p></li>
+                    <li><p><strong>Séquence de mise en service</strong> : pour chaque brique (forêt, second DC, annuaire, DNS, DHCP, fichiers, DFS, GPO), la commande de montée, la commande de preuve et le résultat attendu.</p></li>
+                    <li><p><strong>Reprise après sinistre</strong> : qui détient le mot de passe DSRM et quel rôle FSMO se saisit en cas de perte de SRV-AD01 (le rôle, jamais le mot de passe lui-même).</p></li>
+                    <li><p><strong>Panne provoquée</strong> : un binôme (ou toi, sans te le dire) dégrade une brique, au choix du DNS, de l'heure ou du DHCP, sans te dire laquelle.</p></li>
+                    <li><p><strong>Diagnostic sans indice</strong> : tu notes le symptôme, les commandes lancées dans l'ordre DNS, heure, réplication, la cause trouvée et le correctif.</p></li>
+                    <li><p><strong>Preuve de retour à la normale</strong> : la commande de preuve de la brique, relancée après le correctif, avec son résultat.</p></li>
+                    <li><p><strong>Relecture</strong> : le runbook ne contient ni mot de passe, ni adresse réelle, ni nom de machine hors du plan Orion.</p></li>
+                </ol>
+            </div>
+        </section>
 
         <section class="test" id="test" data-test="windows-server">
             <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>

@@ -160,6 +160,15 @@ chmod | | Change les permissions d'un fichier, en octal (chmod 640) ou en symbol
 chown | | Change le propriétaire (et le groupe) d'un fichier. | chown
 umask | | Masque qui retire des droits aux fichiers et dossiers créés (022 → fichiers 644, dossiers 755). | umask
 Inode | | Structure qui décrit un fichier (droits, propriétaire, blocs) ; le nom n'est qu'un lien vers elle. | inodes?
+Distribution | | Ensemble cohérent (noyau, outils, gestionnaire de paquets, dépôts) assemblé et maintenu par un projet ; Debian en est une. | distributions? Linux
+Noyau | Kernel | Cœur du système d'exploitation : il pilote le matériel, la mémoire et les processus ; Linux est un noyau. | noyau;kernel
+LTS | Long Term Support | Suivi de sécurité prolongé d'une version Debian après la fin de son support régulier. | LTS\b
+Chemin absolu | | Chemin qui commence par / et part de la racine : valable depuis n'importe quel dossier. | chemins? absolus?
+Chemin relatif | | Chemin qui part du dossier courant, sans / initial (., .., nom de dossier). | chemins? relatifs?
+Point de montage | | Dossier de l'arborescence où un disque ou une partition est rattaché. | points? de montage
+Joker | Wildcard | Caractère (* ou ?) que le shell remplace par la liste des noms de fichiers correspondants, avant de lancer la commande. | jokers?;wildcards?
+Lien physique | Hard link | Second nom pour le même inode : le contenu subsiste tant qu'un nom existe. | liens? physiques?;hard links?
+Lien symbolique | Symlink | Fichier qui contient le chemin d'une cible, comme un raccourci ; il devient orphelin si la cible disparaît. | liens? symboliques?;symlinks?
 Redirection | | Envoie la sortie d'une commande vers un fichier (>, >>) ou lit un fichier en entrée (<) ; 2> pour les erreurs. | redirections?
 Paquet (logiciel) | | Archive d'un logiciel et de ses métadonnées, installée par le gestionnaire (apt et .deb sous Debian). | apt\b;paquets? \.deb
 systemd | | Système d'initialisation et gestionnaire de services de Linux (systemctl, journalctl). | systemd;systemctl

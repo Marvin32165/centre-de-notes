@@ -2132,7 +2132,104 @@ window.QUIZ_BANK = {
         a: 3,
         why: "<code>Ctrl+C</code> interrompt la commande en cours. <code>Ctrl+Z</code> la suspend (on la reprend avec <code>fg</code>), <code>Ctrl+D</code> ferme le terminal et <code>Ctrl+L</code> efface seulement l'écran.",
         ref: "Chapitre 25"
-    }]
+    },
+    {
+        lvl: 1,
+        q: "Dans la phrase « Debian est une distribution Linux », que désigne « Linux » ?",
+        c: ["Le programme qui lit les commandes tapées au clavier", "Le noyau, qui pilote le matériel, la mémoire et les processus", "Le gestionnaire de paquets de Debian", "Le nom de code de la version stable"],
+        a: 1,
+        why: "Linux est le <strong>noyau</strong>. Debian est la distribution (noyau, outils, paquets, dépôts) ; le programme qui lit les commandes est le shell, par exemple bash.",
+        ref: "Chapitre 01"
+    },
+    {
+        lvl: 1,
+        q: "Dans la commande <code>ls -la /home</code>, quel élément est l'argument ?",
+        c: ["<code>ls</code>", "<code>-la</code>", "<code>-l</code>", "<code>/home</code>"],
+        a: 3,
+        why: "<code>ls</code> est le nom de la commande, <code>-la</code> regroupe deux options, et <code>/home</code> est l'argument : ce sur quoi la commande agit.",
+        ref: "Chapitre 01"
+    },
+    {
+        lvl: 1,
+        q: "Pourquoi évite-t-on de travailler en permanence avec le compte root ?",
+        c: ["Root ne peut pas lancer <code>apt</code>", "Une commande mal tapée agit avec tous les droits et peut détruire le système", "Root est limité à son dossier personnel", "Root ne peut plus se connecter après l'installation"],
+        a: 1,
+        why: "Root a tous les droits, sans garde-fou : une faute de frappe peut être fatale. On travaille avec un utilisateur normal et on élève ses droits avec <code>sudo</code> pour une commande à la fois.",
+        ref: "Chapitre 02"
+    },
+    {
+        lvl: 2,
+        q: "Tu viens d'ajouter <code>apprenant</code> au groupe <code>sudo</code>, mais <code>sudo</code> reste refusé dans son terminal déjà ouvert. Que fait-il ?",
+        c: ["Il réinstalle le paquet <code>sudo</code>", "Il relance <code>usermod</code> sans l'option <code>-a</code>", "Il redémarre le service <code>sudo</code>", "Il se déconnecte puis se reconnecte : le groupe est pris en compte à la connexion"],
+        a: 3,
+        why: "Une session ouverte garde les groupes qu'elle avait au moment de la connexion. Après l'ajout au groupe, il faut une nouvelle connexion.",
+        ref: "Chapitre 02"
+    },
+    {
+        lvl: 1,
+        q: "Quelle commande indique si des mises à jour de paquets sont en attente ?",
+        c: ["<code>lsblk</code>", "<code>ip a</code>", "<code>apt list --upgradeable</code>", "<code>groups</code>"],
+        a: 2,
+        why: "<code>apt list --upgradeable</code> liste les paquets à mettre à jour. <code>lsblk</code> montre les disques et <code>ip a</code> les adresses réseau.",
+        ref: "Chapitre 02"
+    },
+    {
+        lvl: 1,
+        q: "Tu es dans <code>/home/apprenant</code>. Quel chemin relatif désigne <code>/etc/hosts</code> ?",
+        c: ["<code>etc/hosts</code>", "<code>../etc/hosts</code>", "<code>../../etc/hosts</code>", "<code>~/etc/hosts</code>"],
+        a: 2,
+        why: "Il faut remonter de <code>/home/apprenant</code> à <code>/home</code>, puis à la racine : deux <code>..</code>, puis <code>etc/hosts</code>.",
+        ref: "Chapitre 03"
+    },
+    {
+        lvl: 1,
+        q: "<code>ls /Home</code> répond que le dossier n'existe pas, alors que <code>/home</code> existe. Pourquoi ?",
+        c: ["Linux est sensible à la casse : <code>/Home</code> et <code>/home</code> sont deux chemins différents", "Il manque les droits de lecture sur la racine", "Le dossier <code>/home</code> est caché", "<code>ls</code> ne sait pas lister un dossier de la racine"],
+        a: 0,
+        why: "Les noms de fichiers et de dossiers sont sensibles à la casse sous Linux.",
+        ref: "Chapitre 03"
+    },
+    {
+        lvl: 1,
+        q: "Quelle commande crée d'un coup <code>tp/a/b/c</code> alors que <code>tp</code> n'existe pas ?",
+        c: ["<code>mkdir tp/a/b/c</code>", "<code>mkdir -p tp/a/b/c</code>", "<code>touch tp/a/b/c</code>", "<code>cp -r tp/a/b/c</code>"],
+        a: 1,
+        why: "<code>mkdir -p</code> crée toute la chaîne de dossiers. Sans <code>-p</code>, <code>mkdir</code> échoue si le dossier parent n'existe pas.",
+        ref: "Chapitre 04"
+    },
+    {
+        lvl: 1,
+        q: "Tu dois lire un journal de plusieurs milliers de lignes. Quelle commande choisis-tu ?",
+        c: ["<code>cat</code>, qui affiche tout d'un coup", "<code>less</code>, qui permet de naviguer et de chercher", "<code>mv</code>, qui déplace le fichier", "<code>diff</code>, qui compare deux fichiers"],
+        a: 1,
+        why: "<code>less</code> affiche page par page, avec navigation dans les deux sens et recherche ; <code>cat</code> noie l'information sur un gros fichier.",
+        ref: "Chapitre 05"
+    },
+    {
+        lvl: 1,
+        q: "Tu es coincé dans <code>vim</code> et veux quitter sans enregistrer. Que tapes-tu ?",
+        c: ["<code>Ctrl+X</code>", "<code>Ctrl+O</code> puis <code>Entrée</code>", "<code>Échap</code>, puis <code>:q!</code>, puis <code>Entrée</code>", "<code>:wq</code> directement, sans <code>Échap</code>"],
+        a: 2,
+        why: "<code>vim</code> a un mode commande et un mode insertion : <code>Échap</code> revient au mode commande, <code>:q!</code> quitte sans enregistrer. <code>Ctrl+X</code> est un raccourci de <code>nano</code>.",
+        ref: "Chapitre 05"
+    },
+    {
+        lvl: 2,
+        q: "Dans <code>ls -li</code>, comment reconnaître un lien symbolique d'un lien physique ?",
+        c: ["Il porte le même numéro d'inode que sa cible", "Son compteur de liens est toujours supérieur à 1", "Il a un inode différent et sa colonne de droits commence par <code>l</code>", "Il apparaît toujours en vert"],
+        a: 2,
+        why: "Un lien physique partage l'inode de la cible ; un lien symbolique est un fichier à part (autre inode), repéré par le <code>l</code> en tête des droits.",
+        ref: "Chapitre 06"
+    },
+    {
+        lvl: 2,
+        q: "Tu supprimes la cible d'un lien symbolique. Que devient le lien ?",
+        c: ["Il est supprimé automatiquement avec la cible", "Il pointe vers une copie du contenu", "Il reste, mais devient orphelin : il pointe vers un chemin qui n'existe plus", "Il devient un lien physique"],
+        a: 2,
+        why: "Un lien symbolique ne contient que le chemin de sa cible : si la cible disparaît ou change de nom, le lien reste et ne mène nulle part.",
+        ref: "Chapitre 06"
+    }
+    ]
 },
 
 "subnetting": {

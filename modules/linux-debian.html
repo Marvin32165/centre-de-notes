@@ -94,7 +94,60 @@
             <h2 class="chapter__title">Linux &amp; le terminal</h2>
             <p class="chapter__intro">Avant de taper la moindre commande, comprenons de quoi on parle.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Distinguer Linux (le noyau), Debian (une distribution) et le shell, et dire ce que fait chacun.</li>
+                    <li>Décomposer une commande en nom, options et argument.</li>
+                    <li>Choisir, dans le tableau des versions, celle qu'on installe sur un serveur de production.</li>
+                    <li>Afficher la version d'une machine avec <code>cat /etc/os-release</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> aucun prérequis, c'est le point de départ du module · 20 min · une machine ou une VM Debian avec un terminal (pour les constats).</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi on commence par le terminal</h3>
+                <p>Un serveur Debian n'a souvent pas d'écran ni d'interface graphique : on s'y connecte à distance et on tape des commandes. Quand un ticket annonce « le service ne répond plus », c'est par le terminal qu'on regarde l'état du système, la version installée et les journaux.</p>
+                <p>Deux gestes reviennent dans tous les chapitres suivants : lire une commande sans hésiter sur ce qui est le nom, ce qui est une option et ce qui est la cible, et savoir quelle version de Debian on a devant soi, parce que le support de sécurité et la documentation en dépendent.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+            <h3>Noyau, distribution, shell</h3>
             <p><strong>Linux</strong> est un système d'exploitation, comme Windows ou macOS. <strong>Debian</strong> est une « distribution » Linux : un ensemble complet, stable et gratuit, très utilisé sur les serveurs. Le <strong>terminal</strong> (ou shell) est l'outil principal pour l'administrer : on tape des commandes en texte au lieu de cliquer — plus rapide, plus précis, et ça fonctionne même sans interface graphique.</p>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Élément</th><th>Rôle</th><th>Exemple</th></tr></thead>
+                <tbody>
+                    <tr><td>Noyau</td><td>le cœur du système : il pilote le matériel, la mémoire et les processus</td><td>Linux</td></tr>
+                    <tr><td>Distribution</td><td>le noyau + des outils + un gestionnaire de paquets et des dépôts, assemblés et maintenus ensemble</td><td>Debian</td></tr>
+                    <tr><td>Shell</td><td>le programme qui lit ce que tu tapes et le fait exécuter</td><td>bash</td></tr>
+                </tbody>
+            </table></div>
+            <p>Une commande se lit toujours de la même façon : un <strong>nom</strong> (ce qu'on veut faire), des <strong>options</strong> qui commencent par un tiret (comment le faire) et un ou plusieurs <strong>arguments</strong> (sur quoi le faire). Chaque version de Debian porte aussi un <strong>nom de code</strong> (trixie, bookworm…) : c'est lui qu'on retrouve dans la configuration des dépôts, et il est lié à un numéro et à une durée de support, que le tableau plus bas donne.</p>
+            <p class="note">Source : <a href="https://www.debian.org/releases/" rel="noopener">Debian — Informations sur les versions</a> (versions, noms de code, stable, testing, unstable) · <a href="https://wiki.debian.org/LTS" rel="noopener">Debian Wiki — LTS</a> (suivi de sécurité à long terme après la fin du support régulier).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Lire <code>ls -la /home</code> mot par mot</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le nom</p>
+                        <p class="walk__head"><code>ls</code> : ce qu'on veut faire</p>
+                        <p>Le premier mot est toujours la commande. <code>ls</code> veut dire « lister » : afficher le contenu d'un dossier.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · les options</p>
+                        <p class="walk__head"><code>-la</code> : deux options accolées</p>
+                        <p><code>-la</code> est la somme de <code>-l</code> (liste détaillée) et de <code>-a</code> (tout, y compris les fichiers cachés). Les options commencent par un tiret et se placent avant la cible.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · l'argument</p>
+                        <p class="walk__head"><code>/home</code> : sur quoi la commande agit</p>
+                        <p>C'est le dossier à lister. Chaque mot est séparé du suivant par un espace : <code>ls-la</code> collé serait lu comme un seul nom de commande, qui n'existe pas.</p>
+                        <p class="walk__change">Sans argument, <code>ls</code> agit sur le dossier où l'on se trouve.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>Anatomie d'une commande</h3>
             <div class="terminal">
@@ -106,6 +159,11 @@
                 <li><code>-la</code> — des options qui modifient son comportement ;</li>
                 <li><code>/home</code> — l'argument : sur quoi la commande agit.</li>
             </ul>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Dans ton terminal Debian, tape <code>ls -la /home</code>. Tu dois voir une ligne par élément, avec <code>.</code> et <code>..</code> en tête, et le dossier de ton utilisateur (par exemple <code>apprenant</code>).</p>
+                <p class="verify__fail">Si le terminal répond que la commande est introuvable, vérifie l'espace entre le nom et les options : <code>lsla</code> n'est pas <code>ls -la</code>.</p>
+            </div>
 
             <h3>Les versions de Debian</h3>
             <div class="table-wrap"><table>
@@ -118,8 +176,30 @@
                 </tbody>
             </table></div>
 
-            <div class="takeaway">
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — choisir la version d'un nouveau serveur</p>
+                <p>On te demande d'installer aujourd'hui un serveur de production. Quelle version de Debian choisis-tu (nom de code et numéro), laquelle écartes-tu, et quelle commande tapes-tu une fois la machine installée pour vérifier ce qu'elle exécute ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>La <strong>stable</strong> : <strong>trixie</strong> (Debian 13). On écarte <code>testing</code> et <code>unstable</code> (à éviter en production) et <strong>bullseye</strong> (Debian 11), dont le LTS s'est arrêté fin août 2026. Pour vérifier : <code>cat /etc/os-release</code>, présent même sur une installation minimale.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un collègue écrit dans un ticket : « la machine est en bookworm ». Quel est le numéro de version, et jusqu'à quand reçoit-elle des correctifs de sécurité ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>bookworm est <strong>Debian 12</strong>. Le support régulier a pris fin le 11 juillet 2026 ; la machine est désormais en LTS, qui court jusqu'au <strong>30 juin 2028</strong> (d'après le tableau des versions du chapitre).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la commande qui marchait ailleurs</p>
+                <p>Sur un serveur tout juste installé en mode minimal, tu tapes <code>lsb_release -a</code> pour connaître la version : le terminal répond que la commande est introuvable. Tu l'avais pourtant utilisée sans problème sur un autre serveur.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> « introuvable » signifie que le programme n'est pas installé, pas que ta saisie est fausse. <strong>Cause :</strong> <code>lsb_release</code> vient du paquet <code>lsb-release</code>, absent d'une installation minimale. <strong>Correctif :</strong> utiliser <code>cat /etc/os-release</code>, toujours présent, ou installer le paquet <code>lsb-release</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Linux est le noyau, Debian la distribution, bash le shell.</li>
+                    <li>Une commande = un nom, des options (avec un tiret), un ou plusieurs arguments, séparés par des espaces.</li>
+                    <li>En production : la <strong>stable</strong> (trixie, Debian 13) ; jamais testing ni unstable.</li>
+                </ul>
                 <p>Pour connaître sa version : <code>cat /etc/os-release</code> (toujours présent) ou <code>lsb_release -a</code> (paquet <code>lsb-release</code>, absent d'une installation minimale). Une Debian a environ <strong>3 ans</strong> de support régulier puis <strong>2 ans</strong> de LTS. Le nom de code (ex. <strong>trixie</strong>) sert partout, notamment dans la configuration des dépôts APT.</p>
             </div>
         </section>
@@ -130,7 +210,60 @@
             <h2 class="chapter__title">Premiers pas post-install</h2>
             <p class="chapter__intro">Debian vient d'être installé. Voici les toutes premières actions : créer son utilisateur et lui donner les droits sudo.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Expliquer pourquoi on évite de travailler en <code>root</code> et comment <code>sudo</code> donne des droits ponctuels.</li>
+                    <li>Créer un utilisateur et l'ajouter au groupe <code>sudo</code> sans le retirer de ses autres groupes.</li>
+                    <li>Vérifier l'appartenance au groupe avec <code>groups</code>.</li>
+                    <li>Faire les trois vérifications de base d'une machine neuve : disque, réseau, mises à jour.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#chap1">Linux &amp; le terminal</a> · 30 min · une Debian fraîchement installée, accessible en <code>root</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi ne pas rester en root</h3>
             <p>À la première connexion, on entre avec le compte <code>root</code> — le « super-utilisateur » qui a tous les droits. Travailler en permanence avec est dangereux : une commande mal tapée peut détruire le système. La bonne pratique : un utilisateur normal + <code>sudo</code> pour élever ses droits ponctuellement.</p>
+                <p>Le cas typique du métier : sur un serveur partagé par plusieurs administrateurs, chacun se connecte avec son propre compte et n'élève ses droits que pour la commande qui le demande. Une faute de frappe ne touche alors que ce qu'on a volontairement élevé, et chaque action reste rattachée à une personne.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+            <h3>Root, utilisateur et groupe sudo</h3>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Compte</th><th>Droits</th><th>Usage</th></tr></thead>
+                <tbody>
+                    <tr><td><code>root</code></td><td>tous, sans garde-fou</td><td>première connexion, dépannage ; pas le travail courant</td></tr>
+                    <tr><td>utilisateur normal</td><td>limités à son dossier personnel</td><td>le travail de tous les jours</td></tr>
+                    <tr><td>utilisateur du groupe <code>sudo</code></td><td>ceux d'un utilisateur normal, plus l'élévation ponctuelle par <code>sudo</code></td><td>l'administrateur au quotidien</td></tr>
+                </tbody>
+            </table></div>
+            <p class="note">Si tu as laissé le mot de passe root <strong>vide</strong> pendant l'installation, l'installeur a déjà installé <code>sudo</code> et mis ton premier utilisateur dans le groupe <code>sudo</code> : le compte root est alors verrouillé, et les étapes de création plus bas sont inutiles.</p>
+            <p>On ne « donne » pas les droits d'admin à l'utilisateur directement : on le fait <strong>entrer dans le groupe <code>sudo</code></strong>. Debian a configuré à l'avance (dans le fichier <code>/etc/sudoers</code>) que <em>tout membre du groupe <code>sudo</code></em> peut exécuter des commandes en administrateur. Devenir admin, c'est donc simplement rejoindre ce groupe — c'est pour ça qu'on vérifie l'appartenance avec <code>groups</code>.</p>
+            <p class="note">Source : <a href="https://wiki.debian.org/sudo" rel="noopener">Debian Wiki — sudo</a> · <a href="https://manpages.debian.org/stable/sudo/sudoers.5.en.html" rel="noopener">sudoers(5)</a> (le fichier qui définit qui peut élever ses droits).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Premier jour sur un serveur : passer de <code>root</code> à <code>apprenant</code></p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · l'état de départ</p>
+                        <p class="walk__head">Un seul compte utilisable : root</p>
+                        <p>La machine vient d'être installée avec un mot de passe root. Tout ce qu'on tape part avec tous les droits : c'est exactement ce qu'on veut quitter vite.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la décision</p>
+                        <p class="walk__head">Un utilisateur, un groupe, plutôt qu'un partage du mot de passe root</p>
+                        <p>On crée <code>apprenant</code> puis on l'ajoute au groupe <code>sudo</code> avec <code>-aG</code> : <code>-G</code> seul remplacerait ses autres groupes, <code>-a</code> les conserve.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le contrôle</p>
+                        <p class="walk__head">Vérifier avant de quitter root</p>
+                        <p>Tant que root est ouvert, on peut encore corriger : on lit les groupes d'<code>apprenant</code> et on s'assure que <code>sudo</code> y figure, puis seulement on se déconnecte.</p>
+                        <p class="walk__change">Le groupe ne compte que pour une <em>nouvelle</em> connexion : d'où l'étape « Se reconnecter » ci-dessous.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="steps">
                 <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Installer sudo</strong><p>Connecté en root : <code>apt install sudo</code></p></div></div>
@@ -148,9 +281,12 @@
 <span class="k">exit</span></pre>
             </div>
 
-            <h3>Pourquoi ça marche</h3>
-            <p class="note">Si tu as laissé le mot de passe root <strong>vide</strong> pendant l'installation, l'installeur a déjà installé <code>sudo</code> et mis ton premier utilisateur dans le groupe <code>sudo</code> : le compte root est alors verrouillé, et ces étapes sont inutiles.</p>
-            <p>On ne « donne » pas les droits d'admin à l'utilisateur directement : on le fait <strong>entrer dans le groupe <code>sudo</code></strong>. Debian a configuré à l'avance (dans le fichier <code>/etc/sudoers</code>) que <em>tout membre du groupe <code>sudo</code></em> peut exécuter des commandes en administrateur. Devenir admin, c'est donc simplement rejoindre ce groupe — c'est pour ça qu'on vérifie l'appartenance avec <code>groups</code>.</p>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après <code>groups apprenant</code>, la liste des groupes doit contenir <code>sudo</code>. Après la reconnexion avec le nouvel utilisateur, <code>sudo apt update</code> demande <strong>son</strong> mot de passe.</p>
+                <p class="verify__fail">Si <code>sudo</code> n'apparaît pas dans la liste : l'ajout n'a pas eu lieu (ou a été fait sans <code>-a</code>, auquel cas les autres groupes ont disparu). Refaire <code>usermod -aG sudo apprenant</code> en root.</p>
+            </div>
+
             <div class="takeaway takeaway--warn">
                 <p class="takeaway__label">Le piège du -a dans usermod -aG</p>
                 <p><code>-G</code> <strong>remplace</strong> la liste des groupes secondaires de l'utilisateur. Le <code>-a</code> (pour <em>append</em>, « ajouter ») dit « ajoute ce groupe sans effacer les autres ». Oublier le <code>-a</code> et écrire <code>usermod -G sudo apprenant</code> retirerait l'utilisateur de tous ses autres groupes — d'où le réflexe : toujours <code>-aG</code> pour ajouter.</p>
@@ -165,8 +301,35 @@
 <span class="k">apt</span> list <span class="p">--upgradeable</span>    <span class="c"># « mon système est-il à jour ? » → paquets à mettre à jour</span></pre>
             </div>
 
-            <div class="takeaway">
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — donner les droits sudo à un collègue</p>
+                <p>Un utilisateur <code>bob</code> existe déjà et appartient à d'autres groupes. Donne-lui les droits <code>sudo</code> sans qu'il perde ces groupes, puis vérifie le résultat. Énoncé seul : écris les deux commandes.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — en root</span></div>
+                    <pre class="terminal__code"><span class="k">usermod</span> <span class="p">-aG</span> sudo bob
+<span class="k">groups</span> bob</pre>
+                </div><p>Mêmes commandes que dans le terminal du chapitre, avec un autre nom d'utilisateur (<em>reconstitué, non testé</em>). Le <code>-a</code> est indispensable : sans lui, <code>bob</code> perdrait ses autres groupes.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu reçois une machine installée par un collègue qui a laissé le mot de passe root vide pendant l'installation. Faut-il créer un utilisateur et l'ajouter au groupe <code>sudo</code> ? Qu'est-ce que tu contrôles en premier ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Non : dans ce cas l'installeur a déjà installé <code>sudo</code> et placé le premier utilisateur dans le groupe <code>sudo</code> ; le compte root est verrouillé. On contrôle simplement l'appartenance de cet utilisateur avec <code>groups</code>.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — sudo refuse un administrateur tout juste ajouté</p>
+                <p>En root, tu viens d'ajouter <code>apprenant</code> au groupe <code>sudo</code> et la liste de ses groupes l'affiche bien. Mais dans le terminal qu'<code>apprenant</code> avait déjà ouvert, <code>sudo apt update</code> est refusé : le système dit que l'utilisateur n'est pas autorisé à utiliser <code>sudo</code>.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le groupe est bien déclaré (la liste le montre), donc l'ajout est correct ; on se demande plutôt <em>quand</em> il est pris en compte. <strong>Cause :</strong> une session déjà ouverte garde les groupes qu'elle avait à la connexion ; <code>groups</code> sans nom d'utilisateur décrit la session courante et peut différer de la base des groupes. <strong>Correctif :</strong> se déconnecter puis se reconnecter (étape « Se reconnecter » du chapitre).</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/coreutils/groups.1.en.html" rel="noopener">groups(1)</a> — sans nom, la commande décrit le processus courant, qui peut différer si la base des groupes a changé.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>On travaille avec un utilisateur normal ; <code>sudo</code> élève les droits pour une commande.</li>
+                    <li>Devenir administrateur = entrer dans le groupe <code>sudo</code> : <code>usermod -aG sudo utilisateur</code>, jamais sans <code>-a</code>.</li>
+                    <li>Le groupe ne s'applique qu'à une nouvelle connexion ; on le vérifie avec <code>groups</code>.</li>
+                </ul>
                 <p>Ensuite, on préfixe les commandes d'administration par <code>sudo</code> : par exemple <code>sudo apt update</code>. Le système demande <strong>votre</strong> mot de passe (pas celui de root) et vérifie que vous êtes bien dans le groupe <code>sudo</code> avant d'autoriser.</p>
             </div>
         </section>
@@ -176,6 +339,23 @@
             <p class="chapter__num">03</p>
             <h2 class="chapter__title">Les chemins de base (paths)</h2>
             <p class="chapter__intro">Sous Debian, tout part de la racine <code>/</code> — l'équivalent du <code>C:\</code> de Windows. Pas de lettres de lecteurs : disques et clés USB sont « montés » dans l'arborescence.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Nommer le rôle des dossiers principaux (<code>/etc</code>, <code>/var</code>, <code>/home</code>, <code>/usr</code>, <code>/tmp</code>…) et dire où chercher une configuration, un journal, un programme.</li>
+                    <li>Écrire un chemin de deux façons, absolue et relative, avec <code>~</code>, <code>.</code> et <code>..</code>.</li>
+                    <li>Expliquer pourquoi <code>/Home</code> et <code>/home</code> sont deux chemins différents.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#chap1">Linux &amp; le terminal</a> · 25 min · un terminal Debian (pour les constats).</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi connaître l'arborescence par cœur</h3>
+                <p>Sous Windows, on cherche dans l'Explorateur, dans le Registre ou dans <code>ProgramData</code>. Sous Debian, tout est rangé à un endroit prévisible, et une panne se règle presque toujours en deux gestes : ouvrir le bon fichier de configuration, lire le bon journal.</p>
+                <p>Quand un collègue demande « où est le fichier de config du service ? » ou « où sont les logs ? », la réponse doit venir sans chercher : c'est ce qui fait gagner du temps à chaque incident, sur n'importe quelle Debian.</p>
+            </div>
+
 
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Arborescence du système de fichiers</span></div>
@@ -199,6 +379,9 @@
 └── <span class="k">var/</span>     <span class="c">données variables : logs, mails, sites…</span></pre>
             </div>
 
+            <div class="lecon__bloc" data-bloc="4">
+            <h3>Une seule arborescence, deux façons de la décrire</h3>
+            <p>Il n'existe qu'<strong>un seul arbre</strong>, qui part de la racine <code>/</code> : les disques s'y greffent en un « point de montage ». Un <strong>chemin absolu</strong> commence par <code>/</code> et dit où l'on va depuis la racine, quel que soit l'endroit où l'on se trouve. Un <strong>chemin relatif</strong> ne commence pas par <code>/</code> et se lit à partir du dossier courant. Le rôle de chaque dossier suit une convention commune aux distributions (la hiérarchie standard des fichiers) : c'est pour ça qu'on retrouve <code>/etc</code> et <code>/var</code> au même endroit partout.</p>
             <div class="table-wrap"><table>
                 <thead><tr><th>Chemin Linux</th><th>Équivalent Windows</th><th>Contenu (à peu près)</th></tr></thead>
                 <tbody>
@@ -232,6 +415,8 @@
                     <tr><td><code>cd -</code></td><td>Revenir au dossier précédent</td></tr>
                 </tbody>
             </table></div>
+            <p class="note">Source : <a href="https://man7.org/linux/man-pages/man7/hier.7.html" rel="noopener">hier(7) — description de la hiérarchie des systèmes de fichiers</a> (rôle de chaque répertoire) · <a href="https://wiki.debian.org/FilesystemHierarchyStandard" rel="noopener">Debian Wiki — Filesystem Hierarchy Standard</a>.</p>
+            </div>
 
             <div class="takeaway takeaway--warn">
                 <p class="takeaway__label">Attention</p>
@@ -242,6 +427,70 @@
                 <p class="tip__label">Où chercher quoi ?</p>
                 <p>Config système → <code>/etc</code> · Journaux → <code>/var/log</code> · Programmes → <code>/usr/bin</code>, <code>/opt</code> · Vos fichiers → <code>/home/votre_nom</code></p>
             </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Écrire le chemin du journal <code>dpkg.log</code> depuis <code>/home/apprenant</code></p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · où ranger la chose</p>
+                        <p class="walk__head">Un journal : donc <code>/var/log</code></p>
+                        <p>Les journaux sont des données qui changent : elles vivent sous <code>/var</code>, dans <code>log</code>. Le fichier du chapitre « Lire &amp; éditer » est <code>dpkg.log</code> dans ce dossier.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le chemin absolu</p>
+                        <p class="walk__head"><code>/var/log/dpkg.log</code></p>
+                        <p>On part de la racine et on descend : <code>/</code>, <code>var</code>, <code>log</code>, le fichier. Ce chemin est valable depuis n'importe quel dossier.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le chemin relatif</p>
+                        <p class="walk__head"><code>../../var/log/dpkg.log</code></p>
+                        <p>On se trouve dans <code>/home/apprenant</code> : <code>..</code> remonte à <code>/home</code>, un second <code>..</code> à la racine, puis on redescend. Ce chemin ne marche que depuis ce dossier.</p>
+                        <p class="walk__change">Déplacé ailleurs, le chemin relatif change ; l'absolu reste le même.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="terminal" data-reconstitue>
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
+                <pre class="terminal__code"><span class="k">cd</span> <span class="s">/etc</span>
+<span class="k">pwd</span>
+<span class="k">cd</span> ~
+<span class="k">pwd</span>
+<span class="k">cd</span> -</pre>
+            </div>
+            <p class="note"><em>reconstitué, non testé</em> : enchaînement des commandes <code>pwd</code>, <code>cd</code>, <code>cd ~</code> et <code>cd -</code> du module, jouées dans cet ordre.</p>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Le premier <code>pwd</code> affiche <code>/etc</code>, le second ton dossier personnel (par exemple <code>/home/apprenant</code>). Avec <code>cd -</code>, tu reviens dans <code>/etc</code>.</p>
+                <p class="verify__fail">Si <code>cd</code> refuse le chemin, vérifie la casse (<code>/Etc</code> n'existe pas) et le sens de la barre : c'est <code>/</code>, pas <code>\</code>.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — ranger trois éléments</p>
+                <p>Dans quel dossier trouves-tu, pour chaque cas : (a) le fichier <code>hosts</code> ; (b) le dossier personnel de l'utilisateur <code>alice</code> ; (c) une clé USB montée automatiquement ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>(a) <code>/etc</code> (toute la configuration) ; (b) <code>/home/alice</code> ; (c) <code>/media</code>.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu es dans <code>/home/apprenant</code>. Écris deux chemins différents pour désigner le fichier <code>/etc/hosts</code> : un absolu, un relatif.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Absolu : <code>/etc/hosts</code>. Relatif : <code>../../etc/hosts</code> (deux <code>..</code> pour remonter de <code>/home/apprenant</code> jusqu'à la racine).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le dossier est là, mais introuvable</p>
+                <p>Un collègue te dicte un chemin : <code>/Home/apprenant/notes</code>. Tu le tapes avec <code>ls</code> et le terminal répond que le fichier ou le dossier n'existe pas, alors que <code>ls /home</code> montre bien <code>apprenant</code>.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> on compare le chemin tapé avec ce que <code>ls</code> affiche, caractère par caractère. <strong>Cause :</strong> Linux est sensible à la casse : <code>/Home</code> n'est pas <code>/home</code>. <strong>Correctif :</strong> retaper <code>/home/apprenant/notes</code>, en vérifiant aussi que le séparateur est <code>/</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Un seul arbre, qui part de <code>/</code> ; config dans <code>/etc</code>, journaux dans <code>/var/log</code>, utilisateurs dans <code>/home</code>.</li>
+                    <li>Chemin absolu : commence par <code>/</code>. Relatif : part du dossier courant, avec <code>.</code>, <code>..</code> et <code>~</code>.</li>
+                    <li>Casse significative : <code>/Home</code> ≠ <code>/home</code>.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 04 -->
@@ -250,6 +499,25 @@
             <h2 class="chapter__title">Se déplacer &amp; gérer ses fichiers</h2>
             <p class="chapter__intro">Sous Linux, tout est fichier. Le système part de la racine <code>/</code> ; votre dossier personnel est <code>/home/votre_nom</code>, abrégé <code>~</code>.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Te déplacer et gérer fichiers et dossiers : créer, copier, déplacer, renommer, supprimer.</li>
+                    <li>Désigner plusieurs fichiers d'un coup avec les jokers <code>*</code> et <code>?</code>.</li>
+                    <li>Expliquer pourquoi <code>rm</code> ne se rattrape pas, et vérifier avant de le lancer.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#chap3">Les chemins de base</a> · 35 min · un terminal Debian dans ton dossier personnel.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi apprendre ces commandes</h3>
+                <p>Sans interface graphique, déplacer un fichier, copier une configuration avant de la modifier ou nettoyer un dossier de logs se fait avec quelques commandes seulement. Elles sont les mêmes sur toutes les Debian, et on les enchaîne tous les jours.</p>
+                <p>Le revers : ici, pas de corbeille ni de fenêtre de confirmation. Une copie de sauvegarde avant de modifier et un coup d'œil avant de supprimer font partie du geste, pas d'un excès de prudence.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+            <h3>Ce que fait chaque commande</h3>
+            <p>Les commandes agissent sur des chemins (voir le chapitre précédent). Quand on écrit un joker, ce n'est pas la commande qui le comprend : le <strong>shell</strong> remplace d'abord le motif par la liste des noms qui lui correspondent, puis lance la commande avec cette liste. C'est pourquoi <code>cp /etc/*.conf repb</code> reçoit autant de sources qu'il y a de fichiers <code>.conf</code>, et pourquoi un joker mal pensé touche plus de fichiers que prévu.</p>
             <div class="table-wrap"><table>
                 <thead><tr><th>Commande</th><th>Action</th></tr></thead>
                 <tbody>
@@ -265,6 +533,8 @@
                     <tr><td><code>tree /</code></td><td>arborescence graphique (<code>apt install tree</code>)</td></tr>
                 </tbody>
             </table></div>
+            <p class="note">Source : <a href="https://man7.org/linux/man-pages/man7/glob.7.html" rel="noopener">glob(7) — motifs de noms de fichiers</a> (le motif est développé par le shell, avant l'appel de la commande).</p>
+            </div>
 
             <div class="takeaway takeaway--warn">
                 <p class="takeaway__label">Attention</p>
@@ -280,10 +550,38 @@
                     <tr><td><code>?</code></td><td>exactement un caractère</td><td><code>ls /etc/?e*</code> — « e » en 2ᵉ position</td></tr>
                 </tbody>
             </table></div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Supprimer les fichiers qui commencent par <code>mon</code>, sans se tromper</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · où suis-je</p>
+                        <p class="walk__head"><code>pwd</code> avant toute suppression</p>
+                        <p><code>rm mon*</code> agit sur le dossier courant. Se tromper de dossier est l'erreur la plus fréquente : on lit donc d'abord le résultat de <code>pwd</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · ce que le joker désigne</p>
+                        <p class="walk__head">Le même motif, avec <code>ls</code> à la place de <code>rm</code></p>
+                        <p>Le shell développe <code>mon*</code> de la même façon pour <code>ls</code> : la liste affichée est exactement celle que <code>rm</code> supprimerait. On la relit, nom par nom.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la suppression</p>
+                        <p class="walk__head">Seulement ensuite : <code>rm mon*</code></p>
+                        <p>La liste est celle qu'on attendait, le dossier est le bon : on relance la même ligne en remplaçant <code>ls</code> par <code>rm</code>.</p>
+                        <p class="walk__change">Il n'y a pas de corbeille : une fois supprimés, les fichiers ne reviennent que d'une sauvegarde.</p>
+                    </li>
+                </ol>
+            </div>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
                 <pre class="terminal__code"><span class="k">cp</span> <span class="s">/bin/sh*</span> repb          <span class="c"># copie tout ce qui commence par "sh"</span>
 <span class="k">rm</span> mon*                   <span class="c"># supprime tout ce qui commence par "mon"</span></pre>
+            </div>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après la copie, <code>ls repb</code> montre des fichiers dont tous les noms commencent par <code>sh</code>. Avant <code>rm mon*</code>, <code>ls mon*</code> doit afficher exactement ce que tu veux supprimer.</p>
+                <p class="verify__fail">Si <code>cp</code> se plaint que <code>repb</code> n'est pas un dossier, crée-le d'abord avec <code>mkdir repb</code> : avec plusieurs sources, la destination doit être un dossier existant.</p>
             </div>
 
             <h3>Comparer, monter, éteindre</h3>
@@ -294,6 +592,36 @@
 <span class="k">sudo mount</span> <span class="s">/dev/sdb1</span> tp           <span class="c"># monte la partition dans le dossier tp</span>
 <span class="k">sudo shutdown</span> <span class="p">-h</span> now             <span class="c"># extinction immédiate</span></pre>
             </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — monter une arborescence et la renommer</p>
+                <p>Depuis ton dossier personnel, crée d'un seul coup les dossiers <code>tp/a/b/c</code>, puis renomme <code>tp</code> en <code>exercice</code>. Énoncé seul : écris les deux commandes.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
+                    <pre class="terminal__code"><span class="k">mkdir</span> <span class="p">-p</span> tp/a/b/c
+<span class="k">mv</span> tp exercice</pre>
+                </div><p><code>mkdir -p</code> crée toute la chaîne ; <code>mv</code> renomme quand la destination n'existe pas encore. Commandes du module avec d'autres noms (<em>reconstitué, non testé</em>).</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un dossier contient <code>rapport1.txt</code>, <code>rapport2.txt</code>, <code>rapport10.txt</code> et <code>notes.txt</code>. Écris un motif qui désigne les trois rapports, puis un motif qui ne désigne que ceux dont le numéro n'a qu'un chiffre.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Les trois rapports : <code>rapport*.txt</code>. Ceux à un chiffre : <code>rapport?.txt</code> (le <code>?</code> remplace exactement un caractère, donc <code>rapport10.txt</code> est écarté).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — les fichiers ont disparu</p>
+                <p>Un collègue a lancé <code>rm mon*</code> pour nettoyer ses brouillons. Quelques minutes plus tard, il constate que des documents importants ont disparu aussi, et la corbeille de son bureau est vide.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> on retrace ce que la commande a désigné : dans quel dossier était-il, et que couvrait le joker ? <strong>Cause probable :</strong> <code>rm</code> supprime définitivement, sans corbeille ; il n'avait ni vérifié son dossier avec <code>pwd</code>, ni listé le motif avec <code>ls mon*</code>, et le joker a désigné d'autres fichiers que prévu. <strong>Correctif :</strong> rien dans le système lui-même ; il faut restaurer depuis une sauvegarde (chapitre <a href="#sauvegardes">Sauvegardes</a>). Pour l'avenir : <code>pwd</code> puis <code>ls</code> avec le même motif avant <code>rm</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li><code>pwd</code>, <code>ls</code>, <code>cd</code> pour se repérer ; <code>mkdir -p</code>, <code>cp -r</code>, <code>mv</code> pour construire et ranger.</li>
+                    <li>Le shell développe <code>*</code> et <code>?</code> avant de lancer la commande : on teste le motif avec <code>ls</code>.</li>
+                    <li><code>rm</code> ne se rattrape pas : <code>pwd</code>, <code>ls</code> du motif, puis <code>rm</code>.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 05 -->
@@ -302,6 +630,25 @@
             <h2 class="chapter__title">Lire &amp; éditer des fichiers</h2>
             <p class="chapter__intro">Afficher, parcourir, chercher, modifier — sans quitter le terminal.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Choisir entre <code>cat</code>, <code>less</code>, <code>head</code> et <code>tail</code> selon la taille du fichier à lire.</li>
+                    <li>Chercher un motif avec <code>grep</code> et ses options (<code>-i</code>, <code>-n</code>, <code>-c</code>, <code>-v</code>, <code>-E</code>).</li>
+                    <li>Modifier un fichier avec <code>nano</code>, et sortir de <code>vim</code> si l'on y arrive par erreur.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap3">Les chemins de base</a> et <a href="#chap4">Se déplacer &amp; gérer ses fichiers</a> · 35 min · un terminal Debian.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi lire sans tout ouvrir</h3>
+                <p>Sur un serveur, la configuration et les journaux sont des fichiers texte, parfois de plusieurs milliers de lignes. Les afficher d'un bloc noie l'information : on veut la fin d'un journal, les lignes qui parlent d'une erreur, ou comprendre combien de lignes on a devant soi.</p>
+                <p>Retrouver la bonne ligne dans un gros fichier, puis la corriger proprement, c'est le quotidien d'un administrateur : on lit pour comprendre, on cherche pour cibler, on édite en dernier.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+            <h3>Lire, chercher, éditer : trois gestes</h3>
+            <p>On <strong>lit</strong> avec <code>cat</code>, <code>less</code>, <code>head</code> et <code>tail</code> ; on <strong>cherche</strong> avec <code>grep</code>, qui prend un motif (une <em>expression régulière</em> : un texte, ou une description de texte) et affiche les lignes qui le contiennent ; on <strong>édite</strong> avec un éditeur comme <code>nano</code>. Lire et chercher ne modifient jamais le fichier.</p>
             <div class="table-wrap"><table>
                 <thead><tr><th>Commande</th><th>Action</th></tr></thead>
                 <tbody>
@@ -334,6 +681,8 @@
                     <tr><td><code>-N</code> / <code>-i</code> / <code>-S</code></td><td>numéros de ligne / recherche insensible à la casse / pas de retour à la ligne</td></tr>
                 </tbody>
             </table></div>
+            <p class="note">Source : <a href="https://manpages.debian.org/stable/less/less.1.en.html" rel="noopener">less(1)</a> · <a href="https://manpages.debian.org/stable/grep/grep.1.en.html" rel="noopener">grep(1)</a> (options et expressions régulières).</p>
+            </div>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
                 <pre class="terminal__code"><span class="k">less</span> <span class="p">-N</span> <span class="s">/etc/passwd</span>            <span class="c"># explorer avec numéros de ligne</span>
@@ -354,11 +703,39 @@
                     <tr><td><code>-o</code> / <code>-v</code></td><td>seulement la partie qui correspond / inverse (lignes qui ne matchent pas)</td></tr>
                 </tbody>
             </table></div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Interroger <code>/etc/passwd</code> sans l'ouvrir en entier</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · la taille</p>
+                        <p class="walk__head"><code>wc -l /etc/passwd</code> avant de choisir comment lire</p>
+                        <p>Quelques dizaines de lignes : <code>cat</code> ou <code>less</code> conviennent. Plusieurs milliers : <code>less</code>, ou <code>head</code> et <code>tail</code>. On décide d'après le nombre de lignes, pas d'après l'habitude.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · cibler</p>
+                        <p class="walk__head"><code>grep -n root /etc/passwd</code></p>
+                        <p>On cherche le motif <code>root</code> et on demande le numéro de ligne avec <code>-n</code> : on sait où se trouve l'information, sans lire le reste du fichier.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · compter ou exclure</p>
+                        <p class="walk__head"><code>-c</code> pour compter, <code>-v</code> pour inverser</p>
+                        <p>Avec <code>-c</code>, <code>grep</code> donne le nombre de lignes correspondantes au lieu de les afficher ; avec <code>-v</code>, il affiche toutes les autres.</p>
+                        <p class="walk__change">Le fichier n'a pas changé : <code>grep</code> lit, il ne modifie rien.</p>
+                    </li>
+                </ol>
+            </div>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
                 <pre class="terminal__code"><span class="k">grep</span> <span class="p">-v</span> <span class="s">'^$'</span> fichier.txt              <span class="c"># enlever les lignes vides</span>
 <span class="k">grep</span> <span class="p">-E</span> <span class="s">"root|admin"</span> <span class="s">/etc/passwd</span>      <span class="c"># "root" OU "admin"</span>
 <span class="k">grep</span> <span class="p">-c</span> <span class="s">""</span> fichier.txt                <span class="c"># compter les lignes, fiable même sans retour final</span></pre>
+            </div>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p><code>grep -E "root|admin" /etc/passwd</code> affiche au moins la ligne de <code>root</code> (elle commence par <code>root:</code>). Dans <code>less</code>, la touche <code>q</code> te rend le terminal.</p>
+                <p class="verify__fail">Si <code>grep</code> n'affiche rien, regarde la casse du motif (ajoute <code>-i</code>) et les guillemets : avec <code>-E</code>, le motif <code>"root|admin"</code> doit être entre guillemets, sinon le shell lit le <code>|</code> comme un pipe.</p>
             </div>
 
             <h3>Éditer avec nano (le plus simple)</h3>
@@ -372,6 +749,38 @@
                 <p class="tip__label">Et vim ?</p>
                 <p><code>vim</code> est plus puissant mais plus complexe : pour débuter, rester sur <code>nano</code>. Coincé dans vim ? <code>Échap</code> puis <code>:q!</code> puis <code>Entrée</code>. Deux modes : <strong>commande</strong> (défaut) et <strong>insertion</strong> (<code>i</code>). Remplacer partout : <code>:%s/avant/après/g</code> · sauver et quitter : <code>:wq</code>.</p>
             </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — retrouver une ligne avec son numéro</p>
+                <p>Affiche les lignes de <code>/etc/passwd</code> qui contiennent <code>root</code>, avec leur numéro de ligne. Énoncé seul : écris la commande.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
+                    <pre class="terminal__code"><span class="k">grep</span> <span class="p">-n</span> root <span class="s">/etc/passwd</span></pre>
+                </div><p><code>-n</code> ajoute le numéro de ligne. Option du tableau appliquée à un fichier du module (<em>reconstitué, non testé</em>).</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un fichier de configuration <code>service.conf</code> mêle commentaires (lignes qui commencent par <code>#</code>) et lignes vides. Comment n'afficher que les lignes actives ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
+                    <pre class="terminal__code"><span class="k">grep</span> <span class="p">-vE</span> <span class="s">'^(#|$)'</span> service.conf</pre>
+                </div><p><code>-v</code> inverse la sélection, <code>-E</code> permet l'alternative <code>|</code> : on écarte les lignes qui commencent par <code>#</code> ou qui sont vides (<em>reconstitué, non testé</em>).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — impossible de quitter l'éditeur</p>
+                <p>En ouvrant un fichier pour le modifier, tu te retrouves dans un éditeur que tu ne reconnais pas. Les touches que tu tapes ne font pas apparaître de texte, <code>Ctrl+X</code> ne fait rien, et tu ne vois aucun menu pour sortir.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> les raccourcis de <code>nano</code> ne répondent pas, donc ce n'est pas <code>nano</code>. <strong>Cause :</strong> c'est <code>vim</code>, qui a deux modes : en mode commande (le mode par défaut), les touches sont des ordres et non du texte. <strong>Correctif :</strong> <code>Échap</code>, puis <code>:q!</code>, puis <code>Entrée</code> pour quitter sans enregistrer ; <code>i</code> passe en insertion et <code>:wq</code> sauvegarde et quitte.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Gros fichier : <code>less</code> (<code>q</code> pour quitter), <code>head</code>, <code>tail</code> ; jamais <code>cat</code>.</li>
+                    <li><code>grep</code> cherche sans modifier : <code>-i</code>, <code>-n</code>, <code>-c</code>, <code>-v</code>, <code>-E</code>.</li>
+                    <li><code>nano</code> pour débuter : <code>Ctrl+O</code> enregistre, <code>Ctrl+X</code> quitte. Coincé dans <code>vim</code> : <code>Échap</code>, <code>:q!</code>.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 06 -->
@@ -380,7 +789,59 @@
             <h2 class="chapter__title">Liens &amp; inodes</h2>
             <p class="chapter__intro">Comprendre l'inode explique pourquoi <code>mv</code> est instantané et ce qui distingue vraiment un lien physique d'un raccourci.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Expliquer ce qu'est un inode et pourquoi un nom de fichier n'est qu'une entrée de dossier.</li>
+                    <li>Créer un lien physique et un lien symbolique, et les distinguer avec <code>ls -li</code>.</li>
+                    <li>Prévoir ce que devient chaque type de lien quand on supprime l'original.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#chap4">Se déplacer &amp; gérer ses fichiers</a> · 30 min · un terminal Debian et un dossier de travail.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi un fichier peut avoir plusieurs noms</h3>
+                <p>Un administrateur rencontre vite des chemins qui « pointent ailleurs » : un raccourci vers une version courante, un dossier de données déplacé sur un autre disque, un fichier qu'on veut atteindre depuis deux endroits. Deux outils, deux comportements très différents quand on supprime ou déplace quelque chose.</p>
+                <p>Comprendre l'inode règle d'un coup plusieurs énigmes : pourquoi <code>mv</code> est instantané sur un même système de fichiers, pourquoi supprimer un nom ne détruit pas toujours le contenu, et pourquoi un raccourci peut devenir « orphelin ».</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+            <h3>Inode, nom et deux sortes de liens</h3>
             <p>Chaque fichier est décrit par une structure appelée <strong>inode</strong> : taille, propriétaire, permissions, dates, et les adresses des blocs de données sur le disque. Le nom du fichier, lui, n'est qu'une entrée dans un dossier qui pointe vers un inode — un même inode peut avoir plusieurs noms.</p>
+            <div class="table-wrap"><table>
+                <thead><tr><th></th><th>Lien physique</th><th>Lien symbolique</th></tr></thead>
+                <tbody>
+                    <tr><td>Ce que c'est</td><td>un second nom, vers le même inode</td><td>un fichier à part qui contient un chemin</td></tr>
+                    <tr><td>Dans <code>ls -li</code></td><td>même numéro d'inode, compteur de liens plus élevé</td><td>inode différent, droits commençant par <code>l</code></td></tr>
+                    <tr><td>Si l'original est supprimé</td><td>le contenu reste, tant qu'un nom subsiste</td><td>le lien devient orphelin</td></tr>
+                    <tr><td>Vers un dossier</td><td>impossible</td><td>possible</td></tr>
+                </tbody>
+            </table></div>
+            <p class="note">Source : <a href="https://man7.org/linux/man-pages/man7/inode.7.html" rel="noopener">inode(7)</a> (ce que contient un inode) · <a href="https://man7.org/linux/man-pages/man7/symlink.7.html" rel="noopener">symlink(7)</a> (un lien symbolique est un fichier qui contient un chemin) · <a href="https://man7.org/linux/man-pages/man2/link.2.html" rel="noopener">link(2)</a> (créer un second nom pour un fichier).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Suivre <code>fichier1</code>, <code>fichier4</code> et <code>fichier5</code> quand on supprime <code>fichier1</code></p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · l'état de départ</p>
+                        <p class="walk__head">Un contenu, un inode, un nom</p>
+                        <p><code>fichier1</code> est un nom qui pointe vers un inode ; le contenu est sur le disque, décrit par cet inode.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · deux liens, deux effets</p>
+                        <p class="walk__head"><code>ln fichier1 fichier4</code>, puis <code>ln -s fichier4 fichier5</code></p>
+                        <p><code>fichier4</code> est un second nom vers le <em>même</em> inode (compteur de liens : 2). <code>fichier5</code> est un fichier à part, qui contient le chemin <code>fichier4</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la suppression</p>
+                        <p class="walk__head"><code>rm fichier1</code> ne retire qu'un nom</p>
+                        <p>L'inode a encore un nom (<code>fichier4</code>) : le contenu est intact, et <code>fichier5</code>, qui pointe sur <code>fichier4</code>, fonctionne toujours.</p>
+                        <p class="walk__change">Si l'on supprimait ensuite <code>fichier4</code>, le contenu serait libéré et <code>fichier5</code> deviendrait orphelin.</p>
+                    </li>
+                </ol>
+            </div>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
                 <pre class="terminal__code"><span class="k">ls</span> <span class="p">-li</span> fichier      <span class="c"># -i affiche le numéro d'inode en 1re colonne</span></pre>
@@ -406,9 +867,45 @@
                 <pre class="terminal__code"><span class="k">ln</span> <span class="p">-s</span> fichier4 fichier5
 <span class="k">ls</span> <span class="p">-li</span>               <span class="c"># inode DIFFÉRENT de fichier4, colonne des droits commence par "l"</span></pre>
             </div>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Dans <code>ls -li</code>, <code>fichier1</code> et <code>fichier4</code> portent le même numéro d'inode et un compteur de liens de 2 ; <code>fichier5</code> a un autre numéro d'inode et sa colonne de droits commence par <code>l</code>.</p>
+                <p class="verify__fail">Si <code>fichier4</code> n'a pas le même inode que <code>fichier1</code>, tu as créé un lien symbolique (<code>-s</code>) ou une copie (<code>cp</code>) au lieu d'un lien physique : refais <code>ln fichier1 fichier4</code> sans option.</p>
+            </div>
             <div class="tip">
                 <p class="tip__label">Lien cassé</p>
                 <p>Si la cible d'un lien symbolique est supprimée, le lien devient « orphelin » (souvent affiché en rouge/clignotant par <code>ls</code>) : il pointe vers un chemin qui n'existe plus.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — un second nom et un raccourci</p>
+                <p>Tu as un fichier <code>rapport.txt</code>. Crée <code>copie.txt</code>, un second nom pour le même contenu, puis <code>raccourci.txt</code>, un raccourci vers <code>rapport.txt</code>. Comment contrôles-tu lequel est lequel ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
+                    <pre class="terminal__code"><span class="k">ln</span> rapport.txt copie.txt
+<span class="k">ln</span> <span class="p">-s</span> rapport.txt raccourci.txt
+<span class="k">ls</span> <span class="p">-li</span></pre>
+                </div><p>Même inode pour <code>rapport.txt</code> et <code>copie.txt</code> ; autre inode et droits en <code>l</code> pour <code>raccourci.txt</code>. Commandes du module avec d'autres noms (<em>reconstitué, non testé</em>).</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le dossier <code>/srv/partage</code> doit être atteignable aussi par le chemin <code>/home/apprenant/partage</code>. Quel type de lien utilises-tu, et pourquoi pas l'autre ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Un lien <strong>symbolique</strong> : <code>ln -s /srv/partage /home/apprenant/partage</code> (la cible d'abord, puis le nom du lien — <em>reconstitué, non testé</em>). Un lien physique est impossible vers un dossier.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — un raccourci qui ne mène plus nulle part</p>
+                <p>Dans le dossier de l'équipe, un lien nommé <code>courant</code> apparaît en rouge dans <code>ls</code>, et l'ouvrir donne une erreur de fichier inexistant, alors que le lien lui-même est bien listé. Hier, quelqu'un a renommé le dossier qu'il visait.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> <code>ls -l</code> montre que <code>courant</code> est un lien symbolique et vers quel chemin il pointe. <strong>Cause :</strong> un lien symbolique ne contient que le chemin de sa cible ; la cible ayant été renommée, le lien est orphelin. <strong>Correctif :</strong> supprimer le lien et le recréer vers le nouveau nom avec <code>ln -s</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Un nom de fichier n'est qu'une entrée de dossier qui pointe vers un inode.</li>
+                    <li>Lien physique (<code>ln</code>) : même inode, le contenu survit tant qu'un nom subsiste ; impossible vers un dossier.</li>
+                    <li>Lien symbolique (<code>ln -s</code>) : un fichier qui contient un chemin ; orphelin si la cible disparaît ou change de nom.</li>
+                </ul>
             </div>
         </section>
 
@@ -1976,7 +2473,7 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
 <script src="../assets/catalogue.js?v=a8bae127"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/linux-debian.js?v=b1dc4a7c"></script>
+<script src="../assets/quiz/linux-debian.js?v=6f79137f"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 <script src="../assets/atelier.js?v=c35298a6"></script>

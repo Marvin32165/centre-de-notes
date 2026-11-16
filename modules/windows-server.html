@@ -590,6 +590,63 @@ SRV-AD02                 02m:48s    0 /   5    0</pre>
             <h2 class="chapter__title">Organiser l'annuaire : OU, groupes, comptes, délégation</h2>
             <p class="chapter__intro">Un annuaire bien rangé se reconnaît à trois choses : des OU qui suivent l'organisation, des droits donnés à des <strong>groupes</strong> (jamais à des personnes), et des tâches courantes déléguées sans donner les clés du domaine.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Ranger des comptes et des groupes dans des OU qui suivent l'organisation (<code>New-ADOrganizationalUnit</code>, <code>New-ADGroup</code>, <code>New-ADUser</code>).</li>
+                    <li>Choisir l'étendue d'un groupe (globale, domaine local, universelle) et appliquer la règle AGDLP.</li>
+                    <li>Déléguer la gestion des comptes d'une OU à un utilisateur sans en faire un administrateur du domaine.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#adds">Installer Active Directory</a> (le domaine <code>orion.local</code> existe) · 35 min · une session PowerShell sur SRV-AD01.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Un annuaire plat devient ingérable</h3>
+                <p>Quand l'entreprise grossit, un annuaire où tous les comptes se mélangent pose vite trois questions : à qui donner l'accès au dossier du service Development, qui a le droit de créer un compte, et que faire quand quelqu'un change de service ? Si chaque droit est donné à une personne, chaque arrivée et chaque départ obligent à repasser sur toutes les ressources.</p>
+                <p>Dans Orion, Sacha Somers rejoint le service Development : on veut un seul geste (l'ajouter à un groupe) et non vingt réglages, et on veut qu'un collègue puisse créer les comptes de ce service sans détenir les clés de tout le domaine.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>OU, groupes et délégation : trois outils, trois rôles</h3>
+                <p>Une <strong>OU</strong> range des objets (comptes, ordinateurs, groupes) selon l'organisation, et c'est sur elle qu'on applique des GPO ou qu'on délègue une tâche. Un <strong>groupe</strong> ne range rien : il porte des droits. On ne confond donc pas les deux : l'OU dit où l'objet vit, le groupe dit ce qu'il a le droit de faire. La <strong>délégation</strong> confie une tâche précise sur une OU (par exemple gérer les comptes) à un utilisateur ou à un groupe, sans en faire un administrateur du domaine.</p>
+                <h3>Les étendues de groupes, et la règle AGDLP</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Étendue</th><th>Contient</th><th>Sert à</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Globale</strong></td><td>Des comptes et des groupes globaux du même domaine</td><td>Regrouper des <strong>personnes</strong> par fonction (DEV-GRP)</td></tr>
+                            <tr><td><strong>Domaine local</strong></td><td>Des comptes, des groupes globaux et universels de toute la forêt (et des domaines approuvés), d'autres groupes de domaine local du même domaine</td><td>Porter des <strong>droits</strong> sur une ressource (DL-DEV-Modif)</td></tr>
+                            <tr><td><strong>Universelle</strong></td><td>Des comptes, des groupes globaux et universels de toute la forêt</td><td>Forêts à plusieurs domaines</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>AGDLP</strong> : les comptes (<em>Accounts</em>) vont dans des groupes <em>Globaux</em>, mis dans des groupes de <em>Domaine Local</em>, qui reçoivent les <em>Permissions</em>. Dans un petit lab, on donne souvent les droits directement aux groupes globaux (c'est ce que fait le TP) ; AGDLP prend tout son sens quand plusieurs services partagent les mêmes ressources.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups" rel="noopener">Microsoft Learn — Active Directory security groups</a> · <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/delegating-administration-of-account-ous-and-resource-ous" rel="noopener">Microsoft Learn — Delegating administration of account OUs and resource OUs</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Accueillir Sacha Somers dans le service Development</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le besoin</p>
+                        <p class="walk__head">Un compte, un accès, un collègue qui gère le service</p>
+                        <p>Sacha arrive. Il doit ouvrir une session, accéder aux ressources du service Development, et <code>jsmith</code> doit pouvoir créer les comptes de ce service sans devenir administrateur du domaine.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le rangement</p>
+                        <p class="walk__head">L'OU pour l'endroit, le groupe pour le droit</p>
+                        <p>Le compte vit dans l'OU <code>Development</code>, elle-même sous <code>ORION-DPT</code> : l'annuaire reproduit l'organisation. Les droits, eux, ne vont pas à Sacha mais au groupe global <code>DEV-GRP</code> (personnes regroupées par fonction) : Sacha n'a qu'à en être membre.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la délégation</p>
+                        <p class="walk__head">Une tâche, une OU, pas le domaine</p>
+                        <p>Sur l'OU <code>Development</code>, on délègue à <code>jsmith</code> la tâche « <em>Create, delete, and manage user accounts</em> ». Il gère les comptes de cette OU, et rien d'autre.</p>
+                        <p class="walk__change">Un départ ou un changement de service se règle en retirant la personne d'un groupe ou en déplaçant son compte : aucun droit nominatif à rechercher.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — l'arborescence du TP final</span></div>
                 <pre class="terminal__code"><span class="k">New-ADOrganizationalUnit</span> <span class="p">-Name</span> <span class="s">"ORION-DPT"</span> <span class="p">-Path</span> <span class="s">"DC=orion,DC=local"</span>
@@ -602,33 +659,13 @@ SRV-AD02                 02m:48s    0 /   5    0</pre>
     <span class="p">-AccountPassword</span> (Read-Host <span class="p">-AsSecureString</span> <span class="s">"Mot de passe"</span>) <span class="p">-Enabled</span> <span class="p">$true</span>
 <span class="k">Add-ADGroupMember</span> <span class="p">-Identity</span> <span class="s">"DEV-GRP"</span> <span class="p">-Members</span> <span class="s">"sso"</span></pre>
             </div>
-            <h3>Les étendues de groupes, et la règle AGDLP</h3>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Étendue</th><th>Contient</th><th>Sert à</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong>Globale</strong></td><td>Des comptes et des groupes globaux du même domaine</td><td>Regrouper des <strong>personnes</strong> par fonction (DEV-GRP)</td></tr>
-                        <tr><td><strong>Domaine local</strong></td><td>Des comptes, des groupes globaux et universels de toute la forêt (et des domaines approuvés), d'autres groupes de domaine local du même domaine</td><td>Porter des <strong>droits</strong> sur une ressource (DL-DEV-Modif)</td></tr>
-                        <tr><td><strong>Universelle</strong></td><td>Des comptes, des groupes globaux et universels de toute la forêt</td><td>Forêts à plusieurs domaines</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <p><strong>AGDLP</strong> : les comptes (<em>Accounts</em>) vont dans des groupes <em>Globaux</em>, mis dans des groupes de <em>Domaine Local</em>, qui reçoivent les <em>Permissions</em>. Dans un petit lab, on donne souvent les droits directement aux groupes globaux (c'est ce que fait le TP) ; AGDLP prend tout son sens quand plusieurs services partagent les mêmes ressources.</p>
-            <h3>Ce que le TP final ajoute</h3>
+                        <h3>Ce que le TP final ajoute</h3>
             <ul>
                 <li><strong>Utilisateur modèle</strong> : un compte désactivé qui porte les réglages communs (groupes, heures d'ouverture de session, profil).</li>
                 <li><strong>Heures d'ouverture de session</strong> : onglet <em>Account</em> → <em>Logon Hours…</em> du compte.</li>
                 <li><strong>Délégation</strong> : clic droit sur l'OU <em>Development</em> → <em>Delegate Control…</em> → ajouter <code>jsmith</code> → tâche « <em>Create, delete, and manage user accounts</em> ». Il gère les comptes de cette OU, et rien d'autre : il n'est pas administrateur du domaine.</li>
             </ul>
-            <div class="cmdex" data-accept="New-ADGroup (-Name )?&quot;?ACC-GRP&quot;? -GroupScope Global -GroupCategory Security -Path &quot;?OU=Accounting,OU=ORION-DPT,DC=orion,DC=local&quot;?;;New-ADGroup (-Name )?&quot;?ACC-GRP&quot;? -GroupCategory Security -GroupScope Global -Path &quot;?OU=Accounting,OU=ORION-DPT,DC=orion,DC=local&quot;?;;New-ADGroup (-Name )?&quot;?ACC-GRP&quot;? -Path &quot;?OU=Accounting,OU=ORION-DPT,DC=orion,DC=local&quot;? -GroupScope Global( -GroupCategory Security)?" data-hint="New-ADGroup avec -Name, -GroupScope et -Path.">
-                <p class="cmdex__label">À toi de taper</p>
-                <p>En PowerShell, crée un groupe de sécurité global <code>ACC-GRP</code> dans l'OU <code>OU=Accounting,OU=ORION-DPT,DC=orion,DC=local</code>.</p>
-                <details class="reveal">
-                    <summary>Voir la solution</summary>
-                    <div class="reveal__body"><p><code>New-ADGroup -Name "ACC-GRP" -GroupScope Global -GroupCategory Security -Path "OU=Accounting,OU=ORION-DPT,DC=orion,DC=local"</code>. <code>-GroupScope</code>, lui, est obligatoire.</p></div>
-                </details>
-            </div>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Qui est dans quel groupe ?</p>
             <div class="terminal">
@@ -642,9 +679,35 @@ SRV-AD02                 02m:48s    0 /   5    0</pre>
 Sacha Somers sso</pre>
                 <p class="verify__fail">Un compte créé sans <code>-Enabled $true</code> reste désactivé ; avec un mot de passe refusé par la stratégie (trop court, pas assez complexe), <code>New-ADUser</code> renvoie une erreur mais crée quand même le compte, <strong>désactivé</strong> : lui donner un mot de passe conforme (<code>Set-ADAccountPassword -Reset</code>), puis <code>Enable-ADAccount</code>.</p>
             </div>
-            <div class="takeaway">
+
+            <div class="cmdex" data-bloc="7" data-accept="New-ADGroup (-Name )?&quot;?ACC-GRP&quot;? -GroupScope Global -GroupCategory Security -Path &quot;?OU=Accounting,OU=ORION-DPT,DC=orion,DC=local&quot;?;;New-ADGroup (-Name )?&quot;?ACC-GRP&quot;? -GroupCategory Security -GroupScope Global -Path &quot;?OU=Accounting,OU=ORION-DPT,DC=orion,DC=local&quot;?;;New-ADGroup (-Name )?&quot;?ACC-GRP&quot;? -Path &quot;?OU=Accounting,OU=ORION-DPT,DC=orion,DC=local&quot;? -GroupScope Global( -GroupCategory Security)?" data-hint="New-ADGroup avec -Name, -GroupScope et -Path.">
+                <p class="cmdex__label">À toi de taper</p>
+                <p>En PowerShell, crée un groupe de sécurité global <code>ACC-GRP</code> dans l'OU <code>OU=Accounting,OU=ORION-DPT,DC=orion,DC=local</code>.</p>
+                <details class="reveal">
+                    <summary>Voir la solution</summary>
+                    <div class="reveal__body"><p><code>New-ADGroup -Name "ACC-GRP" -GroupScope Global -GroupCategory Security -Path "OU=Accounting,OU=ORION-DPT,DC=orion,DC=local"</code>. <code>-GroupScope</code>, lui, est obligatoire.</p></div>
+                </details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Les services Accounting et Development doivent lire un même dossier de rapports, et seule Accounting doit pouvoir le modifier. Dis dans quel ordre tu places comptes, groupes et permissions pour appliquer AGDLP, et quel type de groupe tu utilises à chaque étape.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Les comptes vont dans leur groupe <strong>global</strong> (<code>ACC-GRP</code>, <code>DEV-GRP</code>) ; ces groupes globaux vont dans des groupes de <strong>domaine local</strong> propres à la ressource, un pour la modification et un pour la lecture seule (par exemple sur le modèle de <code>DL-DEV-Modif</code> : les noms sont des propositions) ; ce sont ces groupes de domaine local qui reçoivent les <strong>permissions</strong> sur le dossier. Accounting va dans celui de modification, Development dans celui de lecture.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le nouveau compte n'ouvre pas de session</p>
+                <p>Le compte de Sacha Somers (<code>sso</code>) existe : <code>Get-ADUser</code> le trouve dans la bonne OU. Pourtant il ne peut pas ouvrir de session. L'administrateur se souvient que <code>New-ADUser</code> avait affiché une erreur à propos du mot de passe au moment de la création.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le compte existe et il est bien rangé : le problème n'est ni l'OU ni le groupe, mais l'état du compte. <strong>Cause :</strong> le mot de passe a été refusé par la stratégie (trop court ou pas assez complexe) ; <code>New-ADUser</code> a signalé l'erreur mais créé quand même le compte, <strong>désactivé</strong> (un compte créé sans <code>-Enabled $true</code> reste aussi désactivé). <strong>Correctif :</strong> lui donner un mot de passe conforme avec <code>Set-ADAccountPassword -Reset</code>, puis <code>Enable-ADAccount</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p>Des OU qui suivent l'organisation, des droits donnés à des groupes, un utilisateur modèle pour créer des comptes cohérents, et la délégation pour confier une tâche sans donner le domaine.</p>
+                <ul>
+                    <li>L'OU range selon l'organisation ; le groupe porte les droits. On ne donne jamais un droit à une personne.</li>
+                    <li>AGDLP : comptes, groupes globaux, groupes de domaine local, permissions. Un groupe global regroupe des personnes, un groupe de domaine local porte des droits sur une ressource.</li>
+                    <li>Un utilisateur modèle désactivé crée des comptes cohérents ; la délégation sur une OU confie une tâche sans donner le domaine.</li>
+                    <li>Un compte créé avec une erreur de mot de passe est désactivé : <code>Set-ADAccountPassword -Reset</code>, puis <code>Enable-ADAccount</code>.</li>
+                </ul>
             </div>
         </section>
 
@@ -654,16 +717,64 @@ Sacha Somers sso</pre>
             <h2 class="chapter__title">DNS en pratique</h2>
             <p class="chapter__intro">Le principe du DNS est expliqué dans <a href="reseau-bases.html#dns">Réseau : les bases</a>. Sur Windows Server, il s'agit de créer les zones, les enregistrements, de régler les redirecteurs, et de savoir lire le cache quand un changement « ne prend pas ».</p>
 
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Type de zone</th><th>Où vivent les données</th><th>Quand</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong>Primaire</strong></td><td>Un fichier sur ce serveur, modifiable</td><td>DNS autonome (le TP DNS du cours, sans AD)</td></tr>
-                        <tr><td><strong>Secondaire</strong></td><td>Une copie en lecture seule, transférée depuis le primaire</td><td>Redondance hors AD</td></tr>
-                        <tr><td><strong>Intégrée à AD</strong></td><td>Dans l'annuaire, répliquée avec lui sur tous les DC</td><td>Dès qu'il y a un domaine AD DS : le DNS y est intégré</td></tr>
-                    </tbody>
-                </table>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Choisir le type de zone (primaire, secondaire, intégrée à AD) selon le besoin.</li>
+                    <li>Créer la zone inverse, un enregistrement A avec son PTR, un alias CNAME et un redirecteur.</li>
+                    <li>Expliquer pourquoi un changement DNS « ne prend pas » (cache, TTL) et vider le cache au bon endroit.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#adds">Installer Active Directory</a> et le principe du DNS dans <a href="reseau-bases.html#dns">Réseau : les bases</a> · 35 min · SRV-AD01 et un poste CLIENT-WIN11 du lab.</p>
             </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Des noms pour les humains, et pour Active Directory</h3>
+                <p>Les machines se joignent par adresse, les personnes par nom. Dans un domaine, le DNS fait plus : c'est lui qui permet à un poste de retrouver son contrôleur de domaine. Sans zone correcte, un serveur déplacé ou renuméroté devient introuvable, et le poste ne joint plus le domaine.</p>
+                <p>Un cas courant : on change l'adresse d'un serveur, le serveur DNS répond la nouvelle, et un poste continue d'utiliser l'ancienne. Savoir où vit la donnée (zone, serveur, cache du poste) évite de chercher au mauvais endroit.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Zones, enregistrements et cache</h3>
+                <p>Une <strong>zone</strong> est la partie de l'espace de noms dont un serveur détient les enregistrements. La <strong>zone directe</strong> (<code>orion.local</code>) traduit un nom en adresse (enregistrement A) ; la <strong>zone inverse</strong> traduit une adresse en nom grâce aux enregistrements <strong>PTR</strong> ; un <strong>CNAME</strong> est un alias vers un autre nom. Le type de zone dit où vivent les données :</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Type de zone</th><th>Où vivent les données</th><th>Quand</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Primaire</strong></td><td>Un fichier sur ce serveur, modifiable</td><td>DNS autonome (le TP DNS du cours, sans AD)</td></tr>
+                            <tr><td><strong>Secondaire</strong></td><td>Une copie en lecture seule, transférée depuis le primaire</td><td>Redondance hors AD</td></tr>
+                            <tr><td><strong>Intégrée à AD</strong></td><td>Dans l'annuaire, répliquée avec lui sur tous les DC</td><td>Dès qu'il y a un domaine AD DS : le DNS y est intégré</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Le <strong>redirecteur</strong> est la seule porte du lab vers les noms d'Internet : les postes interrogent le DC, qui répond pour <code>orion.local</code> et transfère tout le reste. C'est ce qui permet aux postes de n'avoir que le DNS des DC tout en naviguant.</p>
+                <p>Enfin, chaque réponse DNS porte un <strong>TTL</strong> : la durée pendant laquelle le poste (et un serveur intermédiaire) peut la garder en cache au lieu de reposer la question. Tant que le TTL n'est pas écoulé, la modification faite sur le serveur n'est pas vue du poste.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/networking/dns/dns-top" rel="noopener">Microsoft Learn — DNS Server overview</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/dnsserver/add-dnsserverforwarder" rel="noopener">Microsoft Learn — Add-DnsServerForwarder</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Publier srv-web01 et l'alias storage</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le besoin</p>
+                        <p class="walk__head">Deux noms pour les postes : un serveur, un alias</p>
+                        <p>Les postes doivent joindre <code>srv-web01.orion.local</code> par son nom, retrouver ce nom à partir de <code>172.16.50.25</code>, et utiliser <code>storage</code> comme second nom de SRV-FILE01.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · les choix</p>
+                        <p class="walk__head">Zone intégrée, A avec PTR, CNAME pour l'alias</p>
+                        <p>Le domaine AD existe, donc la zone <code>orion.local</code> est intégrée à AD. Le PTR a besoin d'une zone inverse, créée pour <code>172.16.50.0/24</code>, et se crée en même temps que l'A (<code>-CreatePtr</code>). Pour <code>storage</code>, un CNAME vers <code>srv-file01.orion.local</code> plutôt qu'un second A : si l'adresse de SRV-FILE01 change, un seul enregistrement est à corriger.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la vérification</p>
+                        <p class="walk__head">Trois <code>nslookup</code> depuis le poste</p>
+                        <p>On résout le nom, l'adresse et l'alias depuis CLIENT-WIN11. Si une réponse montre l'ancienne valeur après un changement, on regarde le TTL et le cache avant de toucher au serveur.</p>
+                        <p class="walk__change">Zone, PTR et alias sont posés une fois ; le reste du temps, le DNS se vérifie, il ne se refait pas.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01 : zone inverse, enregistrements, redirecteur</span></div>
                 <pre class="terminal__code"><span class="k">Add-DnsServerPrimaryZone</span> <span class="p">-NetworkId</span> <span class="s">"172.16.50.0/24"</span> <span class="p">-ReplicationScope</span> Forest<span class="c">      # zone inverse</span>
@@ -671,10 +782,9 @@ Sacha Somers sso</pre>
 <span class="k">Add-DnsServerResourceRecordCName</span> <span class="p">-ZoneName</span> orion.local <span class="p">-Name</span> storage <span class="p">-HostNameAlias</span> srv-file01.orion.local
 <span class="k">Add-DnsServerForwarder</span> <span class="p">-IPAddress</span> 1.1.1.1<span class="c">                                           # le reste du monde</span></pre>
             </div>
-            <p>Le <strong>redirecteur</strong> est la seule porte du lab vers les noms d'Internet : les postes interrogent le DC, qui répond pour <code>orion.local</code> et transfère tout le reste. C'est ce qui permet aux postes de n'avoir que le DNS des DC tout en naviguant.</p>
-            <h3>Le cache, ou pourquoi un changement « ne prend pas »</h3>
+                        <h3>Le cache, ou pourquoi un changement « ne prend pas »</h3>
             <p>Le TP final demande de modifier un enregistrement et d'observer le cache : le poste continue d'utiliser l'ancienne réponse jusqu'à la fin de son <strong>TTL</strong>. Pour voir et vider : <code>ipconfig /displaydns</code>, <code>ipconfig /flushdns</code> (ou <code>Clear-DnsClientCache</code>) côté poste ; <code>Clear-DnsServerCache</code> côté serveur.</p>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Résolution directe, inverse et alias.</p>
             <div class="terminal">
@@ -689,10 +799,27 @@ Address:  172.16.50.20
 Aliases:  storage.orion.local</pre>
                 <p class="verify__fail">La résolution inverse échoue (<em>Nonexistent domain</em>) : la zone inverse manque, ou l'enregistrement A a été créé sans <code>-CreatePtr</code> (case « <em>Create associated PTR record</em> » dans la console).</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Zone intégrée à AD dès qu'il y a un domaine, zone inverse pour les PTR, CNAME pour les alias, redirecteur vers Internet. Un changement qui « ne prend pas » est souvent un cache : <code>ipconfig /flushdns</code>.</p>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — un second nom pour SRV-FILE01</p>
+                <p>Les utilisateurs veulent joindre SRV-FILE01 sous le nom <code>partage</code>, sans nouvelle adresse. Ajoute-le dans la zone <code>orion.local</code> : énoncé seul, écris la commande.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01</span></div>
+                    <pre class="terminal__code"><span class="k">Add-DnsServerResourceRecordCName</span> <span class="p">-ZoneName</span> orion.local <span class="p">-Name</span> partage <span class="p">-HostNameAlias</span> srv-file01.orion.local</pre>
+                </div><p><em>reconstitué, non testé</em> : c'est la commande de l'alias <code>storage</code> du module, avec un autre nom. Un CNAME pointe vers un nom, jamais vers une adresse.</p></div></details>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Avant de tester une modification d'enregistrement, tu veux repartir d'un cache propre : nomme les commandes à lancer sur le poste, puis sur le serveur DNS.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Sur le poste : <code>ipconfig /flushdns</code> (ou <code>Clear-DnsClientCache</code>) ; <code>ipconfig /displaydns</code> permet de voir ce qui est en cache. Sur le serveur : <code>Clear-DnsServerCache</code>.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le nom se résout, l'adresse non</p>
+                <p>Depuis CLIENT-WIN11, <code>nslookup srv-web01.orion.local</code> renvoie bien <code>172.16.50.25</code>. Mais <code>nslookup 172.16.50.25</code> répond <em>Nonexistent domain</em>. Le serveur DNS ne signale aucune erreur.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> la résolution directe marche, seule l'inverse échoue : on regarde donc la zone inverse et les PTR, pas la zone <code>orion.local</code>. <strong>Cause :</strong> la zone inverse manque, ou l'enregistrement A a été créé sans <code>-CreatePtr</code> (case « <em>Create associated PTR record</em> » dans la console). <strong>Correctif :</strong> créer la zone inverse <code>172.16.50.0/24</code> si elle manque, puis recréer l'A avec son PTR.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -705,6 +832,16 @@ Aliases:  storage.orion.local</pre>
                     <div class="scenario__why"><p><code>nslookup</code> interroge directement le serveur DNS et ignore le cache du poste ; <code>ping</code> passe par le client DNS de Windows, qui réutilise la réponse en cache. <code>ipconfig /displaydns</code> le montre, <code>ipconfig /flushdns</code> (ou <code>Clear-DnsClientCache</code>) règle le problème tout de suite.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Zone intégrée à AD dès qu'il y a un domaine ; zone inverse pour les PTR ; CNAME pour les alias ; redirecteur pour le reste du monde.</li>
+                    <li>Les postes n'ont que le DNS des DC : le DC répond pour <code>orion.local</code> et transfère le reste au redirecteur.</li>
+                    <li>Un changement qui « ne prend pas » est souvent un cache jusqu'à la fin du TTL : <code>ipconfig /flushdns</code> côté poste, <code>Clear-DnsServerCache</code> côté serveur.</li>
+                    <li><code>nslookup</code> interroge le serveur, <code>ping</code> passe par le cache du poste : leurs réponses peuvent différer.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 07 -->
@@ -712,6 +849,64 @@ Aliases:  storage.orion.local</pre>
             <p class="chapter__num">07</p>
             <h2 class="chapter__title">DHCP en pratique</h2>
             <p class="chapter__intro">DORA, les baux et les options sont expliqués dans <a href="reseau-bases.html#dhcp">Réseau : les bases</a>. Côté Windows Server, deux étapes qu'on oublie : terminer la configuration post-installation, et <strong>autoriser</strong> le serveur dans Active Directory — un DHCP non autorisé ne distribue rien.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Installer le rôle DHCP, terminer sa configuration et l'autoriser dans Active Directory.</li>
+                    <li>Créer une étendue avec ses options (passerelle, DNS, domaine) et une réservation.</li>
+                    <li>Diagnostiquer un client sans bail (adresse en 169.254) ou qui reçoit un mauvais DNS.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#adds">Installer Active Directory</a> et <a href="#dns">DNS en pratique</a>, et <a href="reseau-bases.html#dhcp">Réseau : les bases</a> pour DORA · 35 min · SRV-AD01 et CLIENT-WIN11 sur le commutateur <code>LABOPS</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Distribuer les réglages réseau, sans les saisir à la main</h3>
+                <p>Sans DHCP, chaque poste se règle à la main : adresse, masque, passerelle, DNS. Un oubli et le poste ne joint plus rien. Le DHCP donne tout cela au démarrage, depuis un seul endroit, et on peut corriger un réglage pour tout un réseau d'un coup.</p>
+                <p>Ce point unique est aussi le risque : une option fausse se retrouve sur tous les postes. Dans Orion, une seule option DNS erronée suffit à rendre le domaine introuvable alors que chaque poste a bien son adresse.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Autorisation, étendue, options et réservation</h3>
+                <p>Un serveur DHCP Windows dans un domaine doit d'abord être <strong>autorisé</strong> : son inscription dans Active Directory empêche des serveurs non autorisés de distribuer des adresses aux clients. Sans elle, il ne distribue rien. Une fois autorisé, il distribue ce qu'on lui a décrit :</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Élément</th><th>Il décrit</th><th>Dans le lab Orion</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Étendue</strong></td><td>La plage d'adresses distribuées sur un réseau</td><td><code>LAN-ORION</code> : de 172.16.50.100 à 172.16.50.199, masque 255.255.255.0</td></tr>
+                            <tr><td><strong>Option 3</strong></td><td>La passerelle par défaut</td><td>172.16.50.1</td></tr>
+                            <tr><td><strong>Option 6</strong></td><td>Les serveurs DNS : les contrôleurs de domaine</td><td>172.16.50.10 et 172.16.50.11</td></tr>
+                            <tr><td><strong>Option 15</strong></td><td>Le nom de domaine</td><td><code>orion.local</code></td></tr>
+                            <tr><td><strong>Réservation</strong></td><td>Une même adresse pour une MAC donnée (imprimante, borne)</td><td>172.16.50.150 pour IMP-01</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Un client qui n'obtient aucun bail finit en <code>169.254.x.x</code> (adresse que Windows se donne lui-même). Un client qui obtient un bail avec une mauvaise option 6 a une adresse, mais ne trouve pas son domaine.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/networking/technologies/dhcp/dhcp-top" rel="noopener">Microsoft Learn — DHCP Server overview</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/dhcpserver/add-dhcpserverindc" rel="noopener">Microsoft Learn — Add-DhcpServerInDC</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Mettre en service le DHCP du lab, dans l'ordre</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le besoin</p>
+                        <p class="walk__head">Des postes qui obtiennent adresse et domaine</p>
+                        <p>CLIENT-WIN11 doit recevoir une adresse de la plage .100 à .199, la passerelle .1 et les DNS des deux DC, pour pouvoir joindre le domaine.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · l'ordre</p>
+                        <p class="walk__head">Rôle, configuration, autorisation, étendue, options</p>
+                        <p>On installe le rôle, on termine la configuration post-installation, on autorise le serveur dans AD (sans cela rien n'est distribué), on crée l'étendue, puis on pose les options 3, 6 et 15. Chaque étape dépend de la précédente.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la vérification</p>
+                        <p class="walk__head">Du serveur au client</p>
+                        <p>Côté serveur, le serveur est listé comme autorisé et un bail apparaît. Côté client, <code>ipconfig /all</code> montre le DNS réellement reçu : c'est lui qu'on lit, pas ce qu'on croit avoir configuré.</p>
+                        <p class="walk__change">Un DHCP se juge à ce que le client reçoit, pas à ce que le serveur affiche.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — le DHCP du lab sur SRV-AD01</span></div>
@@ -723,7 +918,7 @@ Aliases:  storage.orion.local</pre>
 <span class="k">Set-DhcpServerv4OptionValue</span> <span class="p">-ScopeId</span> 172.16.50.0 <span class="p">-Router</span> 172.16.50.1 <span class="p">-DnsServer</span> 172.16.50.10,172.16.50.11 <span class="p">-DnsDomain</span> orion.local</pre>
             </div>
             <p>Une <strong>réservation</strong> donne toujours la même adresse à une MAC (imprimante, borne) tout en restant gérée au même endroit : <code>Add-DhcpServerv4Reservation -ScopeId 172.16.50.0 -IPAddress 172.16.50.150 -ClientId 00-15-5D-01-02-03 -Name IMP-01</code>.</p>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Le serveur est-il autorisé, et les baux distribués ?</p>
             <div class="terminal">
@@ -737,6 +932,31 @@ Aliases:  storage.orion.local</pre>
 172.16.50.100   172.16.50.0     00-15-5d-0a-1b-2c  CLIENT-WIN11.orion.local Active</pre>
                 <p class="verify__fail">Aucun bail et le client en <code>169.254</code> : serveur non autorisé (<code>Get-DhcpServerInDC</code> vide), étendue inactive, ou client branché sur un autre commutateur virtuel que <code>LABOPS</code>.</p>
             </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — autoriser le serveur</p>
+                <p>Le rôle DHCP est installé et configuré sur SRV-AD01 (<code>srv-ad01.orion.local</code>, <code>172.16.50.10</code>), mais il ne distribue rien. Autorise-le dans Active Directory, puis vérifie : énoncé seul, écris les commandes.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01</span></div>
+                    <pre class="terminal__code"><span class="k">Add-DhcpServerInDC</span> <span class="p">-DnsName</span> srv-ad01.orion.local <span class="p">-IPAddress</span> 172.16.50.10
+<span class="k">Get-DhcpServerInDC</span></pre>
+                </div><p><code>Get-DhcpServerInDC</code> doit lister le serveur : vide, il n'est pas autorisé.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Une seconde imprimante, IMP-02 (MAC <code>00-15-5D-01-02-04</code>), doit toujours recevoir <code>172.16.50.151</code>. Crée la réservation dans l'étendue du lab.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01</span></div>
+                    <pre class="terminal__code"><span class="k">Add-DhcpServerv4Reservation</span> <span class="p">-ScopeId</span> 172.16.50.0 <span class="p">-IPAddress</span> 172.16.50.151 <span class="p">-ClientId</span> 00-15-5D-01-02-04 <span class="p">-Name</span> IMP-02</pre>
+                </div><p><em>reconstitué, non testé</em> : c'est la réservation d'IMP-01 du module, avec une autre adresse et une autre MAC (valeurs d'exemple du lab fictif). L'adresse reste dans la plage de l'étendue.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le client reste en 169.254</p>
+                <p>CLIENT-WIN11 affiche une adresse en <code>169.254.x.x</code>. Sur SRV-AD01, l'étendue existe et <code>Get-DhcpServerv4Lease -ScopeId 172.16.50.0</code> ne montre aucun bail. Le rôle DHCP est installé depuis une heure.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le client n'a pas parlé au serveur, ou le serveur n'a rien répondu. On vérifie dans l'ordre le serveur (autorisé ?), l'étendue (active ?), puis le client (bon commutateur virtuel ?). <strong>Causes possibles :</strong> serveur non autorisé (<code>Get-DhcpServerInDC</code> vide), étendue inactive, ou client branché sur un autre commutateur virtuel que <code>LABOPS</code>. <strong>Correctif :</strong> autoriser le serveur avec <code>Add-DhcpServerInDC</code>, activer l'étendue, ou rebrancher la VM sur <code>LABOPS</code>.</p></div></details>
+            </div>
+
             <div class="scenario">
                 <p class="scenario__label">Scénario de panne</p>
                 <p class="scenario__title">L'erreur volontaire du TP final</p>
@@ -764,9 +984,15 @@ Serveurs DNS. . . . . . . . . . . . . .: 172.16.50.1</pre>
                 </div>
                 <div class="scenario__end"><strong>Correction :</strong> <code>Set-DhcpServerv4OptionValue -ScopeId 172.16.50.0 -DnsServer 172.16.50.10,172.16.50.11</code>, puis sur le client <code>ipconfig /renew</code> et <code>nltest /dsgetdc:orion.local</code>, qui doit nommer un DC.</div>
             </div>
-            <div class="takeaway">
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p>Installer, terminer la configuration, <strong>autoriser dans AD</strong>, créer l'étendue, puis les options : 3 (passerelle), 6 (DNS = les DC), 15 (domaine). Une option 6 fausse donne un poste « connecté » qui ne trouve pas son domaine.</p>
+                <ul>
+                    <li>Installer, terminer la configuration, <strong>autoriser dans AD</strong>, créer l'étendue, puis poser les options : 3 (passerelle), 6 (DNS = les DC), 15 (domaine).</li>
+                    <li>Une réservation donne toujours la même adresse à une MAC tout en restant gérée sur le serveur.</li>
+                    <li>Client en 169.254 : serveur non autorisé, étendue inactive ou mauvais commutateur. Client avec adresse mais sans domaine : option 6 fausse.</li>
+                    <li>Après correction côté serveur, <code>ipconfig /renew</code> sur le client, puis <code>nltest /dsgetdc:orion.local</code> doit nommer un DC.</li>
+                </ul>
             </div>
         </section>
 

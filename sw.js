@@ -4,7 +4,7 @@
    - pages : réseau d'abord (toujours la dernière version), cache si le réseau manque ;
    - polices Google : gardées au premier chargement.
    VERSION et FICHIERS sont réécrits par site/outils/construit.js — ne pas éditer à la main. */
-const VERSION = '03cc690bd2';
+const VERSION = '81b461db88';
 const FICHIERS = [
   "assets/app.js?v=fabe4251",
   "assets/atelier.js?v=c35298a6",
@@ -16,7 +16,7 @@ const FICHIERS = [
   "assets/dojo.js?v=b46a816e",
   "assets/favicon.svg",
   "assets/glossaire-ui.js?v=178c909e",
-  "assets/glossaire.js?v=686a49af",
+  "assets/glossaire.js?v=e383e81f",
   "assets/notes.js?v=172c0c32",
   "assets/plan.js?v=5a5966ea",
   "assets/pratique.js?v=6ed4d335",
@@ -51,7 +51,7 @@ const FICHIERS = [
   "assets/quiz/windows-server.js?v=8fa3263e",
   "assets/quiz/zabbix-windows.js?v=50232a45",
   "assets/revision.js?v=843cfd26",
-  "assets/search-index.js?v=53553119",
+  "assets/search-index.js?v=8251ee9e",
   "assets/search.js?v=80a32003",
   "assets/serie.js?v=3e1cada5",
   "assets/simulateurs.js?v=b2610493",

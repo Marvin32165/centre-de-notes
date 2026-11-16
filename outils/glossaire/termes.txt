@@ -157,6 +157,14 @@ IFM | Install From Media | Copie de l'annuaire préparée sur un DC (ntdsutil) p
 FSMO | Flexible Single Master Operations | Les cinq rôles d'AD qui n'ont qu'un seul maître : schéma, nommage de domaines, RID, émulateur PDC, infrastructure. | FSMO
 Émulateur PDC | | Rôle FSMO du domaine : source de temps, mots de passe récents, verrouillages. | émulateur PDC
 Catalogue global | GC | Copie partielle de tous les objets de la forêt, tenue par certains DC pour les recherches et l'ouverture de session. | catalogue global
+AGDLP | Accounts, Global, Domain Local, Permissions | Règle de rangement des droits : les comptes vont dans des groupes globaux, mis dans des groupes de domaine local, qui reçoivent les permissions. | AGDLP
+Délégation de contrôle | Delegate Control | Droit confié à un utilisateur ou un groupe de gérer certaines tâches sur une OU (créer des comptes, par exemple) sans être administrateur du domaine. | délégation;Delegate Control
+Zone inverse | | Zone DNS qui traduit une adresse IP en nom, grâce aux enregistrements PTR. | zones? inverses?
+Enregistrement PTR | Pointer | Enregistrement DNS de la résolution inverse : il associe une adresse à un nom. | PTR
+Redirecteur DNS | Forwarder | Serveur vers lequel un DNS transfère les questions auxquelles il ne sait pas répondre lui-même, par exemple les noms d'Internet. | redirecteurs?;forwarders?
+Autorisation DHCP | | Inscription d'un serveur DHCP dans Active Directory : sans elle, un serveur DHCP d'un domaine ne distribue aucun bail. | serveur autorisé;non autorisé;autoriser dans AD
+Réservation DHCP | | Association fixe d'une adresse IP à une adresse MAC dans une étendue : l'appareil reçoit toujours la même adresse. | réservations?
+Option DHCP | | Paramètre distribué avec le bail : 3 = passerelle, 6 = serveurs DNS, 15 = nom de domaine. | options? DHCP
 ## Linux & virtualisation
 Linux | | Noyau libre ; une distribution (Debian, Ubuntu) l'assemble avec des outils et des paquets. | Linux
 Debian | | Distribution Linux communautaire, stable, base d'Ubuntu et de Proxmox. | Debian

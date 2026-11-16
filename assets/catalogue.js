@@ -165,7 +165,7 @@ window.CATALOGUE = {
       "icon": "IP",
       "desc": "Le point d'entrée : équipements, OSI et TCP/IP, Ethernet et MAC, IPv4, ARP, TCP/UDP et ports, DNS, DHCP, routage et NAT, IPv6, VLAN et Wi-Fi — chaque notion avec la commande qui la rend visible, et une requête web suivie dans Wireshark.",
       "level": 1,
-      "duree": "5 h",
+      "duree": "7 h 15",
       "chapters": 12,
       "prereq": [],
       "related": [

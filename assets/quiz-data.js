@@ -29,7 +29,7 @@ window.QUIZ_BANK = {
     name: "Réseau : les bases",
     file: "reseau-bases.html",
     title: "Test — Réseau : les bases",
-    intro: "Douze chapitres, vingt questions tirées au hasard parmi soixante. Peu de définitions : surtout des situations, des commandes et des sorties à lire.",
+    intro: "Douze chapitres, vingt questions tirées au hasard parmi le fonds de questions du module. Peu de définitions : surtout des situations, des commandes et des sorties à lire.",
     pass: 70,
     questions: [
     {
@@ -510,6 +510,110 @@ window.QUIZ_BANK = {
         c: ["Le serveur ne l'envoie qu'après la requête HTTP", "Il voyage déjà chiffré, comme le reste de la conversation", "Wireshark ne sait pas décoder les certificats", "Le certificat n'est jamais envoyé en TLS 1.3, qui le remplace par une clé partagée en clair"],
         a: 1,
         why: "En TLS 1.3, le certificat du serveur part dans la réponse au Client Hello, déjà chiffré : il est bien envoyé, mais illisible sur le câble. Une réponse qui dit « jamais envoyé » ou « Wireshark ne décode pas » passe à côté du chiffrement.",
+        ref: "Chapitre 12"
+    },
+    {
+        lvl: 2,
+        q: "Une agence sauvegarde 2 Go chaque soir vers le siège par un lien WAN de 10 Mb/s. Quelle est la durée minimale de la sauvegarde ?",
+        c: ["Environ 20 secondes", "Environ 3 minutes", "Environ 27 minutes", "Environ 2 heures 30"],
+        a: 2,
+        why: "2 Go = 16 000 Mb ; à 10 Mb/s cela fait 1 600 secondes, soit près de 27 minutes. Les 3 minutes viennent d'un calcul qui oublie de multiplier par 8 : le débit est en bits, la taille en octets.",
+        ref: "Chapitre 01"
+    },
+    {
+        lvl: 2,
+        q: "Un switch reçoit une trame dont l'adresse MAC de destination n'est pas dans sa table. Que fait-il ?",
+        c: ["Il l'envoie sur tous les ports sauf celui d'arrivée, et note la MAC source", "Il la jette et attend que la machine se manifeste", "Il demande la MAC par ARP avant de transmettre", "Il la renvoie au routeur, qui saura la livrer"],
+        a: 0,
+        why: "Une destination inconnue est inondée sur tous les ports sauf celui d'arrivée ; la MAC source est apprise au passage. Quand la machine répond, le switch retient son port et n'inonde plus.",
+        ref: "Chapitre 03"
+    },
+    {
+        lvl: 2,
+        q: "Dans <code>show mac address-table</code>, une ligne affiche <code>10  3c52.821a.4f09  DYNAMIC  Fa0/2</code>. Que signifie-t-elle ?",
+        c: ["Le switch a appris que cette MAC se trouve derrière le port <code>Fa0/2</code>, dans le VLAN 10", "Le port <code>Fa0/2</code> a été configuré à la main pour cette MAC", "La machine d'adresse IP <code>10.x.x.x</code> est branchée sur le port 2", "La MAC est celle de l'interface du switch lui-même"],
+        a: 0,
+        why: "Le type DYNAMIC indique une entrée apprise d'après les trames reçues, non saisie à la main. Elle associe une MAC à un port et à un VLAN ; une adresse IP n'y figure pas.",
+        ref: "Chapitre 03"
+    },
+    {
+        lvl: 1,
+        q: "Dans quel ordre se font les trois messages d'ouverture d'une connexion TCP ?",
+        c: ["SYN, ACK, SYN-ACK", "SYN-ACK, SYN, ACK", "SYN, SYN-ACK, ACK", "ACK, SYN, SYN-ACK"],
+        a: 2,
+        why: "Le client envoie SYN, le serveur répond SYN-ACK, le client conclut par ACK : c'est la poignée de main en trois temps.",
+        ref: "Chapitre 06"
+    },
+    {
+        lvl: 1,
+        q: "Pour autoriser le bureau à distance Windows (RDP) à travers un pare-feu, quel port et quel protocole faut-il ouvrir en priorité ?",
+        c: ["TCP 22", "TCP 3389", "UDP 53", "TCP 445"],
+        a: 1,
+        why: "RDP utilise le port TCP 3389. Le 22 est SSH, le 53 le DNS et le 445 SMB, le partage de fichiers Windows.",
+        ref: "Chapitre 06"
+    },
+    {
+        lvl: 2,
+        q: "Après un changement de matériel, un poste Windows envoie encore ses trames à l'ancienne MAC de la passerelle. Quelle commande vide son cache ARP ?",
+        c: ["<code>arp -d *</code>", "<code>ipconfig /flushdns</code>", "<code>ipconfig /release</code>", "<code>getmac /v</code>"],
+        a: 0,
+        why: "arp -d * efface le cache ARP, donc l'ancienne correspondance IP vers MAC. flushdns vide le cache DNS, release rend le bail DHCP, getmac affiche seulement les MAC des cartes.",
+        ref: "Chapitre 05"
+    },
+    {
+        lvl: 2,
+        q: "Un poste doit résoudre <code>www.exemple.be</code> et n'a rien en mémoire. Dans quel ordre cherche-t-il la réponse ?",
+        c: ["Cache du poste et fichier <code>hosts</code>, puis serveur DNS configuré","Serveur racine, puis fichier <code>hosts</code>, puis cache","Passerelle, puis serveur DHCP, puis cache","Serveur DNS configuré, puis fichier <code>hosts</code>"],
+        a: 0,
+        why: "Le poste regarde d'abord son cache, puis son fichier hosts ; sinon il pose une question récursive à son serveur DNS, qui interroge ensuite racine, TLD et zone.",
+        ref: "Chapitre 07"
+    },
+    {
+        lvl: 2,
+        q: "Pourquoi une machine d'Internet ne peut-elle pas, de sa propre initiative, ouvrir une connexion vers un poste derrière la box (sans redirection de port) ?",
+        c: ["La box n'a une correspondance NAT que pour les connexions parties de l'intérieur","Les adresses privées sont trop longues pour Internet","Le DNS refuse de résoudre les adresses privées","Le port 443 est toujours fermé sur une box"],
+        a: 0,
+        why: "Le NAT/PAT retient la correspondance d'une connexion sortante pour faire le chemin inverse. Sans correspondance, un paquet entrant ne sait pas vers quel poste aller : il faut une redirection de port.",
+        ref: "Chapitre 09"
+    },
+    {
+        lvl: 2,
+        q: "Quelle fonction IPv6 remplace ARP pour trouver l'adresse de couche 2 d'un voisin ?",
+        c: ["NDP, en multicast ICMPv6","SLAAC","DHCPv6","Un broadcast sur <code>ff:ff:ff:ff:ff:ff</code>"],
+        a: 0,
+        why: "NDP (sollicitation et annonce de voisin, en ICMPv6 multicast) joue le rôle d'ARP. SLAAC fabrique l'adresse d'une machine, DHCPv6 la distribue, et le broadcast n'existe plus en IPv6.",
+        ref: "Chapitre 10"
+    },
+    {
+        lvl: 1,
+        q: "Deux postes sont dans deux VLAN différents du même switch, sans routeur. Pourquoi ne se joignent-ils pas ?",
+        c: ["Chaque VLAN est un domaine de broadcast et un sous-réseau séparé : il faut un routeur entre les deux","Le switch ne gère qu'un VLAN à la fois","Il faut passer les deux ports en trunk","Les VLAN bloquent le DHCP"],
+        a: 0,
+        why: "Un VLAN découpe le switch en réseaux logiques : l'ARP du premier poste n'atteint pas le second. Pour passer d'un VLAN à l'autre, il faut un routeur ou un switch de niveau 3.",
+        ref: "Chapitre 11"
+    },
+    {
+        lvl: 2,
+        q: "Quel est l'ordre des étapes d'une requête web vers <code>www.exemple.be</code>, quand le poste vient de démarrer ?",
+        c: ["DHCP, ARP, DNS, routage et NAT, TCP, TLS, HTTP","DNS, DHCP, TCP, ARP, TLS, HTTP","ARP, HTTP, TLS, DNS, TCP, DHCP","TCP, DNS, DHCP, NAT, ARP, HTTP"],
+        a: 0,
+        why: "Le poste obtient d'abord son adresse (DHCP), trouve la MAC de la passerelle (ARP), résout le nom (DNS), route et traduit (NAT), ouvre TCP, chiffre avec TLS, puis envoie HTTP.",
+        ref: "Chapitre 12"
+    },
+    {
+        lvl: 3,
+        q: "Entre la sortie du PC et la sortie de la box, un même paquet SYN vers le serveur : quels éléments ont changé ?",
+        c: ["Les MAC, l'IP et le port source (NAT), le TTL","L'IP de destination et le port de destination","Uniquement le TTL","Rien : la box ne modifie jamais un paquet"],
+        a: 0,
+        why: "Chaque tronçon a ses MAC, le NAT réécrit l'IP et le port source, et le TTL baisse de 1 par routeur. L'IP et le port de destination restent ceux du serveur.",
+        ref: "Chapitre 12"
+    },
+    {
+        lvl: 3,
+        q: "La passerelle répond au ping, <code>ping 203.0.113.10</code> échoue, et <code>tracert -d</code> vers cette adresse s'arrête toujours à la box. Quelle étape de la chaîne est en cause ?",
+        c: ["Le chemin après la box : route, NAT ou liaison du fournisseur","Le DNS du poste","Le DHCP du poste","Le cache ARP du poste"],
+        a: 0,
+        why: "On joint une IP, donc le DNS n'est pas en cause ; la passerelle répond, donc couche 2 et adresse sont corrects. Un tracert qui s'arrête au dernier routeur qui répond place le défaut juste après.",
         ref: "Chapitre 12"
     }
     ]

@@ -59,6 +59,16 @@ Test-NetConnection | | Cmdlet PowerShell qui teste ping, route et ouverture d'un
 MTU | Maximum Transmission Unit | Taille maximale d'un paquet sur un lien (1500 octets en Ethernet). | MTU
 QoS | Quality of Service | Ensemble de mécanismes qui donnent la priorité à certains flux (la voix) sur un réseau chargé. | QoS
 Duplex | | Mode d'un lien : full (émet et reçoit en même temps) ou half ; un désaccord des deux côtés cause erreurs et lenteurs. | duplex
+OUI | Organizationally Unique Identifier | Les 3 premiers octets d'une adresse MAC : ils identifient le fabricant de la carte réseau. | OUI
+LAN | Local Area Network | Réseau local : celui d'un bâtiment ou d'un étage, relié par des switchs. | \bLAN\b
+WAN | Wide Area Network | Réseau étendu qui relie des sites éloignés, par exemple le lien vers le fournisseur d'accès. | \bWAN\b
+Table MAC | Table CAM | Liste tenue par un switch qui associe chaque adresse MAC apprise au port où elle se trouve. | tables? MAC;table CAM
+Domaine de collision | | Ensemble de ports qui partagent le même support en half duplex ; chaque port de switch en full duplex forme le sien. | domaines? de collision
+Domaine de broadcast | | Ensemble de machines qui reçoivent les mêmes diffusions ; il s'arrête à un routeur ou à la limite d'un VLAN. | domaines? de broadcast
+Cache ARP | | Mémoire d'un poste qui garde les correspondances IP vers MAC déjà apprises, pour ne pas reposer la question à chaque paquet. | cache ARP
+TTL | Time To Live | Compteur d'un paquet IP, diminué de 1 à chaque routeur traversé ; à 0, le paquet est jeté. | TTL
+Port éphémère | | Port source choisi au hasard par le client pour une connexion (49 152 à 65 535 sous Windows). | ports? éphémères?
+SYN | Synchronize | Segment TCP qui demande l'ouverture d'une connexion ; la poignée de main est SYN, SYN-ACK, ACK. | SYN\b
 PoE | Power over Ethernet | Alimentation électrique d'un appareil (téléphone, borne Wi-Fi) par le câble réseau. | PoE
 Wi-Fi | IEEE 802.11 | Réseau local sans fil. | Wi-Fi
 ARP | Address Resolution Protocol | Protocole qui retrouve l'adresse MAC d'une machine du même réseau à partir de son adresse IP ; le résultat est gardé dans un cache (voisins) qu'on peut lire pour vérifier la passerelle. | ARP\b
@@ -68,6 +78,15 @@ CRC | Cyclic Redundancy Check | Contrôle d'erreur en fin de trame ; un compteur
 err-disabled | | État d'un port de switch Cisco coupé automatiquement après une violation de sécurité (port-security, BPDU Guard) ; on retire la cause avant de le réactiver. | err-disabled
 BPDU Guard | | Protection Cisco qui coupe un port PortFast dès qu'il reçoit des BPDU de spanning tree, signe d'un switch branché par erreur. | BPDU Guard
 Bottom-up | | Méthode de diagnostic qui teste du bas vers le haut des couches (câble, adresse, route, port, service) ; chaque étape réussie élimine une couche. | bottom-up
+Résolveur DNS | | Serveur DNS qui reçoit la question d'un poste et fait le travail de recherche (racine, TLD, zone) pour rendre la réponse finale. | résolveurs?
+Enregistrement CNAME | | Enregistrement DNS qui fait d'un nom un alias vers un autre nom. | CNAME
+Enregistrement MX | Mail eXchanger | Enregistrement DNS qui désigne le serveur de messagerie d'un domaine, avec une priorité (le plus petit nombre passe en premier). | \bMX\b
+Étendue DHCP | Scope | Plage d'adresses qu'un serveur DHCP distribue sur un réseau, dont on retire les exclusions. | étendues?;scope
+PAT | Port Address Translation | NAT qui distingue les connexions des postes par le port source, pour les faire sortir derrière une seule IP publique. | PAT\b
+Adresse lien local | Link-local | Adresse IPv6 en fe80::/10, présente sur chaque interface, valable sur le réseau local seulement. | lien local
+Port access | | Port de switch qui appartient à un seul VLAN et ne marque pas les trames. | ports? access
+SSID | Service Set Identifier | Nom d'un réseau Wi-Fi ; un point d'accès peut en diffuser plusieurs, chacun relié à un VLAN. | SSID
+SNI | Server Name Indication | Nom du site demandé, envoyé en clair dans le Client Hello d'une connexion TLS. | SNI
 ## Téléphonie
 VoIP | Voice over IP | Téléphonie sur un réseau IP. | VoIP
 SIP | Session Initiation Protocol | Protocole de signalisation qui établit, modifie et termine les appels (INVITE, 180, 200 OK, BYE). | SIP

@@ -29,7 +29,7 @@
         </div>
         <div class="hero__facts">
             <span class="fact fact--n1"><b>Niveau</b> Débutant</span>
-            <span class="fact"><b>Durée</b> ≈ 5 h</span>
+            <span class="fact"><b>Durée</b> ≈ 7 h 15</span>
             <span class="fact"><b>Chapitres</b> 12</span>
             <span class="fact"><b>Test</b> 20 questions</span>
             <span class="fact"><b>Prérequis</b> aucun</span>
@@ -80,6 +80,23 @@
             <h2 class="chapter__title">Ce qu'est un réseau</h2>
             <p class="chapter__intro">Un réseau, c'est des machines qui s'échangent des données en suivant des règles communes — les <strong>protocoles</strong>. Avant les adresses et les commandes, il faut savoir qui sont les acteurs et ce que chacun fait.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Dire quelle adresse lit un switch et laquelle lit un routeur.</li>
+                    <li>Distinguer un LAN, un WAN et Internet.</li>
+                    <li>Convertir un débit en bits par seconde en un temps de transfert pour un fichier en octets.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> aucun prérequis · 25 min · papier et crayon, aucune commande dans ce chapitre.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi connaître les acteurs avant les commandes</h3>
+                <p>Un utilisateur appelle le support : « internet ne marche pas ». Selon le cas, la carte réseau du poste est débranchée, le switch de l'étage est éteint, la passerelle est mal réglée ou le lien vers le fournisseur est coupé. Sans savoir quel équipement fait quoi, on teste au hasard ; en le sachant, on élimine un maillon à la fois.</p>
+                <p>Ce chapitre pose donc le vocabulaire et la règle de base : chaque équipement décide d'après une adresse précise, et c'est cette adresse qui dit où chercher la panne.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>Les équipements, et ce qu'ils regardent</h3>
             <div class="table-wrap">
                 <table>
@@ -116,10 +133,56 @@
                 <p class="tip__label">Bits ou octets ?</p>
                 <p>Un débit s'écrit en bits (<strong>b</strong> minuscule), une taille de fichier en octets (<strong>o</strong>, ou <strong>B</strong> en anglais). Une connexion à 1 Gb/s télécharge donc au mieux ~125 Mo/s — et un peu moins, à cause des en-têtes de chaque paquet.</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Le <strong>switch</strong> relie les machines d'un même réseau en lisant les adresses <strong>MAC</strong> ; le <strong>routeur</strong> relie des réseaux différents en lisant les adresses <strong>IP</strong>. Presque toute panne se ramène à « qui ne parle pas à qui, et à quel niveau ».</p>
+            <p class="note">Source : <a href="https://www.rfc-editor.org/rfc/rfc1812" rel="noopener">RFC 1812 — Requirements for IP Version 4 Routers</a> (un routeur transmet un datagramme d'après son adresse IP de destination, de réseau en réseau).</p>
             </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Un poste du lab Orion parle à un serveur voisin, puis à un site sur Internet</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le serveur voisin</p>
+                        <p class="walk__head">Le poste et <code>SRV-FILE01</code> (<code>172.16.50.20</code>) sont dans le même réseau <code>172.16.50.0/24</code></p>
+                        <p>Le switch reçoit la trame, lit l'adresse <strong>MAC</strong> de destination et la sort par le bon port. Aucun routeur n'intervient.</p>
+                        <p class="walk__change">Même réseau local : le switch suffit.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le site sur Internet</p>
+                        <p class="walk__head">La destination est hors du réseau : on confie le paquet à la passerelle</p>
+                        <p>Le poste envoie à la passerelle du lab (<code>172.16.50.1</code>). Le routeur lit l'adresse <strong>IP</strong> de destination et choisit la sortie vers le fournisseur d'accès, à travers le WAN.</p>
+                        <p class="walk__change">Autre réseau : le routeur décide, d'après l'IP.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la règle</p>
+                        <p class="walk__head">L'adresse lue désigne l'équipement</p>
+                        <p>Une panne « on joint le serveur mais pas Internet » met le routeur ou la passerelle en cause ; une panne « on ne joint personne, même voisin » met en cause le switch, le câble ou la carte réseau.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Constat sur papier : pour chaque ligne du tableau des équipements, nomme l'adresse lue (MAC ou IP) et dis si l'équipement relie des machines d'un même réseau ou des réseaux différents. Tu dois obtenir : switch et point d'accès = MAC, même réseau ; routeur = IP, réseaux différents.</p>
+                <p class="verify__fail">Tu as mis « IP » pour le switch : un switch ne lit pas les adresses IP, il ne regarde que la MAC (sauf un switch de niveau 3, vu plus loin).</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — calculer un temps de transfert</p>
+                <p>Un poste est relié à un lien de <strong>100 Mb/s</strong>. Combien de temps faut-il, au mieux, pour copier un fichier de <strong>600 Mo</strong> ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>600 Mo × 8 = 4 800 Mb ; 4 800 Mb ÷ 100 Mb/s = <strong>48 secondes</strong> en théorie, un peu plus en pratique.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Une agence sauvegarde <strong>2 Go</strong> chaque soir vers le siège par un lien WAN de <strong>10 Mb/s</strong>. Quelle est la durée minimale de la sauvegarde ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>2 Go = 2 000 Mo = 16 000 Mb ; 16 000 ÷ 10 = 1 600 s, soit environ <strong>26 minutes 40 secondes</strong> au minimum.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le partage s'ouvre, mais aucune page web</p>
+                <p>Depuis ce matin, un poste de l'étage ouvre sans problème le partage du serveur de fichiers, mais aucune page web ne s'affiche. Un collègue branché sur le même switch navigue normalement.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le serveur est joint, donc la carte, le câble et le switch fonctionnent (le niveau MAC est bon). Le collègue navigue, donc le routeur et le lien vers Internet fonctionnent aussi. <strong>Cause probable :</strong> le problème est propre à ce poste, dans la façon dont il atteint un autre réseau — typiquement une passerelle absente ou erronée (chapitre 04). <strong>Correctif :</strong> relever la configuration IP du poste et la comparer à celle du collègue.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -132,6 +195,16 @@
                     <div class="scenario__why"><p>4 Go = 4 × 8 = <strong>32 Gb</strong>. À 1 Gb/s : 32 secondes en théorie, un peu plus en réalité (en-têtes, disques). Débit en <strong>bits</strong>, taille en <strong>octets</strong> : on multiplie par 8.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Le <strong>switch</strong> relie les machines d'un même réseau en lisant les adresses <strong>MAC</strong> ; le <strong>routeur</strong> relie des réseaux différents en lisant les adresses <strong>IP</strong>.</li>
+                    <li>Un LAN est à toi, un WAN relie des sites, Internet est le réseau des réseaux.</li>
+                    <li>Débit en bits/s, taille en octets : on multiplie par 8 pour le temps de transfert.</li>
+                    <li>Presque toute panne se ramène à « qui ne parle pas à qui, et à quel niveau ».</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 02 -->
@@ -140,6 +213,23 @@
             <h2 class="chapter__title">OSI et TCP/IP : l'encapsulation</h2>
             <p class="chapter__intro">Deux modèles découpent la communication en couches. OSI (7 couches) sert à <strong>raisonner et à dépanner</strong> ; TCP/IP (4 couches) décrit ce qui tourne vraiment. Les deux disent la même chose : chaque couche ajoute son en-tête, comme des enveloppes glissées les unes dans les autres.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Nommer les couches OSI et TCP/IP, avec leur unité (segment, paquet, trame) et leur adresse.</li>
+                    <li>Dire quelles adresses changent et lesquelles restent identiques quand un paquet traverse un routeur.</li>
+                    <li>Situer une panne dans la bonne couche à partir de son symptôme.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#reseau">Ce qu'est un réseau</a> · 30 min · papier et crayon.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Un langage commun pour situer une panne</h3>
+                <p>Quand un collègue dit « c'est un problème de couche 2 » ou « c'est du transport », il indique en quelques mots où chercher et où ne pas chercher. Sans ce découpage, une panne réseau reste une boîte noire : on change le câble, on redémarre le routeur, on réinstalle le pilote, sans méthode.</p>
+                <p>Les couches servent aussi à comprendre pourquoi un même paquet porte plusieurs adresses (MAC, IP, port) : chaque couche a son propre rôle et ne lit que son propre en-tête.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>OSI</th><th>Couche</th><th>TCP/IP</th><th>Unité (PDU)</th><th>Adresse ou repère</th><th>Exemples</th></tr></thead>
@@ -203,10 +293,56 @@
                 <li><strong>Le mot « paquet » est employé à tort et à travers.</strong> Au sens strict, c'est l'unité de la couche 3 ; la trame est celle de la couche 2, le segment celle du TCP.</li>
             </ul>
             <p>Pour retenir l'ordre des sept couches OSI, de 1 à 7 : <strong>P</strong>our <strong>L</strong>e <strong>R</strong>éseau, <strong>T</strong>out <strong>S</strong>e <strong>P</strong>asse <strong>A</strong>utomatiquement — Physique, Liaison, Réseau, Transport, Session, Présentation, Application.</p>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Les <strong>adresses IP</strong> restent les mêmes de bout en bout (hors NAT) ; les <strong>adresses MAC</strong> changent à chaque routeur traversé. C'est la phrase qui explique la moitié des pannes et des questions d'examen.</p>
+            <p class="note">Source : <a href="https://www.rfc-editor.org/rfc/rfc1122" rel="noopener">RFC 1122 — Requirements for Internet Hosts, Communication Layers</a> (la pile TCP/IP : couches liaison, Internet, transport et application).</p>
             </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Que deviennent les adresses d'une requête web qui traverse un routeur ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · départ du PC</p>
+                        <p class="walk__head">Le serveur est dans un autre réseau : la trame vise la passerelle</p>
+                        <p>Le PC écrit l'IP du serveur (<code>203.0.113.10</code>) dans le paquet, mais la MAC de destination de la trame est celle de la <strong>passerelle</strong> (<code>aa:aa:aa:00:00:01</code> dans la trame ci-dessus).</p>
+                        <p class="walk__change">IP destination = le serveur ; MAC destination = le prochain équipement.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le switch</p>
+                        <p class="walk__head">Il lit la MAC et s'arrête</p>
+                        <p>Le switch retrouve le port de la passerelle d'après la MAC de destination et y envoie la trame, sans ouvrir le paquet.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le routeur</p>
+                        <p class="walk__head">Il retire la trame, lit l'IP, en refabrique une autre</p>
+                        <p>Le routeur lit l'IP de destination, choisit sa sortie, décrémente le TTL et pose le paquet dans une <strong>nouvelle trame</strong> avec de nouvelles MAC pour le tronçon suivant.</p>
+                        <p class="walk__change">Les MAC ont changé ; les IP et les ports sont restés identiques (hors NAT).</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Constat sur papier : reprends la trame de la section « La trame, vue de l'intérieur » et dessine-la avant et après le routeur. Tu dois retrouver les mêmes cases IP et port (couches 3 et 4) et des cases MAC différentes (couche 2).</p>
+                <p class="verify__fail">Tu as changé l'IP de destination au passage du routeur : c'est une erreur classique. L'IP désigne le serveur de bout en bout ; seule la MAC désigne l'équipement du tronçon.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — ce qu'un routeur modifie</p>
+                <p>Une requête web part d'un PC vers un serveur situé derrière un routeur. Parmi la MAC source, la MAC destination, l'IP source, l'IP destination, le port destination et le TTL, lesquels sont modifiés par le routeur ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Modifiés : les deux <strong>MAC</strong> (nouvelle trame pour le tronçon suivant) et le <strong>TTL</strong> (décrémenté). Inchangés : les deux IP et le port destination, hors NAT.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Associe chaque symptôme à une couche : (a) le voyant de la carte réseau reste éteint ; (b) le ping vers la passerelle répond, mais pas le ping vers <code>8.8.8.8</code> ; (c) le ping vers un serveur répond, mais son port 443 ne répond pas.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>(a) couche 1, physique ; (b) couche 3, réseau (la passerelle ou la route vers l'extérieur) ; (c) couche 4, transport (port bloqué ou service qui n'écoute pas).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le ping répond, la page n'arrive pas</p>
+                <p>Un poste obtient une réponse au ping vers le serveur de l'intranet, mais le navigateur affiche « délai d'attente dépassé » sur l'adresse en https. Rien n'a changé côté poste.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le ping répond, donc les couches 1 à 3 sont bonnes (câble, trame, IP, routage). On monte d'un cran. <strong>Cause probable :</strong> couche 4 — le port 443 est bloqué par un pare-feu ou le service n'écoute pas ; à défaut, couche 7. <strong>Correctif :</strong> tester le port avec <code>Test-NetConnection hôte -Port 443</code> (Windows) ou <code>nc -zv hôte 443</code> (Linux), comme dans le tableau « Ce que chaque couche règle ».</p></div></details>
+            </div>
+
             <div class="tip">
                 <p class="tip__label">Pour dépanner</p>
                 <p>On remonte les couches : le câble est-il branché (1) ? la carte voit-elle le switch (2) ? ai-je une IP et une passerelle (3) ? le port répond-il (4) ? le service répond-il correctement (7) ? Le module <a href="depannage-reseau.html">Dépannage réseau</a> transforme ce réflexe en méthode.</p>
@@ -235,6 +371,15 @@
                     <div class="scenario__why"><p>Le ping vers une adresse IP prouve les couches 1 à 3. Si seul le <strong>nom</strong> échoue, le coupable est le serveur DNS configuré sur le poste : on teste avec <code>nslookup www.exemple.be</code>.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>OSI (7 couches) sert à raisonner, TCP/IP (4 couches) décrit ce qui tourne ; unités : <strong>segment</strong> (4), <strong>paquet</strong> (3), <strong>trame</strong> (2).</li>
+                    <li>Les <strong>adresses IP</strong> restent les mêmes de bout en bout (hors NAT) ; les <strong>adresses MAC</strong> changent à chaque routeur traversé. C'est la phrase qui explique la moitié des pannes et des questions d'examen.</li>
+                    <li>On remonte les couches : câble (1), trame (2), IP et passerelle (3), port (4), service (7).</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 03 -->
@@ -243,6 +388,24 @@
             <h2 class="chapter__title">Ethernet, adresses MAC et switch</h2>
             <p class="chapter__intro">Ethernet est la technologie de presque tous les réseaux locaux filaires. Sa brique de base : l'<strong>adresse MAC</strong>, et un équipement qui apprend où se trouve chacune — le switch.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Décomposer une adresse MAC (fabricant, numéro de carte) et reconnaître l'adresse de broadcast.</li>
+                    <li>Décrire les quatre actions d'un switch : apprendre, commuter, inonder, oublier.</li>
+                    <li>Lire une table MAC pour dire sur quel port se trouve une machine.</li>
+                    <li>Distinguer un domaine de collision d'un domaine de broadcast.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#modeles">OSI et TCP/IP</a> (couche 2, trame) · 30 min · un PC Windows ou une VM Linux ; un switch Cisco est un plus.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi un switch doit savoir où est chaque machine</h3>
+                <p>Dans un bureau de vingt postes, si chaque trame était envoyée à tout le monde, comme sur les anciens hubs, le réseau serait vite saturé et chacun pourrait lire les échanges des autres. Le switch règle cela : il retient quelle adresse MAC se trouve derrière quel port et n'envoie la trame qu'au bon endroit.</p>
+                <p>C'est aussi lui qu'on interroge quand une machine « ne répond plus » dans le même réseau : sa table MAC dit si la machine est vue, et sur quel port.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>L'adresse MAC</h3>
             <p>Une adresse MAC fait <strong>48 bits</strong>, écrits en 6 octets hexadécimaux : <code>3C-52-82-1A-4F-09</code> (Windows) ou <code>3c:52:82:1a:4f:09</code> (Linux, Cisco l'écrit <code>3c52.821a.4f09</code>). Les 3 premiers octets sont l'<strong>OUI</strong>, l'identifiant du fabricant ; les 3 derniers, le numéro de la carte. <code>FF-FF-FF-FF-FF-FF</code> est l'adresse de <strong>broadcast</strong> : « à tout le monde sur ce réseau ».</p>
             <h3>Ce que fait un switch</h3>
@@ -275,7 +438,35 @@
                 </table>
             </div>
             <p>La limite des 100 m du cuivre est une vraie limite : au-delà, les erreurs augmentent. Les ports modernes font l'<strong>auto-MDIX</strong> (câble droit ou croisé, peu importe) et négocient vitesse et duplex. Une négociation ratée (<em>duplex mismatch</em>) donne un lien qui marche… très lentement, avec des erreurs qui montent sur l'interface.</p>
-            <div class="verify">
+            <p>Sur le câble, une trame Ethernet transporte le paquet IP dans son champ de données, dont la taille maximale est de <strong>1500 octets</strong> (le MTU) ; le champ « type » de la trame, <code>0800</code> en hexadécimal, indique que ce qu'elle porte est de l'IPv4.</p>
+            <p class="note">Source : <a href="https://www.rfc-editor.org/rfc/rfc894" rel="noopener">RFC 894 — A Standard for the Transmission of IP Datagrams over Ethernet Networks</a> (type <code>0800</code>, adresses de 48 bits, données jusqu'à 1500 octets).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Comment une table MAC se remplit, en deux trames</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · table vide</p>
+                        <p class="walk__head">A envoie une trame à B, que le switch ne connaît pas</p>
+                        <p>A (<code>3c52.821a.4f09</code>) est branché sur <code>Fa0/2</code> et envoie une trame à B (<code>0050.56a1.2b3c</code>). Le switch note la <strong>MAC source</strong> : A se trouve sur <code>Fa0/2</code>. B est inconnue : il <strong>inonde</strong> la trame sur tous les autres ports.</p>
+                        <p class="walk__change">Table : une ligne (A → <code>Fa0/2</code>).</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la réponse</p>
+                        <p class="walk__head">B répond à A</p>
+                        <p>B est branchée sur <code>Gi0/1</code>. Le switch apprend sa MAC source (B → <code>Gi0/1</code>) ; la destination A est connue : il envoie la trame <strong>uniquement</strong> sur <code>Fa0/2</code>.</p>
+                        <p class="walk__change">Table : deux lignes, A sur <code>Fa0/2</code> et B sur <code>Gi0/1</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la suite</p>
+                        <p class="walk__head">Les trames suivantes ne sont plus inondées</p>
+                        <p>Tant que les entrées ne sont pas oubliées, A et B échangent directement, sans que les autres ports ne voient la conversation. (On laisse ARP de côté ici : il fait l'objet du chapitre 05.)</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Voir l'adresse MAC de sa carte, et la table MAC d'un switch Cisco.</p>
             <div class="terminal">
@@ -293,10 +484,23 @@ Vlan    Mac Address       Type        Ports
   10    0050.56a1.2b3c    DYNAMIC     Gi0/1</pre>
                 <p class="verify__fail">Une table vide sur un switch qui vient de démarrer est normale : elle se remplit dès que les machines émettent. Fais un <code>ping</code> entre deux PC puis relance la commande.</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Le switch <strong>apprend</strong> les MAC sources, <strong>commute</strong> vers la MAC de destination connue et <strong>inonde</strong> l'inconnu et les broadcasts. Un switch découpe les collisions, pas les broadcasts : pour ça, il faut un routeur ou des VLAN.</p>
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — suivre la table MAC</p>
+                <p>Un switch démarre avec une table vide. Le PC C, sur le port <code>Fa0/5</code>, envoie une trame à D (adresse inconnue). Que fait le switch, et que contient sa table ensuite ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Il apprend la MAC source : C est sur <code>Fa0/5</code>. D est inconnue, donc il <strong>inonde</strong> la trame sur tous les ports sauf <code>Fa0/5</code>. La table contient une seule ligne : C → <code>Fa0/5</code>.</p></div></details>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un switch de 24 ports a 12 ports dans le VLAN 10 et 12 ports dans le VLAN 20. Combien a-t-il de domaines de broadcast, et de domaines de collision en full duplex ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><strong>2</strong> domaines de broadcast (un par VLAN) et <strong>24</strong> domaines de collision (un par port : chaque port est son propre domaine de collision).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le lien marche, mais très lentement</p>
+                <p>Entre un poste et le switch, le ping répond sans perte, mais la copie d'un fichier est dix fois plus lente qu'à l'habitude. Sur l'interface du switch, le compteur d'erreurs monte. Le câble a été remplacé la semaine dernière.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le lien est vu (le ping passe), mais il est dégradé : on regarde la couche 1-2, la négociation et le câble, pas l'IP. <strong>Cause probable :</strong> une négociation ratée de vitesse ou de duplex (<em>duplex mismatch</em>), ou un câble de plus de 100 m ou abîmé : le lien marche, très lentement, avec des erreurs. <strong>Correctif :</strong> comparer la vitesse et le duplex des deux côtés (<code>show interfaces</code> côté Cisco), les remettre en négociation automatique, puis contrôler la longueur du câble.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -309,6 +513,15 @@ Vlan    Mac Address       Type        Ports
                     <div class="scenario__why"><p>C'est l'<strong>inondation</strong> (<em>flooding</em>). Quand la machine répond, le switch apprend sa MAC et son port grâce à l'adresse source : la trame suivante ira directement au bon port.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Une MAC = 48 bits en hexadécimal : 3 octets de <strong>fabricant</strong> (OUI) + 3 octets de numéro de carte ; <code>FF-FF-FF-FF-FF-FF</code> = broadcast.</li>
+                    <li>Le switch <strong>apprend</strong> les MAC sources, <strong>commute</strong> vers la MAC de destination connue, <strong>inonde</strong> l'inconnu et les broadcasts, et <strong>oublie</strong> les entrées inutilisées.</li>
+                    <li>Un switch découpe les collisions, pas les broadcasts : pour ça, il faut un routeur ou des VLAN.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 04 -->
@@ -317,6 +530,24 @@ Vlan    Mac Address       Type        Ports
             <h2 class="chapter__title">L'adresse IPv4, le masque et la passerelle</h2>
             <p class="chapter__intro">Une machine a besoin de <strong>quatre</strong> réglages pour vivre sur un réseau IP : une adresse, un masque, une passerelle et un serveur DNS. Ce chapitre explique les trois premiers ; le DNS a son propre chapitre.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Nommer les quatre réglages IP d'une machine et dire à quoi sert chacun.</li>
+                    <li>Dire, d'après l'adresse et le masque, si une destination est locale ou distante.</li>
+                    <li>Reconnaître les plages spéciales (privées, boucle locale, <code>169.254.x.x</code>).</li>
+                    <li>Poser une adresse fixe permanente sur une VM Debian et la vérifier.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#modeles">OSI et TCP/IP</a> et <a href="#ethernet">Ethernet</a> · 40 min · un PC Windows et, pour le lab, une VM Debian (module <a href="hyperv.html">Hyper-V</a>).</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi une machine a besoin de quatre réglages</h3>
+                <p>Un poste neuf branché sur le réseau de l'entreprise reste muet tant qu'il n'a pas de quoi répondre à trois questions : qui suis-je, qui est dans mon réseau, et par où sortir pour le reste. Une seule valeur fausse suffit à couper une partie du réseau, et les symptômes (« ça marche chez les voisins, pas chez moi ») désorientent si on ne sait pas lequel des réglages incriminer.</p>
+                <p>Savoir lire ces réglages est le premier geste de tout dépannage : avant de soupçonner le serveur ou le routeur, on regarde ce que la machine croit être son réseau.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>Les quatre réglages</h3>
             <div class="table-wrap">
                 <table>
@@ -358,7 +589,39 @@ Vlan    Mac Address       Type        Ports
                     </tbody>
                 </table>
             </div>
-            <div class="verify">
+            <p class="note">Sources : <a href="https://www.rfc-editor.org/rfc/rfc1918" rel="noopener">RFC 1918 — Address Allocation for Private Internets</a> (plages privées) ; <a href="https://www.rfc-editor.org/rfc/rfc3927" rel="noopener">RFC 3927 — Dynamic Configuration of IPv4 Link-Local Addresses</a> (<code>169.254.0.0/16</code> quand aucune configuration n'est disponible) ; <a href="https://www.rfc-editor.org/rfc/rfc791" rel="noopener">RFC 791 — Internet Protocol</a> (adresse de 32 bits).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Un poste en <code>192.168.1.25/24</code> : local ou distant ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le réseau du poste</p>
+                        <p class="walk__head">Le masque <code>/24</code> fait du réseau <code>192.168.1.0/24</code></p>
+                        <p>Les trois premiers octets sont la partie réseau : le poste est dans <code>192.168.1.0/24</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · destination <code>192.168.1.40</code></p>
+                        <p class="walk__head">Même réseau : envoi direct</p>
+                        <p>Les trois premiers octets sont identiques : la destination est locale. Le poste cherche sa MAC par ARP et envoie la trame directement.</p>
+                        <p class="walk__change">Pas de routeur.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · destination <code>192.168.5.10</code></p>
+                        <p class="walk__head">Autre réseau : on passe par la passerelle</p>
+                        <p>Le troisième octet diffère (5 au lieu de 1) : réseau <code>192.168.5.0/24</code>, donc distant. La trame part vers la MAC de la passerelle <code>192.168.1.1</code>, avec l'IP <code>192.168.5.10</code> dans le paquet.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · avec un masque faux</p>
+                        <p class="walk__head">Un <code>/16</code> change la décision</p>
+                        <p>En <code>/16</code>, le réseau du poste devient <code>192.168.0.0/16</code> et contient <code>192.168.5.10</code> : le poste le croit local, cherche sa MAC par ARP, et n'obtient aucune réponse.</p>
+                        <p class="walk__change">Même adresse, autre masque : autre décision.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Afficher les quatre réglages d'une machine.</p>
             <div class="terminal">
@@ -406,10 +669,23 @@ Vlan    Mac Address       Type        Ports
                 </ol>
             </div>
             <div class="tool" data-tool="ipcalc"><noscript><p>Cet outil a besoin de JavaScript.</p></noscript></div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>IP + masque disent <strong>où je suis</strong> ; la passerelle dit <strong>par où sortir</strong> ; le DNS dit <strong>comment s'appelle ce que je cherche</strong>. Une adresse en <code>169.254.x.x</code> n'est jamais une configuration : c'est un DHCP qui n'a pas répondu.</p>
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — local ou distant ?</p>
+                <p>Un poste a l'adresse <code>172.16.50.20/24</code> et la passerelle <code>172.16.50.1</code>. Pour chaque destination, dis s'il envoie directement ou à la passerelle : <code>172.16.50.200</code> et <code>172.16.51.20</code>.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>172.16.50.200</code> est dans <code>172.16.50.0/24</code> : envoi <strong>direct</strong>. <code>172.16.51.20</code> est dans <code>172.16.51.0/24</code> : envoi à la <strong>passerelle</strong> <code>172.16.50.1</code>.</p></div></details>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un poste a l'adresse <code>10.1.1.130</code> avec le masque <code>255.255.255.128</code>. Parmi <code>10.1.1.5</code> et <code>10.1.1.200</code>, laquelle joint-il sans passerelle ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Le masque <code>/25</code> donne les blocs <code>10.1.1.0/25</code> (de .0 à .127) et <code>10.1.1.128/25</code> (de .128 à .255). Le poste est dans le second : il joint <code>10.1.1.200</code> directement ; <code>10.1.1.5</code> exige la passerelle.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — un serveur injoignable depuis un seul poste</p>
+                <p>Un poste configuré à la main joint son voisin et la passerelle, mais le ping vers <code>192.168.5.10</code> reste sans réponse. Les autres postes joignent ce serveur sans difficulté.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le problème est propre à ce poste : on compare son <code>ipconfig /all</code> à celui d'un collègue qui fonctionne. <strong>Cause probable :</strong> un masque trop large (<code>/16</code> au lieu de <code>/24</code>) : le poste croit que <code>192.168.5.10</code> est dans son réseau, ne passe pas par la passerelle et n'obtient jamais de réponse à son ARP. <strong>Correctif :</strong> corriger le masque.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -422,6 +698,16 @@ Vlan    Mac Address       Type        Ports
                     <div class="scenario__why"><p>192.168.2.1 n'est pas dans 192.168.1.0/24 : le poste ne peut pas la joindre par ARP, donc rien ne sort du réseau local. Erreur de saisie classique sur une IP fixe.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>IP + masque disent <strong>où je suis</strong> ; la passerelle dit <strong>par où sortir</strong> ; le DNS dit <strong>comment s'appelle ce que je cherche</strong>.</li>
+                    <li>Avant d'envoyer, la machine applique son masque à l'IP de destination : même réseau, envoi direct ; sinon, envoi à la passerelle.</li>
+                    <li>Une adresse en <code>169.254.x.x</code> n'est jamais une configuration : c'est un DHCP qui n'a pas répondu.</li>
+                    <li>Une adresse posée avec <code>ip addr add</code> disparaît au redémarrage ; celle du fichier <code>/etc/network/interfaces</code> reste.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 05 -->
@@ -430,13 +716,30 @@ Vlan    Mac Address       Type        Ports
             <h2 class="chapter__title">ARP : de l'adresse IP à l'adresse MAC</h2>
             <p class="chapter__intro">IP dit <em>à qui</em> on parle ; Ethernet a besoin de la MAC pour livrer la trame. <strong>ARP</strong> (<em>Address Resolution Protocol</em>, RFC 826) fait le lien, sur le réseau local uniquement.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Expliquer pourquoi IP a besoin d'ARP et décrire l'échange question en broadcast, réponse en unicast.</li>
+                    <li>Dire sur quelle adresse un poste fait son ARP, selon que la destination est locale ou distante.</li>
+                    <li>Lire et vider le cache ARP d'un poste.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#ethernet">Ethernet, MAC, switch</a> et <a href="#ipv4">IPv4, masque, passerelle</a> · 25 min · un PC Windows (ou une VM Linux) sur un réseau local.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi IP ne suffit pas pour livrer une trame</h3>
+                <p>Un programme ne connaît qu'une adresse IP ; la carte réseau ne sait envoyer une trame qu'à une adresse MAC. Entre les deux, il manque un traducteur. Sans lui, un poste connaît l'IP de sa passerelle (elle est dans sa configuration) mais ne sait pas à quelle carte remettre la trame.</p>
+                <p>C'est aussi un point de dépannage : quand un poste « voit » son réseau en IP mais n'obtient pas de MAC, la panne est sous IP, dans le câble, le VLAN ou le port de switch.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <div class="steps">
                 <div class="step"><div class="step__num">1</div><div class="step__body"><strong>La question, en broadcast</strong><p>« Qui a <code>192.168.1.1</code> ? Réponds à <code>192.168.1.25</code> » — trame envoyée à <code>FF-FF-FF-FF-FF-FF</code>, reçue par tout le réseau local.</p></div></div>
                 <div class="step"><div class="step__num">2</div><div class="step__body"><strong>La réponse, en unicast</strong><p>Seule la machine concernée répond : « <code>192.168.1.1</code>, c'est <code>00-1A-2B-3C-4D-5E</code> ».</p></div></div>
                 <div class="step"><div class="step__num">3</div><div class="step__body"><strong>La mémoire</strong><p>La réponse est gardée dans le <strong>cache ARP</strong> : sur un poste Windows, une entrée reste « Reachable » de 15 à 45 secondes, puis passe en « Stale » ; 4 heures par défaut sur un routeur Cisco. Pas de nouvelle question à chaque paquet.</p></div></div>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">Le point qui piège</p>
+            <div class="tip">
+                <p class="tip__label">Le point qui piège</p>
                 <p>Pour joindre une machine <strong>distante</strong>, on ne fait jamais d'ARP sur elle : on fait un ARP sur la <strong>passerelle</strong>. Le cache ARP d'un poste ne contient donc que des machines de son propre réseau.</p>
             </div>
             <h3>Ce qu'ARP révèle en dépannage</h3>
@@ -445,7 +748,33 @@ Vlan    Mac Address       Type        Ports
                 <li><strong>Conflit d'adresse IP</strong> : deux machines répondent pour la même IP ; Windows le signale (« conflit d'adresses IP détecté ») grâce à un ARP envoyé au démarrage, l'<em>ARP gratuit</em>.</li>
                 <li><strong>ARP spoofing</strong> : un attaquant répond à la place de la passerelle et voit passer le trafic. La parade côté switch Cisco : <em>DHCP snooping</em> + <em>Dynamic ARP Inspection</em> (module <a href="cisco-securite.html">Cisco sécurité</a>).</li>
             </ul>
-            <div class="verify">
+            <p class="note">Source : <a href="https://www.rfc-editor.org/rfc/rfc826" rel="noopener">RFC 826 — An Ethernet Address Resolution Protocol</a> (un protocole qui traduit une adresse de la couche réseau, comme une IP, en adresse Ethernet de 48 bits).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">PC1 (<code>192.168.1.25</code>) pingue sa passerelle <code>192.168.1.1</code>, cache vide</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · la décision</p>
+                        <p class="walk__head">Destination dans le même réseau : il faut une MAC</p>
+                        <p><code>192.168.1.1</code> est dans <code>192.168.1.0/24</code>. PC1 connaît l'IP mais pas la MAC, et son cache ARP est vide pour cette adresse.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la question</p>
+                        <p class="walk__head">Une trame en broadcast</p>
+                        <p>PC1 envoie à <code>FF-FF-FF-FF-FF-FF</code> : « Qui a <code>192.168.1.1</code> ? ». Le switch inonde la trame, tout le réseau local la reçoit.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · la réponse</p>
+                        <p class="walk__head">Seule la passerelle répond, en unicast</p>
+                        <p>« <code>192.168.1.1</code>, c'est <code>00-1A-2B-3C-4D-5E</code> ». PC1 l'inscrit dans son cache ARP, puis envoie le ping dans une trame vers cette MAC.</p>
+                        <p class="walk__change">Au ping suivant, pas de nouvelle question : l'entrée est dans le cache.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Voir le cache ARP après avoir joint la passerelle.</p>
             <div class="terminal">
@@ -463,7 +792,7 @@ Adresse Internet      Adresse physique      Type
 192.168.1.255         ff-ff-ff-ff-ff-ff     statique</pre>
                 <p class="verify__fail">Si <code>ping</code> vers la passerelle échoue et qu'aucune entrée n'apparaît (ou <code>INCOMPLETE</code> sous Linux), le problème est en dessous d'IP : câble, Wi-Fi, VLAN ou port du switch.</p>
             </div>
-            <div class="cmdex" data-accept="arp -d \*;;netsh interface ip delete arpcache;;Remove-NetNeighbor( .*)?" data-hint="la commande s&#x27;appelle comme le protocole, avec l&#x27;option qui supprime (delete).">
+            <div class="cmdex" data-bloc="7" data-accept="arp -d \*;;netsh interface ip delete arpcache;;Remove-NetNeighbor( .*)?" data-hint="la commande s&#x27;appelle comme le protocole, avec l&#x27;option qui supprime (delete).">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>Sous Windows, vide le cache ARP. Une seule commande.</p>
                 <details class="reveal">
@@ -471,7 +800,7 @@ Adresse Internet      Adresse physique      Type
                     <div class="reveal__body"><p><code>arp -d *</code> vide le cache ; <code>netsh interface ip delete arpcache</code> fait pareil. Utile après avoir changé une carte ou une VM de place : sinon le poste continue d'envoyer à l'ancienne MAC pendant quelques minutes.</p></div>
                 </details>
             </div>
-            <div class="exo">
+            <div class="exo" data-bloc="7">
                 <p class="exo__label">Exercice — qui fait un ARP sur qui ?</p>
                 <p>PC1 (<code>192.168.1.25/24</code>, passerelle <code>192.168.1.1</code>) envoie un ping à PC2 (<code>192.168.1.40</code>), puis à un serveur web <code>203.0.113.10</code>. Pour chaque ping, sur quelle adresse IP PC1 fait-il sa requête ARP ?</p>
                 <details class="reveal">
@@ -479,6 +808,18 @@ Adresse Internet      Adresse physique      Type
                     <div class="reveal__body"><p>Vers <strong>PC2</strong> : même réseau (<code>192.168.1.0/24</code>), ARP sur <code>192.168.1.40</code> directement. Vers le <strong>serveur web</strong> : réseau différent, donc ARP sur la <strong>passerelle</strong> <code>192.168.1.1</code>. La trame part avec la MAC de la passerelle et l'IP du serveur. PC1 ne connaîtra jamais la MAC du serveur web.</p></div>
                 </details>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un poste <code>10.0.0.9/24</code>, passerelle <code>10.0.0.254</code>, pingue successivement <code>10.0.0.12</code>, <code>10.0.0.77</code>, <code>10.0.5.3</code> et <code>8.8.8.8</code>. Sur combien d'adresses IP différentes fait-il un ARP, et lesquelles ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><strong>Trois</strong> : <code>10.0.0.12</code> et <code>10.0.0.77</code> (dans <code>10.0.0.0/24</code>, ARP direct) et <code>10.0.0.254</code> (la passerelle), qui sert pour <code>10.0.5.3</code> et <code>8.8.8.8</code>, tous deux hors du réseau.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la passerelle ne répond pas</p>
+                <p>Le câble d'un poste est branché et le voyant est allumé, mais le ping vers la passerelle échoue. La commande <code>arp -a</code> n'affiche aucune entrée pour l'adresse de la passerelle.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> sans entrée ARP, le poste n'a obtenu aucune réponse à sa question en broadcast : la trame n'arrive pas, ou la réponse ne revient pas. <strong>Cause probable :</strong> un problème sous IP — câble ou Wi-Fi, mauvais VLAN, port du switch désactivé. <strong>Correctif :</strong> vérifier le port et le VLAN du switch, puis refaire <code>ping</code> et <code>arp -a</code>.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -491,6 +832,15 @@ Adresse Internet      Adresse physique      Type
                     <div class="scenario__why"><p>Même IP, nouvelle MAC : les postes envoient leurs trames à une carte qui n'existe plus, jusqu'à l'expiration de l'entrée ARP. <code>arp -d *</code> (ou un redémarrage) règle le problème tout de suite.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>ARP traduit une IP en MAC sur le réseau local : question en <strong>broadcast</strong>, réponse en <strong>unicast</strong>, résultat gardé dans le <strong>cache ARP</strong>.</li>
+                    <li>Pour joindre une machine <strong>distante</strong>, on fait l'ARP sur la <strong>passerelle</strong>, jamais sur la machine.</li>
+                    <li>Pas d'entrée pour la passerelle dans <code>arp -a</code> : la panne est sous IP (câble, VLAN, port). Cache à vider : <code>arp -d *</code>.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 06 -->
@@ -499,6 +849,24 @@ Adresse Internet      Adresse physique      Type
             <h2 class="chapter__title">TCP, UDP et les ports</h2>
             <p class="chapter__intro">L'adresse IP amène le paquet à la bonne machine ; le <strong>port</strong> l'amène au bon programme. La couche transport offre deux services très différents : TCP, fiable et ordonné, et UDP, léger et sans garantie.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Distinguer TCP et UDP et dire quel transport convient à quel service.</li>
+                    <li>Décrire la poignée de main TCP en trois temps (SYN, SYN-ACK, ACK).</li>
+                    <li>Citer le port et le protocole des services courants (SSH, DNS, HTTPS, SMB, RDP…).</li>
+                    <li>Interpréter une réponse à une tentative de connexion (SYN-ACK, RST, silence) et tester un port à distance.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#modeles">OSI et TCP/IP</a> et <a href="#ipv4">IPv4, masque, passerelle</a> · 40 min · un PC Windows, ou une VM Linux, et un serveur à tester.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi les ports existent</h3>
+                <p>Un serveur fait souvent tourner plusieurs services à la fois : un site web, un partage de fichiers, un accès à distance. Une seule adresse IP les porte tous ; sans autre repère, un paquet arrivé sur la machine ne saurait pas à quel programme le remettre. Le port est ce repère : l'adresse désigne la machine, le port désigne le service.</p>
+                <p>C'est aussi ce que filtre un pare-feu. Quand « le ping marche mais le service non », la panne est presque toujours ici : le port est fermé, ou bloqué en route.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <div class="cards">
                 <div class="card">
                     <h3>TCP — RFC 9293</h3>
@@ -510,12 +878,7 @@ Adresse Internet      Adresse physique      Type
                 </div>
             </div>
             <h3>La poignée de main TCP</h3>
-            <div class="terminal">
-                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Ce que montre une capture Wireshark</span></div>
-                <pre class="terminal__code">PC 51234 → Serveur 443   [SYN]       « je veux ouvrir, mon n° de séquence est x »
-Serveur 443 → PC 51234   [SYN, ACK]  « d'accord, le mien est y, j'attends x+1 »
-PC 51234 → Serveur 443   [ACK]       « bien reçu, j'attends y+1 » — connexion établie</pre>
-            </div>
+            <p>Avant d'échanger des données, TCP ouvre la connexion en trois messages : le client envoie un <code>SYN</code> avec un numéro de séquence, le serveur répond par un <code>SYN, ACK</code> qui confirme et donne le sien, puis le client termine par un <code>ACK</code>. La capture Wireshark de ces trois messages est reproduite plus bas.</p>
             <p>Trois réponses possibles quand on tente une connexion — et elles ne disent pas la même chose :</p>
             <div class="table-wrap">
                 <table>
@@ -547,7 +910,41 @@ PC 51234 → Serveur 443   [ACK]       « bien reçu, j'attends y+1 » — conne
                     </tbody>
                 </table>
             </div>
-            <div class="verify">
+            <p class="note">Sources : <a href="https://www.rfc-editor.org/rfc/rfc9293" rel="noopener">RFC 9293 — Transmission Control Protocol (TCP)</a> (connexion établie par échange de <code>SYN</code>, <code>SYN, ACK</code>, <code>ACK</code>) ; <a href="https://www.rfc-editor.org/rfc/rfc768" rel="noopener">RFC 768 — User Datagram Protocol</a> ; <a href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml" rel="noopener">IANA — Service Name and Transport Protocol Port Number Registry</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Un client tente d'ouvrir le port 443 de <code>srv-web</code> : trois issues possibles</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le port est ouvert</p>
+                        <p class="walk__head">Le serveur répond <code>SYN, ACK</code></p>
+                        <p>Le client envoie son <code>SYN</code>, reçoit un <code>SYN, ACK</code> et conclut par un <code>ACK</code> : un service écoute. <code>Test-NetConnection</code> affiche <code>TcpTestSucceeded : True</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · rien n'écoute</p>
+                        <p class="walk__head">La machine répond <code>RST</code> : « connexion refusée »</p>
+                        <p>La machine est joignable, mais aucun service n'écoute sur ce port : service arrêté ou mauvais numéro de port.</p>
+                        <p class="walk__change">Réponse immédiate : le réseau fonctionne, la panne est au bout.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · aucune réponse</p>
+                        <p class="walk__head">Le <code>SYN</code> est jeté en route : expiration du délai</p>
+                        <p>Aucune réponse n'arrive : un pare-feu, une route manquante ou une machine éteinte. C'est une panne <strong>en chemin</strong>, pas au bout.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <h3>Ce que montre une capture de la poignée de main</h3>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Ce que montre une capture Wireshark</span></div>
+                <pre class="terminal__code">PC 51234 → Serveur 443   [SYN]       « je veux ouvrir, mon n° de séquence est x »
+Serveur 443 → PC 51234   [SYN, ACK]  « d'accord, le mien est y, j'attends x+1 »
+PC 51234 → Serveur 443   [ACK]       « bien reçu, j'attends y+1 » — connexion établie</pre>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Voir ce qui écoute sur une machine, et tester un port à distance.</p>
             <div class="terminal">
@@ -565,7 +962,7 @@ RemotePort       : 443
 TcpTestSucceeded : True</pre>
                 <p class="verify__fail"><code>TcpTestSucceeded : False</code> avec un ping qui marche : soit rien n'écoute (vérifier le service sur le serveur avec <code>netstat</code>/<code>ss</code>), soit un pare-feu bloque (Windows Defender Firewall, ufw, ACL).</p>
             </div>
-            <div class="cmdex" data-accept="Test-NetConnection (-ComputerName )?srv-ad01 -Port 3389;;tnc (-ComputerName )?srv-ad01 -Port 3389;;Test-NetConnection (-ComputerName )?srv-ad01 -CommonTCPPort RDP;;tnc (-ComputerName )?srv-ad01 -CommonTCPPort RDP" data-hint="la cmdlet commence par Test-Net… et prend un paramètre -Port.">
+            <div class="cmdex" data-bloc="7" data-accept="Test-NetConnection (-ComputerName )?srv-ad01 -Port 3389;;tnc (-ComputerName )?srv-ad01 -Port 3389;;Test-NetConnection (-ComputerName )?srv-ad01 -CommonTCPPort RDP;;tnc (-ComputerName )?srv-ad01 -CommonTCPPort RDP" data-hint="la cmdlet commence par Test-Net… et prend un paramètre -Port.">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>En PowerShell, teste si le port <strong>3389</strong> (RDP) répond sur la machine <code>srv-ad01</code>.</p>
                 <details class="reveal">
@@ -574,10 +971,23 @@ TcpTestSucceeded : True</pre>
                 </details>
             </div>
             <div class="tool" data-tool="ports"><noscript><p>Cet outil a besoin de JavaScript.</p></noscript></div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Un service = une <strong>IP</strong> + un <strong>protocole</strong> + un <strong>port</strong>. « Connexion refusée » (RST) veut dire que la machine est là mais pas le service ; « délai expiré » veut dire que quelque chose a jeté le paquet en route — souvent un pare-feu.</p>
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — associer service, protocole et port</p>
+                <p>Donne le protocole de transport et le port de : SSH, DNS, DHCP (serveur) et RDP.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>SSH : TCP 22. DNS : UDP et TCP 53. DHCP (serveur) : UDP 67 (le client utilise 68). RDP : TCP 3389 (UDP aussi).</p></div></details>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Une application de téléphonie envoie la voix en flux continu (RTP). Choisit-on TCP ou UDP, et pourquoi ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><strong>UDP</strong> : il n'ajoute ni connexion ni retransmission, donc une latence minimale. Pour de la voix en direct, un paquet perdu retransmis arriverait trop tard pour servir.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — délai dépassé vers un serveur SQL</p>
+                <p>Depuis un poste, l'application affiche « délai d'attente dépassé » en se connectant au serveur SQL (port 1433). Le ping vers le serveur répond. Le message n'est pas « connexion refusée » ; depuis d'autres postes du même réseau, l'application fonctionne.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le ping passe, donc le réseau marche jusqu'au serveur ; on teste le port avec <code>Test-NetConnection srv-sql -Port 1433</code> et on distingue « refusé » (RST) de « délai dépassé » (rien). <strong>Cause probable :</strong> un délai dépassé signifie que le <code>SYN</code> est jeté en route, pas que le service est arrêté (qui donnerait un RST) : un pare-feu ou une ACL bloque ce poste. <strong>Correctif :</strong> chercher la règle de pare-feu qui concerne ce poste et son port 1433.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -590,6 +1000,16 @@ TcpTestSucceeded : True</pre>
                     <div class="scenario__why"><p>Le réseau fonctionne jusqu'à la couche 3 ; c'est la couche 4 qui échoue. Sur le serveur : le service écoute-t-il (<code>netstat -ano | findstr :443</code>) ? Le pare-feu autorise-t-il le port ?</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Un service = une <strong>IP</strong> + un <strong>protocole</strong> (TCP ou UDP) + un <strong>port</strong>.</li>
+                    <li>TCP : connexion en trois temps, accusés, retransmission ; UDP : sans connexion ni garantie, rapide (DNS, DHCP, voix).</li>
+                    <li>« Connexion refusée » (RST) : la machine est là, pas le service ; « délai expiré » : quelque chose a jeté le paquet en route — souvent un pare-feu.</li>
+                    <li>Ports clés : 22 SSH, 53 DNS, 80 HTTP, 443 HTTPS, 445 SMB, 3389 RDP ; test : <code>Test-NetConnection hôte -Port n</code>.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 07 -->
@@ -598,6 +1018,23 @@ TcpTestSucceeded : True</pre>
             <h2 class="chapter__title">DNS : des noms aux adresses</h2>
             <p class="chapter__intro">Personne ne retient <code>203.0.113.10</code>. Le <strong>DNS</strong> (<em>Domain Name System</em>, RFC 1034/1035) est l'annuaire distribué qui traduit les noms en adresses. Quand « Internet ne marche plus », c'est très souvent lui.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Décrire les étapes d'une résolution de nom, du cache du poste jusqu'au serveur qui fait autorité.</li>
+                    <li>Choisir le type d'enregistrement (A, CNAME, MX, SRV…) qui correspond à un besoin.</li>
+                    <li>Interroger le DNS avec <code>nslookup</code> ou <code>Resolve-DnsName</code> et reconnaître qu'une panne vient du DNS plutôt que du réseau.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#ipv4">IPv4, masque, passerelle</a> et <a href="#transport">TCP, UDP et les ports</a> · 30 min · un PC Windows (ou une VM Linux) avec accès à un serveur DNS.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi un annuaire des noms</h3>
+                <p>Une adresse IP change quand on déplace un serveur ou qu'on change d'hébergeur ; un nom, lui, reste. Sans annuaire, chaque poste devrait connaître les adresses de tous les services qu'il utilise, et les mettre à jour à la main à chaque changement.</p>
+                <p>C'est aussi la première chose à regarder quand « Internet ne marche plus » : le réseau peut être intact alors que la traduction du nom échoue. Savoir séparer les deux évite de chercher au mauvais endroit.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>Une hiérarchie, de droite à gauche</h3>
             <p><code>www.exemple.be.</code> se lit de droite à gauche : la <strong>racine</strong> (le point final, implicite), le domaine de premier niveau <strong>.be</strong> (TLD), le domaine <strong>exemple</strong>, puis l'hôte <strong>www</strong>. Chaque niveau délègue au suivant : les serveurs racine savent qui gère <code>.be</code>, qui sait qui gère <code>exemple.be</code>.</p>
             <h3>Une résolution, pas à pas</h3>
@@ -628,7 +1065,38 @@ TcpTestSucceeded : True</pre>
                 <p class="tip__label">DNS en entreprise</p>
                 <p>Dans un domaine Active Directory, les postes doivent utiliser le DNS des contrôleurs de domaine (sauf scénario d'intégration à un DNS existant, où Microsoft recommande « any DNS server on the network »). Mettre <code>8.8.8.8</code> en DNS sur un poste du domaine casse l'ouverture de session et les GPO : Internet ne connaît pas <code>orion.local</code> ni ses enregistrements SRV. C'est le DNS du DC qui, lui, transfère (<em>redirecteurs</em>) vers Internet.</p>
             </div>
-            <div class="verify">
+            <p class="note">Source : <a href="https://www.rfc-editor.org/rfc/rfc1034" rel="noopener">RFC 1034 — Domain Names: Concepts and Facilities</a> (hiérarchie, résolveur, délégation et TTL).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">PC1 ouvre <code>www.exemple.be</code> pour la première fois de la journée</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · en local</p>
+                        <p class="walk__head">Cache et fichier <code>hosts</code>, sans résultat</p>
+                        <p>PC1 ne connaît pas le nom : rien dans son cache, rien dans <code>hosts</code>. Il faut interroger un serveur.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la question</p>
+                        <p class="walk__head">Une requête récursive vers le DNS configuré</p>
+                        <p>PC1 demande à son serveur DNS (ici la box, <code>192.168.1.1</code>) : « donne-moi l'adresse de <code>www.exemple.be</code> ». Il attend une réponse finale, pas une piste.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le travail du résolveur</p>
+                        <p class="walk__head">Racine, puis <code>.be</code>, puis <code>exemple.be</code></p>
+                        <p>Le serveur interroge la racine, qui le renvoie vers les serveurs de <code>.be</code>, qui le renvoient vers ceux d'<code>exemple.be</code>. Le dernier connaît l'enregistrement A de <code>www</code> : c'est <code>203.0.113.10</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · la réponse</p>
+                        <p class="walk__head">PC1 reçoit l'IP, avec un TTL</p>
+                        <p>La réponse est gardée en cache pendant son TTL, puis PC1 ouvre sa connexion vers <code>203.0.113.10</code>.</p>
+                        <p class="walk__change">Si l'on rouvre le site avant la fin du TTL, aucune de ces étapes n'est refaite : la réponse sort du cache.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Interroger le DNS, et voir le cache du poste.</p>
             <div class="terminal">
@@ -650,7 +1118,7 @@ Nom :    www.exemple.be
 Address:  203.0.113.10</pre>
                 <p class="verify__fail"><em>Nonexistent domain</em> = le nom n'existe pas (faute de frappe, mauvaise zone). <em>Request timed out</em> = le serveur DNS ne répond pas (mauvaise IP de DNS, port 53 bloqué). Si <code>ping 203.0.113.10</code> marche mais pas <code>ping www.exemple.be</code>, le réseau va bien : c'est le DNS.</p>
             </div>
-            <div class="cmdex" data-accept="Resolve-DnsName (-Name )?exemple\.be -Type MX;;Resolve-DnsName -Type MX (-Name )?exemple\.be;;nslookup -(q|type|querytype)=mx exemple\.be" data-hint="Resolve-DnsName, avec le paramètre -Type.">
+            <div class="cmdex" data-bloc="7" data-accept="Resolve-DnsName (-Name )?exemple\.be -Type MX;;Resolve-DnsName -Type MX (-Name )?exemple\.be;;nslookup -(q|type|querytype)=mx exemple\.be" data-hint="Resolve-DnsName, avec le paramètre -Type.">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>En PowerShell, cherche l'enregistrement <strong>MX</strong> du domaine <code>exemple.be</code>.</p>
                 <details class="reveal">
@@ -658,10 +1126,26 @@ Address:  203.0.113.10</pre>
                     <div class="reveal__body"><p><code>Resolve-DnsName exemple.be -Type MX</code>. L'équivalent classique : <code>nslookup -type=MX exemple.be</code>. La réponse donne la priorité (le plus petit nombre gagne) et le nom du serveur de messagerie.</p></div>
                 </details>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Un nom se résout par le <strong>cache</strong>, le fichier <strong>hosts</strong>, puis le <strong>serveur DNS</strong> configuré. Test décisif : si l'IP répond et pas le nom, c'est le DNS. En domaine AD, les postes ne parlent qu'au DNS des contrôleurs de domaine.</p>
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">Exercice — quel enregistrement ?</p>
+                <p>Trois besoins : (a) <code>intranet.orion.local</code> doit être un second nom pour le serveur <code>srv-web01.orion.local</code> ; (b) les mails de <code>exemple.be</code> doivent arriver sur <code>mail.exemple.be</code> ; (c) un poste doit trouver les contrôleurs de domaine d'<code>orion.local</code>. Quel type d'enregistrement pour chacun ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>(a) <strong>CNAME</strong> : un alias vers un autre nom. (b) <strong>MX</strong> : il désigne le serveur de messagerie du domaine, avec une priorité. (c) <strong>SRV</strong> : il dit où trouver un service, ici <code>_ldap._tcp.orion.local</code>.</p></div>
+                </details>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>L'adresse du site <code>www.exemple.be</code> va changer vendredi. Son enregistrement A a un TTL de 86 400 secondes. Combien de temps, au pire, des postes verront-ils encore l'ancienne adresse après le changement, et que fais-tu quelques jours avant pour réduire ce délai ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>86 400 s = <strong>24 heures</strong> au pire, car chaque cache peut garder l'ancienne réponse jusqu'à la fin de son TTL. Quelques jours avant, on <strong>baisse le TTL</strong> de l'enregistrement (par exemple à quelques minutes) : une fois l'ancien TTL écoulé, les caches se renouvellent vite au moment du changement.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — plus d'ouverture de session de domaine</p>
+                <p>Un poste du domaine <code>orion.local</code> navigue sur Internet sans problème, mais l'ouverture de session de domaine échoue et les stratégies de groupe ne s'appliquent plus. La veille, quelqu'un a modifié les paramètres de la carte réseau de ce poste pour « régler une lenteur ».</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> Internet marche, donc le réseau est bon ; on regarde le serveur DNS utilisé avec <code>ipconfig /all</code>, puis on tente <code>Resolve-DnsName _ldap._tcp.orion.local -Type SRV</code>. <strong>Cause probable :</strong> un DNS public (par exemple <code>8.8.8.8</code>) a été saisi sur le poste : Internet ne connaît ni <code>orion.local</code> ni ses enregistrements SRV, donc le poste ne trouve pas son contrôleur de domaine. <strong>Correctif :</strong> remettre le DNS des contrôleurs de domaine ; c'est ce DNS qui transfère vers Internet.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -674,6 +1158,15 @@ Address:  203.0.113.10</pre>
                     <div class="scenario__why"><p>Par IP ça marche, par nom non : c'est le DNS, presque toujours. <code>ipconfig /all</code> pour voir le serveur DNS utilisé, puis <code>nslookup SRV-FILE01</code> pour voir ce qu'il répond.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Un nom se résout par le <strong>cache</strong>, le fichier <strong>hosts</strong>, puis le <strong>serveur DNS</strong> configuré, qui interroge racine, TLD et zone.</li>
+                    <li>Types à connaître : <strong>A</strong>/<strong>AAAA</strong> (adresse), <strong>CNAME</strong> (alias), <strong>MX</strong> (mail), <strong>SRV</strong> (service), <strong>PTR</strong> (inverse). Le <strong>TTL</strong> fixe la durée du cache.</li>
+                    <li>Test décisif : si l'IP répond et pas le nom, c'est le DNS. En domaine AD, les postes ne parlent qu'au DNS des contrôleurs de domaine.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 08 -->
@@ -682,6 +1175,23 @@ Address:  203.0.113.10</pre>
             <h2 class="chapter__title">DHCP : l'adresse automatique</h2>
             <p class="chapter__intro">Configurer à la main chaque poste serait ingérable. Le serveur <strong>DHCP</strong> (RFC 2131) prête une adresse et tous les réglages qui vont avec, pour une durée limitée : le <strong>bail</strong>.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Décrire l'échange DORA et calculer les moments de renouvellement d'un bail (50 % et 87,5 %).</li>
+                    <li>Concevoir une étendue qui laisse de la place aux adresses fixes (exclusion ou réservation).</li>
+                    <li>Expliquer pourquoi un réseau distant exige un relais DHCP, et diagnostiquer une adresse en <code>169.254.x.x</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#ipv4">IPv4, masque, passerelle</a> et <a href="#transport">TCP, UDP et les ports</a> · 25 min · un PC Windows en adresse automatique.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi ne pas régler chaque poste à la main</h3>
+                <p>Sur un parc de quelques dizaines de postes, saisir adresse, masque, passerelle et DNS sur chacun prend des heures et produit des fautes de frappe ; un seul doublon d'adresse suffit à couper deux machines. Le serveur DHCP centralise ces réglages et les distribue au branchement.</p>
+                <p>Quand un poste n'a plus d'adresse valide, tout le reste tombe : le DHCP est l'un des premiers services à vérifier lors d'un « plus de réseau » sur un seul poste ou sur tout un étage.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>DORA, en quatre messages</h3>
             <div class="table-wrap">
                 <table>
@@ -709,7 +1219,33 @@ Address:  203.0.113.10</pre>
             </div>
             <h3>Le DHCP traverse les routeurs grâce au relais</h3>
             <p>DISCOVER est un broadcast : il ne franchit pas un routeur. Avec un serveur DHCP central et plusieurs réseaux (VLAN), on configure sur l'interface du routeur un <strong>relais DHCP</strong> qui réexpédie le broadcast du client vers le serveur, à une adresse configurée — sur Cisco, <code>ip helper-address 192.168.10.5</code>. Le serveur choisit l'étendue d'après l'adresse de l'interface qui a relayé.</p>
-            <div class="verify">
+            <p class="note">Source : <a href="https://www.rfc-editor.org/rfc/rfc2131" rel="noopener">RFC 2131 — Dynamic Host Configuration Protocol</a> (messages, bail, délais T1 et T2, agent de relais).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Un portable se branche sur le réseau <code>192.168.1.0/24</code> ; bail de 8 h obtenu à 09:12:40</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · Discover</p>
+                        <p class="walk__head">Le client n'a pas d'adresse : il crie</p>
+                        <p>Il envoie un broadcast depuis <code>0.0.0.0:68</code> vers <code>255.255.255.255:67</code>. Le serveur DHCP (la box, <code>192.168.1.1</code>) l'entend, car il est sur le même réseau local.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · Offer, Request, Ack</p>
+                        <p class="walk__head">Offre, acceptation, confirmation</p>
+                        <p>Le serveur propose par exemple <code>192.168.1.42</code> avec masque, passerelle, DNS et bail ; le client accepte en broadcast ; le serveur confirme. L'adresse est maintenant au client.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le bail</p>
+                        <p class="walk__head">Quand le client redemande-t-il ?</p>
+                        <p>Le bail court de 09:12:40 à 17:12:40, soit 8 h. T1 = 50 % = 4 h : le client demande la prolongation au serveur à <strong>13:12:40</strong>. T2 = 87,5 % = 7 h : s'il n'a pas de réponse, il redemande à n'importe quel serveur à <strong>16:12:40</strong>.</p>
+                        <p class="walk__change">Sans réponse à 17:12:40, le client lâche l'adresse et recommence par un Discover.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Rendre puis redemander une adresse, et lire le bail.</p>
             <div class="terminal">
@@ -726,7 +1262,7 @@ Bail expirant. . . . . . . . . . . . . : mardi 6 octobre 2026 17:12:40
 Serveur DHCP . . . . . . . . . . . . . : 192.168.1.1</pre>
                 <p class="verify__fail">Après <code>/renew</code>, une adresse en <code>169.254.x.x</code> : aucun serveur n'a répondu. Vérifier le câble et le VLAN, que le service DHCP tourne, que l'étendue n'est pas <strong>pleine</strong>, et sur un autre réseau que le serveur, la présence du relais (<code>ip helper-address</code>).</p>
             </div>
-            <div class="exo">
+            <div class="exo" data-bloc="7">
                 <p class="exo__label">Exercice — l'étendue mal pensée</p>
                 <p>Un réseau <code>192.168.20.0/24</code>, passerelle <code>.1</code>, deux serveurs en fixe <code>.10</code> et <code>.11</code>, une imprimante en fixe <code>.20</code>. L'étendue DHCP va de <code>.1</code> à <code>.254</code>, sans exclusion. Qu'est-ce qui va arriver, et comment corriger ?</p>
                 <details class="reveal">
@@ -734,10 +1270,18 @@ Serveur DHCP . . . . . . . . . . . . . : 192.168.1.1</pre>
                     <div class="reveal__body"><p>Le serveur DHCP finira par distribuer <code>.1</code>, <code>.10</code>, <code>.11</code> ou <code>.20</code> à un poste : <strong>conflit d'adresses</strong>, et une passerelle qui disparaît par intermittence. Deux corrections propres : réduire l'étendue (<code>.100 → .200</code>) et garder le bas de la plage pour le fixe, ou <strong>exclure</strong> <code>.1 → .20</code>. Encore mieux pour l'imprimante : une <strong>réservation</strong> sur sa MAC.</p></div>
                 </details>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>DHCP = <strong>DORA</strong> en broadcast, un <strong>bail</strong> renouvelé à 50 %, et des options (passerelle, DNS, domaine). Entre réseaux, il faut un <strong>relais</strong>. Les adresses fixes se mettent <strong>hors de l'étendue</strong>, ou en réservation.</p>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un poste obtient un bail de 12 h à 08:00. À quelle heure tente-t-il de le prolonger auprès du serveur, et à quelle heure s'adresse-t-il à n'importe quel serveur s'il n'a pas eu de réponse ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>T1 = 50 % de 12 h = 6 h, donc <strong>14:00</strong>, auprès du serveur qui a prêté l'adresse. T2 = 87,5 % de 12 h = 10 h 30, donc <strong>18:30</strong>, auprès de n'importe quel serveur.</p></div></details>
             </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — les nouveaux appareils n'ont pas d'adresse</p>
+                <p>Dans un petit bureau, tout allait bien. Depuis ce matin, chaque nouvel appareil qui se connecte affiche une adresse en <code>169.254.x.x</code> et n'a aucun accès. Les postes déjà connectés fonctionnent. Le câblage et le VLAN sont corrects et le service DHCP tourne.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> une adresse en <code>169.254.x.x</code> veut dire qu'aucun serveur n'a répondu ; le service tourne, donc on regarde ce que le serveur peut encore distribuer. <strong>Cause probable :</strong> l'étendue est <strong>pleine</strong> : toutes ses adresses sont louées, les anciens appareils gardent leur bail. <strong>Correctif :</strong> agrandir l'étendue, raccourcir le bail ou libérer des baux périmés, puis refaire <code>ipconfig /renew</code> sur un poste en échec.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -750,6 +1294,15 @@ Serveur DHCP . . . . . . . . . . . . . : 192.168.1.1</pre>
                     <div class="scenario__why"><p>Le Discover DHCP est un <strong>broadcast</strong> : il s'arrête au routeur. Le relais (<code>ip helper-address</code> sur Cisco) le transforme en unicast vers le serveur, qui doit aussi avoir une étendue pour ce réseau.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>DHCP = <strong>DORA</strong> en broadcast, puis un <strong>bail</strong> renouvelé à 50 % (T1) et 87,5 % (T2), avec des options : passerelle, DNS, domaine.</li>
+                    <li>Les adresses fixes se mettent <strong>hors de l'étendue</strong> (exclusion) ou en <strong>réservation</strong> sur la MAC.</li>
+                    <li>Entre réseaux, il faut un <strong>relais</strong> (<code>ip helper-address</code>). Une adresse en <code>169.254.x.x</code> : aucun serveur n'a répondu (câble, VLAN, service, étendue pleine, relais).</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 09 -->
@@ -758,6 +1311,23 @@ Serveur DHCP . . . . . . . . . . . . . : 192.168.1.1</pre>
             <h2 class="chapter__title">Routage et NAT</h2>
             <p class="chapter__intro">Un routeur décide, paquet par paquet, par où envoyer chaque destination. Il s'appuie sur sa <strong>table de routage</strong>. Et pour qu'un réseau privé sorte sur Internet, il faut en plus traduire les adresses : le <strong>NAT</strong>.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Choisir la route qu'utilise un routeur pour une destination, d'après la règle du préfixe le plus long.</li>
+                    <li>Lire une table de routage et suivre un chemin avec <code>tracert</code>.</li>
+                    <li>Expliquer comment le NAT/PAT fait sortir un réseau privé derrière une seule adresse publique, et ce que cela interdit.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#ipv4">IPv4, masque, passerelle</a>, <a href="#arp">ARP</a> et <a href="#transport">TCP, UDP et les ports</a> · 35 min · un PC Windows ; les extraits Cisco se lisent sans routeur.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi un routeur doit choisir</h3>
+                <p>Un poste ne sait joindre directement que son propre réseau. Pour tout le reste, un routeur doit décider, à chaque paquet, vers quel voisin le pousser : sans table de routage, un site relié à deux autres réseaux enverrait tout au hasard ou nulle part.</p>
+                <p>Et comme les adresses privées ne circulent pas sur Internet, quelque chose doit les traduire à la sortie. C'est ce qui rend « Internet marche » possible à la maison comme en entreprise, et ce qui explique pourquoi on ne peut pas joindre un poste interne depuis l'extérieur.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>La table de routage</h3>
             <p>Chaque ligne dit : « pour atteindre <em>ce réseau</em>, passer par <em>ce voisin</em>, via <em>cette interface</em> ». Trois origines possibles :</p>
             <ul>
@@ -768,7 +1338,45 @@ Serveur DHCP . . . . . . . . . . . . . : 192.168.1.1</pre>
             <p>Ton PC a lui aussi une table de routage — souvent une seule ligne utile : la <strong>route par défaut</strong> <code>0.0.0.0/0</code> vers la passerelle.</p>
             <h3>La règle d'or : le préfixe le plus long</h3>
             <p>Si plusieurs routes correspondent, le routeur prend <strong>la plus précise</strong> (le masque le plus long). Avec les routes <code>10.0.0.0/8</code>, <code>10.1.0.0/16</code> et <code>0.0.0.0/0</code>, un paquet pour <code>10.1.5.9</code> suit <code>/16</code> ; pour <code>10.2.0.1</code>, <code>/8</code> ; pour <code>8.8.8.8</code>, la route par défaut. À égalité de préfixe, c'est sur Cisco la <strong>distance administrative</strong> (confiance dans la source : connecté 0, statique 1, OSPF 110) puis la <strong>métrique</strong> qui départagent. Sous Windows, la route de plus petite métrique est choisie.</p>
-            <div class="verify">
+            <h3>Le NAT : sortir avec une seule adresse publique</h3>
+            <p>Les adresses privées (RFC 1918) ne sont pas routées sur Internet. La box remplace l'adresse source privée par son adresse publique, et retient la correspondance pour faire le chemin inverse au retour. La variante la plus répandue, le <strong>PAT</strong> (<em>NAT overload</em>), distingue les connexions par le <strong>port source</strong> : des centaines de postes derrière une seule IP publique.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Avant la box</th><th>Après la box (vu d'Internet)</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>192.168.1.25:51234 → 203.0.113.10:443</code></td><td><code>198.51.100.7:40001 → 203.0.113.10:443</code></td></tr>
+                        <tr><td><code>192.168.1.40:51234 → 203.0.113.10:443</code></td><td><code>198.51.100.7:40002 → 203.0.113.10:443</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>Conséquence : de l'extérieur, personne ne peut <em>initier</em> une connexion vers un poste interne. Pour publier un serveur, on crée une <strong>redirection de port</strong> (NAT statique, <em>port forwarding</em>) — et on vient d'ouvrir une porte, à protéger.</p>
+            <p class="note">Sources : <a href="https://www.rfc-editor.org/rfc/rfc1812" rel="noopener">RFC 1812 — Requirements for IP Version 4 Routers</a> (choix de la route la plus spécifique) ; <a href="https://www.rfc-editor.org/rfc/rfc3022" rel="noopener">RFC 3022 — Traditional IP Network Address Translator</a> (NAT et traduction de ports) ; <a href="https://www.rfc-editor.org/rfc/rfc1918" rel="noopener">RFC 1918 — Address Allocation for Private Internets</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">PC1 (<code>192.168.1.25</code>) ouvre une page HTTPS sur <code>203.0.113.10</code>, derrière la box</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le poste</p>
+                        <p class="walk__head">Pas dans mon réseau : route par défaut</p>
+                        <p><code>203.0.113.10</code> n'est pas dans <code>192.168.1.0/24</code>. Dans la table de PC1, seule la route par défaut <code>0.0.0.0/0</code> correspond : le paquet part vers la passerelle (la box), après un ARP sur elle.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la box</p>
+                        <p class="walk__head">Route par défaut, puis traduction</p>
+                        <p>La box n'a pas de route plus précise : elle utilise sa route par défaut vers l'opérateur. Avant d'émettre, elle remplace la source <code>192.168.1.25:51234</code> par <code>198.51.100.7:40001</code> et note la correspondance.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le retour</p>
+                        <p class="walk__head">Le serveur répond à l'adresse publique</p>
+                        <p>La réponse revient vers <code>198.51.100.7:40001</code> ; la box retrouve la correspondance et la renvoie à <code>192.168.1.25:51234</code>.</p>
+                        <p class="walk__change">Un deuxième poste utilise le même port source local : la box lui donne <code>:40002</code>, et distingue ainsi les deux connexions.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Lire la table de routage et suivre un chemin.</p>
             <div class="terminal">
@@ -789,19 +1397,7 @@ C        10.0.0.0/30 is directly connected, GigabitEthernet0/0/1
 L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                 <p class="verify__fail">Un <code>tracert</code> qui s'arrête toujours au même saut désigne le dernier routeur qui sait répondre : le problème est juste après (route manquante au retour, pare-feu). Des étoiles isolées au milieu sont souvent normales : certains routeurs ne répondent pas à ce type de sonde.</p>
             </div>
-            <h3>Le NAT : sortir avec une seule adresse publique</h3>
-            <p>Les adresses privées (RFC 1918) ne sont pas routées sur Internet. La box remplace l'adresse source privée par son adresse publique, et retient la correspondance pour faire le chemin inverse au retour. La variante la plus répandue, le <strong>PAT</strong> (<em>NAT overload</em>), distingue les connexions par le <strong>port source</strong> : des centaines de postes derrière une seule IP publique.</p>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Avant la box</th><th>Après la box (vu d'Internet)</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>192.168.1.25:51234 → 203.0.113.10:443</code></td><td><code>198.51.100.7:40001 → 203.0.113.10:443</code></td></tr>
-                        <tr><td><code>192.168.1.40:51234 → 203.0.113.10:443</code></td><td><code>198.51.100.7:40002 → 203.0.113.10:443</code></td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <p>Conséquence : de l'extérieur, personne ne peut <em>initier</em> une connexion vers un poste interne. Pour publier un serveur, on crée une <strong>redirection de port</strong> (NAT statique, <em>port forwarding</em>) — et on vient d'ouvrir une porte, à protéger.</p>
-            <div class="exo">
+            <div class="exo" data-bloc="7">
                 <p class="exo__label">Exercice — quelle route ?</p>
                 <p>Un routeur a ces routes : <code>0.0.0.0/0 via 10.0.0.2</code>, <code>172.16.0.0/16 via 10.0.1.2</code>, <code>172.16.40.0/24 via 10.0.2.2</code>. Par où partent les paquets vers <code>172.16.40.9</code>, <code>172.16.41.9</code> et <code>192.0.2.1</code> ?</p>
                 <details class="reveal">
@@ -809,10 +1405,18 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                     <div class="reveal__body"><p><code>172.16.40.9</code> → <code>10.0.2.2</code> (le <code>/24</code> est le plus long qui correspond). <code>172.16.41.9</code> → <code>10.0.1.2</code> (seul le <code>/16</code> correspond). <code>192.0.2.1</code> → <code>10.0.0.2</code>, la route par défaut.</p></div>
                 </details>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Le routeur choisit la route au <strong>préfixe le plus long</strong>, puis la plus fiable, puis la meilleure métrique. Le <strong>NAT/PAT</strong> fait sortir tout un réseau privé derrière une IP publique ; il empêche aussi, de fait, les connexions entrantes non prévues.</p>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un routeur a ces routes : <code>0.0.0.0/0 → W</code>, <code>10.0.0.0/8 → X</code>, <code>10.20.0.0/16 → Y</code>, <code>10.20.30.0/24 → Z</code>. Pour chacune de ces destinations, quel voisin : <code>10.20.30.5</code>, <code>10.20.99.1</code>, <code>10.99.0.1</code>, <code>11.0.0.1</code> ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>10.20.30.5</code> → <strong>Z</strong> (<code>/24</code>). <code>10.20.99.1</code> → <strong>Y</strong> (<code>/16</code>, hors du <code>/24</code>). <code>10.99.0.1</code> → <strong>X</strong> (<code>/8</code> seulement). <code>11.0.0.1</code> → <strong>W</strong>, la route par défaut.</p></div></details>
             </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le tracert s'arrête toujours au même saut</p>
+                <p>On vient de raccorder un second site. Depuis un poste du nouveau réseau, <code>tracert -d</code> vers un serveur de l'autre site affiche les deux premiers routeurs, puis uniquement « Délai d'attente dépassé » jusqu'au bout, à chaque essai. Le premier routeur répond au ping.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> un <code>tracert</code> qui s'arrête toujours au même saut désigne le dernier routeur qui sait répondre : le problème est juste après. On regarde sur ce routeur, avec <code>show ip route</code>, s'il connaît le réseau de destination. <strong>Cause probable :</strong> une route manquante, à l'aller sur ce routeur ou au retour sur le routeur d'en face (un pare-feu est l'autre suspect). <strong>Correctif :</strong> ajouter la route statique des deux côtés, puis refaire le <code>tracert</code>.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -825,6 +1429,15 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                     <div class="scenario__why"><p>Les trois routes correspondent, mais <code>/24</code> est la plus <strong>précise</strong> : c'est la règle du <strong>préfixe le plus long</strong>.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Le routeur choisit la route au <strong>préfixe le plus long</strong>, puis la plus fiable (distance administrative), puis la meilleure métrique.</li>
+                    <li>Un poste a souvent une seule route utile : la <strong>route par défaut</strong> vers la passerelle. <code>tracert</code> s'arrête au dernier routeur qui répond : le défaut est juste après.</li>
+                    <li>Le <strong>NAT/PAT</strong> fait sortir un réseau privé derrière une IP publique, en distinguant les connexions par le port source ; il bloque de fait les connexions entrantes non prévues.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 10 -->
@@ -833,11 +1446,28 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
             <h2 class="chapter__title">IPv6 en pratique</h2>
             <p class="chapter__intro">IPv4 n'a que 4,3 milliards d'adresses, épuisées depuis longtemps. <strong>IPv6</strong> (RFC 8200) en a 2<sup>128</sup>. Ta machine l'utilise déjà sans que tu le saches : il faut savoir le lire.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Abréger une adresse IPv6 selon les deux règles (zéros de tête, un seul <code>::</code>).</li>
+                    <li>Reconnaître le type d'une adresse d'après son préfixe : globale, lien local, unique locale, multicast.</li>
+                    <li>Lire la sortie d'<code>ipconfig</code> en IPv6 et expliquer ce que remplacent NDP et SLAAC.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#ipv4">IPv4, masque, passerelle</a>, <a href="#arp">ARP</a> et <a href="#dhcp">DHCP</a> · 30 min · un PC Windows (ou une VM Linux).</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi IPv4 ne suffit plus</h3>
+                <p>Avec 4,3 milliards d'adresses pour des milliards d'appareils, IPv4 ne tient que grâce au NAT, qui complique les connexions entrantes et le dépannage. IPv6 rend à chaque machine une adresse à elle, et simplifie la configuration des postes.</p>
+                <p>Sur le terrain, tu rencontres déjà IPv6 sans l'avoir demandé : chaque carte en a une (<code>fe80::</code>), et beaucoup d'opérateurs en distribuent. Il faut savoir la lire, et ne pas la prendre pour une panne.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>Lire et abréger une adresse</h3>
             <p>128 bits, écrits en 8 groupes de 4 chiffres hexadécimaux : <code>2001:0db8:0000:0000:0000:0a1f:0000:0001</code>. Deux règles d'abréviation :</p>
             <ul>
                 <li>On supprime les <strong>zéros de tête</strong> de chaque groupe : <code>2001:db8:0:0:0:a1f:0:1</code>.</li>
-                <li>On remplace <strong>une seule</strong> suite de groupes nuls par <code>::</code> : <code>2001:db8::a1f:0:1</code>. Une seule fois, sinon on ne saurait plus combien de zéros chaque <code>::</code> remplace.</li>
+                <li>On remplace <strong>une seule</strong> suite de groupes nuls par <code>::</code> : <code>2001:db8::a1f:0:1</code>. Une seule fois, sinon on ne saurait plus combien de zéros chaque <code>::</code> remplace. S'il y a plusieurs suites nulles, on abrège la <strong>plus longue</strong> (la première en cas d'égalité), et jamais un groupe nul isolé.</li>
             </ul>
             <h3>Les types d'adresses</h3>
             <div class="table-wrap">
@@ -865,7 +1495,33 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                     </tbody>
                 </table>
             </div>
-            <div class="verify">
+            <p class="note">Sources : <a href="https://www.rfc-editor.org/rfc/rfc8200" rel="noopener">RFC 8200 — Internet Protocol, Version 6</a> ; <a href="https://www.rfc-editor.org/rfc/rfc4291" rel="noopener">RFC 4291 — IPv6 Addressing Architecture</a> (types et préfixes) ; <a href="https://www.rfc-editor.org/rfc/rfc5952" rel="noopener">RFC 5952 — Recommendation for IPv6 Address Text Representation</a> (règles d'abréviation).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Abréger et classer <code>2001:0db8:0000:0000:0000:0a1f:0000:0001</code></p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · zéros de tête</p>
+                        <p class="walk__head">Chaque groupe perd ses zéros de gauche</p>
+                        <p><code>0db8</code> devient <code>db8</code>, <code>0000</code> devient <code>0</code>, <code>0a1f</code> devient <code>a1f</code>, <code>0001</code> devient <code>1</code> : <code>2001:db8:0:0:0:a1f:0:1</code>.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la suite nulle</p>
+                        <p class="walk__head">Un seul <code>::</code>, sur la plus longue suite</p>
+                        <p>Deux suites de groupes nuls : trois groupes, puis un seul. On remplace la plus longue : <code>2001:db8::a1f:0:1</code>. Le dernier <code>0</code> isolé reste écrit.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le type</p>
+                        <p class="walk__head">Le préfixe dit à quoi sert l'adresse</p>
+                        <p>Elle commence par <code>2001:db8</code> : c'est le préfixe de <strong>documentation</strong> (<code>2001:db8::/32</code>), réservé aux exemples. Une vraie adresse globale commencerait par <code>2000::/3</code> avec un autre préfixe.</p>
+                        <p class="walk__change">Pour remettre la forme longue, on rajoute les zéros de tête et on étend le <code>::</code> jusqu'à 8 groupes.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Voir ses adresses IPv6 et joindre un voisin en IPv6.</p>
             <div class="terminal">
@@ -881,7 +1537,7 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
    Adresse IPv6 de liaison locale. . . . .: fe80::5d2e:91a4:c3b0:7c10%7</pre>
                 <p class="verify__fail">Seule l'adresse <code>fe80::</code> présente : pas de routeur IPv6 annoncé sur ce réseau (normal dans beaucoup de labos). Le <code>%7</code> est l'index de l'interface : obligatoire pour pinguer une adresse lien local, car elle existe sur chaque carte.</p>
             </div>
-            <div class="cmdex" data-accept="2001:db8::10" data-hint="retire les zéros de tête, puis remplace la longue suite de groupes 0000 par deux deux-points.">
+            <div class="cmdex" data-bloc="7" data-accept="2001:db8::10" data-hint="retire les zéros de tête, puis remplace la longue suite de groupes 0000 par deux deux-points.">
                 <p class="cmdex__label">À toi d'écrire</p>
                 <p>Écris la forme <strong>la plus courte</strong> de <code>2001:0db8:0000:0000:0000:0000:0000:0010</code>.</p>
                 <details class="reveal">
@@ -889,10 +1545,26 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                     <div class="reveal__body"><p><code>2001:db8::10</code> : zéros de tête retirés (<code>0db8</code> → <code>db8</code>, <code>0010</code> → <code>10</code>), puis les cinq groupes nuls remplacés par <code>::</code>.</p></div>
                 </details>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>IPv6 : <strong>128 bits</strong>, des <strong>/64</strong> pour les réseaux locaux, une adresse <strong>fe80::</strong> sur chaque interface, <strong>NDP</strong> à la place d'ARP et <strong>SLAAC</strong> à côté de DHCP. Pas de NAT : la sécurité repose sur le pare-feu.</p>
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">Exercice — quel type d'adresse ?</p>
+                <p>Classe ces adresses : <code>fe80::5d2e:91a4:c3b0:7c10</code>, <code>2001:db8:4a:1200:5d2e:91a4:c3b0:7c10</code>, <code>fd00::1</code>, <code>ff02::1</code>, <code>::1</code>.</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p><code>fe80::…</code> : <strong>lien local</strong> (<code>fe80::/10</code>). <code>2001:db8:…</code> : adresse du préfixe de <strong>documentation</strong> ; une vraie adresse <strong>globale</strong> serait dans <code>2000::/3</code>. <code>fd00::1</code> : <strong>unique locale</strong> (<code>fd00::/8</code>). <code>ff02::1</code> : <strong>multicast</strong> (<code>ff00::/8</code>). <code>::1</code> : <strong>boucle locale</strong>.</p></div>
+                </details>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Écris la forme la plus courte de <code>2001:0db8:0000:0000:0001:0000:0000:0001</code>.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>2001:db8::1:0:0:1</code>. Les deux suites nulles ont la même longueur (deux groupes) : on abrège la <strong>première</strong>, et on ne peut pas utiliser <code>::</code> deux fois.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le ping vers un voisin en lien local échoue</p>
+                <p>Sous Windows, <code>ping -6 ::1</code> répond, donc la pile IPv6 fonctionne. Mais un ping vers l'adresse <code>fe80::…</code> copiée depuis un voisin du même réseau échoue, alors que le voisin est bien allumé et câblé.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> la pile répond ; on regarde la forme de l'adresse cible : une adresse lien local existe sur chaque carte. <strong>Cause probable :</strong> l'index d'interface est absent : il faut l'écrire après un <code>%</code> (ici <code>%7</code> dans la sortie d'<code>ipconfig</code>), faute de quoi le poste ne sait pas sur quelle carte envoyer. <strong>Correctif :</strong> relancer le ping avec l'adresse suivie de <code>%</code> et de l'index de la carte.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -905,6 +1577,15 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                     <div class="scenario__why"><p>L'adresse <strong>lien local</strong> est toujours là ; l'adresse <strong>globale</strong> n'apparaît que si on la configure à la main, si un routeur envoie des annonces (SLAAC) ou si un DHCPv6 répond. Dans un lab sans routeur IPv6, n'avoir que <code>fe80::</code> est normal.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>IPv6 : <strong>128 bits</strong>, écrits en 8 groupes ; on retire les zéros de tête et on remplace <strong>une</strong> suite nulle (la plus longue) par <code>::</code>.</li>
+                    <li>Une adresse <strong>fe80::</strong> est présente sur chaque interface (lien local, avec <code>%index</code> pour pinguer) ; une adresse globale vient de <code>2000::/3</code>.</li>
+                    <li><strong>NDP</strong> remplace ARP, <strong>SLAAC</strong> complète DHCP, réseaux locaux en <strong>/64</strong>. Pas de NAT en principe : la sécurité repose sur le pare-feu, qui ne doit pas bloquer tout ICMPv6.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 11 -->
@@ -913,6 +1594,23 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
             <h2 class="chapter__title">VLAN et Wi-Fi : premières notions</h2>
             <p class="chapter__intro">Deux technologies que tu croiseras partout : les <strong>VLAN</strong>, qui découpent un switch en plusieurs réseaux, et le <strong>Wi-Fi</strong>, qui remplace le câble. Ici, l'essentiel pour comprendre ; la configuration Cisco vient dans le module <a href="ccna-reseau.html">CCNA</a>.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Expliquer qu'un VLAN est un domaine de broadcast et un sous-réseau, et ce qui est nécessaire pour passer de l'un à l'autre.</li>
+                    <li>Choisir entre un port access et un port trunk selon ce qu'on y branche.</li>
+                    <li>Choisir une sécurité Wi-Fi et relier un SSID à un VLAN.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#ethernet">Ethernet, MAC, switch</a>, <a href="#ipv4">IPv4, masque, passerelle</a> et <a href="#routage">Routage et NAT</a> · 25 min · un accès à l'écran d'administration d'une box ou d'un point d'accès (facultatif).</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi couper un réseau en morceaux</h3>
+                <p>Sur un même réseau local, tout appareil entend les broadcasts de tous les autres, et chacun peut tenter de joindre chacun. Dès que des invités, des caméras et des serveurs partagent le même switch, un seul appareil compromis ou bavard touche tout le monde.</p>
+                <p>Le VLAN règle cela sans multiplier les switchs. Et comme le Wi-Fi remplace le câble sans changer ces règles, un SSID invité doit lui aussi atterrir dans un VLAN isolé.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>Les VLAN</h3>
             <p>Un <strong>VLAN</strong> (<em>Virtual LAN</em>) découpe un switch physique en plusieurs switchs logiques. Les postes du VLAN 10 ne voient pas ceux du VLAN 20 : chaque VLAN est un <strong>domaine de broadcast</strong> séparé et, en pratique, un <strong>sous-réseau IP</strong> séparé. Pour passer de l'un à l'autre, il faut un routeur (ou un switch de niveau 3).</p>
             <div class="cards">
@@ -942,10 +1640,63 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                 <p class="tip__label">Wi-Fi et dépannage</p>
                 <p>Un poste Wi-Fi qui « a du réseau » mais pas d'Internet a souvent… une adresse <code>169.254</code> (DHCP non joint) ou le mauvais SSID. Sur un Wi-Fi saturé, la <strong>latence</strong> et la <strong>gigue</strong> montent bien avant que le débit ne s'effondre : c'est ce qui fait hacher les appels.</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Un <strong>VLAN</strong> = un domaine de broadcast = un sous-réseau ; <strong>access</strong> pour un appareil, <strong>trunk</strong> 802.1Q entre équipements. En Wi-Fi : <strong>WPA3</strong> (ou WPA2-AES), 5 GHz pour le débit, et un SSID par usage relié à son VLAN.</p>
+            <p class="note">Sources : <a href="https://standards.ieee.org/ieee/802.1Q/10323/" rel="noopener">IEEE 802.1Q — Bridges and Bridged Networks</a> (VLAN et étiquetage) ; <a href="https://www.wi-fi.org/discover-wi-fi/security" rel="noopener">Wi-Fi Alliance — Security</a> (WPA2, WPA3).</p>
             </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Un petit bureau veut séparer ses postes et ses invités (valeurs d'exemple)</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le besoin</p>
+                        <p class="walk__head">Un VLAN par usage</p>
+                        <p>Les postes vont en VLAN 10, les invités en VLAN 20. Chaque VLAN est un domaine de broadcast : les invités ne voient pas les postes.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · les ports</p>
+                        <p class="walk__head">Access pour les appareils, trunk entre équipements</p>
+                        <p>Un poste ou une imprimante : port <strong>access</strong> du VLAN 10, trame non marquée. Le lien vers le routeur ou vers un autre switch doit porter les deux VLAN : port <strong>trunk</strong>, trames étiquetées 802.1Q.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · les réseaux IP</p>
+                        <p class="walk__head">Un sous-réseau par VLAN, un routeur entre les deux</p>
+                        <p>Chaque VLAN reçoit son propre sous-réseau, par exemple <code>192.168.10.0/24</code> et <code>192.168.20.0/24</code>. Pour aller de l'un à l'autre, le trafic passe par un routeur (ou un switch de niveau 3), où l'on peut filtrer.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · le Wi-Fi</p>
+                        <p class="walk__head">Un SSID par VLAN</p>
+                        <p>Le point d'accès diffuse « Bureau » relié au VLAN 10 et « Invités » relié au VLAN 20, en WPA3 ou WPA2-AES. Son lien vers le switch transporte donc les deux VLAN.</p>
+                        <p class="walk__change">Un invité en Wi-Fi arrive dans le VLAN 20 : il n'a ni le même broadcast ni le même sous-réseau que les postes.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Constat d'interface, sans commande : ouvre l'écran Wi-Fi de ta box ou de ton point d'accès, et relève pour chaque SSID la bande (2,4 ou 5 GHz), le canal et le mode de sécurité. Ensuite, sur un poste connecté en Wi-Fi, ouvre <code>ipconfig</code> et lis l'adresse : elle doit appartenir au réseau de ce SSID.</p>
+                <p class="verify__fail">Si le mode de sécurité est WEP ou « ouvert », ou si le poste affiche une adresse <code>169.254.x.x</code> (DHCP non joint), le Wi-Fi n'est pas correctement réglé. Un mauvais SSID donne aussi « du réseau » sans Internet.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">Exercice — quel type de port ?</p>
+                <p>Un switch a quatre ports : un PC et une imprimante (tous deux VLAN 10), une caméra (VLAN 30) et un lien vers un second switch qui porte aussi le VLAN 10 et le VLAN 30. Quel type de port pour chacun, et combien de sous-réseaux IP faut-il ?</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>PC, imprimante et caméra : ports <strong>access</strong> (VLAN 10, VLAN 10, VLAN 30). Le lien vers le second switch : port <strong>trunk</strong>, car il transporte deux VLAN. Deux VLAN utilisés, donc <strong>deux sous-réseaux IP</strong>, un par VLAN, avec un routeur pour passer de l'un à l'autre.</p></div>
+                </details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un point d'accès doit diffuser deux réseaux : « Interne » et « Invités », ces derniers ne devant joindre que Internet. Quels éléments prévois-tu, côté switch, côté adressage et côté filtrage ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Deux VLAN, avec chacun son sous-réseau ; le port du switch vers le point d'accès en <strong>trunk</strong> (il porte les deux VLAN) ; un SSID relié à chaque VLAN ; et, au routeur entre les deux VLAN, une règle qui interdit au VLAN invités de joindre le réseau interne.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — du réseau, mais pas d'Internet en Wi-Fi</p>
+                <p>Un portable est connecté au Wi-Fi, l'icône indique « connecté », mais aucune page ne s'ouvre. D'autres appareils, sur le même point d'accès, fonctionnent normalement.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> on lit l'adresse du portable avec <code>ipconfig</code> et on compare avec celle des appareils qui marchent. <strong>Causes probables :</strong> une adresse <code>169.254.x.x</code> (le portable n'a pas joint le DHCP), ou le mauvais SSID (un réseau qui n'est pas relié au bon VLAN ou n'a pas de passerelle vers Internet). <strong>Correctif :</strong> se reconnecter au bon SSID, ou vérifier que le SSID est relié au VLAN qui a un serveur DHCP et une sortie.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -958,6 +1709,15 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                     <div class="scenario__why"><p>Chaque VLAN est un <strong>domaine de broadcast</strong> séparé : l'ARP des postes n'atteint plus l'imprimante. Il faut soit la remettre en VLAN 10, soit lui donner une adresse du réseau du VLAN 20 et router entre les deux.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Un <strong>VLAN</strong> = un domaine de broadcast = un sous-réseau ; pour passer de l'un à l'autre, il faut un routeur.</li>
+                    <li>Port <strong>access</strong> pour un appareil (un seul VLAN), port <strong>trunk</strong> 802.1Q entre équipements (plusieurs VLAN).</li>
+                    <li>En Wi-Fi : <strong>WPA3</strong> (ou WPA2-AES), jamais WEP, et un SSID par usage relié à son VLAN. Du réseau sans Internet : regarder l'adresse (<code>169.254.x.x</code>) et le SSID.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 12 -->
@@ -966,6 +1726,23 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
             <h2 class="chapter__title">Le voyage complet d'une requête web</h2>
             <p class="chapter__intro">Tout ce module se rejoue en une seconde quand tu tapes une adresse dans un navigateur. Suivre ce voyage, et le voir dans une capture Wireshark, est le meilleur moyen de vérifier que tout s'est mis en place.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Ordonner les huit étapes d'une requête web (DHCP, ARP, DNS, routage, NAT, TCP, TLS, HTTP) et dire ce que chacune apporte.</li>
+                    <li>Repérer dans une capture Wireshark ce qui change d'une étape à l'autre (MAC, IP, ports, TTL).</li>
+                    <li>Rattacher un symptôme (adresse <code>169.254.x.x</code>, ping par IP qui marche et pas par nom…) à l'étape qui casse.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> tout le module, surtout <a href="#arp">ARP</a>, <a href="#dns">DNS</a>, <a href="#dhcp">DHCP</a> et <a href="#routage">Routage et NAT</a> · 40 min · un PC avec <a href="https://www.wireshark.org/download.html" rel="noopener">Wireshark</a>, sur ton propre réseau.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi relier les notions entre elles</h3>
+                <p>Chaque chapitre a présenté un outil isolé. Sur le terrain, une panne se présente en vrac : « ça ne charge pas ». Celui qui connaît l'ordre des étapes teste dans cet ordre, et trouve en quelques commandes l'étape où la chaîne casse, au lieu de tout essayer au hasard.</p>
+                <p>La capture réseau est la preuve que ce modèle n'est pas qu'une théorie : chaque étape laisse des trames que l'on peut lire, avec ses adresses et ses ports.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
             <h3>Ce qui se passe quand tu tapes www.exemple.be</h3>
             <div class="steps">
                 <div class="step"><div class="step__num">1</div><div class="step__body"><strong>DHCP (au démarrage)</strong><p>Le poste a obtenu IP, masque, passerelle et DNS par DORA.</p></div></div>
@@ -977,10 +1754,13 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                 <div class="step"><div class="step__num">7</div><div class="step__body"><strong>TLS</strong><p>Échange de certificats et de clés : la suite est chiffrée (module <a href="exchange-securite.html">PKI</a>).</p></div></div>
                 <div class="step"><div class="step__num">8</div><div class="step__body"><strong>HTTP</strong><p><code>GET /</code> → <code>200 OK</code> et la page. Puis des dizaines d'autres requêtes pour les images, scripts, styles.</p></div></div>
             </div>
+            <p>Dans cette chaîne, une règle sert de fil conducteur : à chaque tronçon, les <strong>MAC</strong> sont remplacées (couche 2), tandis que les <strong>IP</strong> de bout en bout ne changent pas, sauf au passage du <strong>NAT</strong> qui réécrit l'IP et le port source. Le <strong>TTL</strong> baisse de 1 à chaque routeur.</p>
+            </div>
+
             <h3>Pas à pas : les en-têtes à chaque étape</h3>
             <p>Les mêmes étapes, trame par trame. À chaque fois, regarde ce qui a changé par rapport à l'étape d'avant : c'est entouré.</p>
-            <div class="walk">
-                <p class="walk__label">Pas à pas</p>
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé · Pas à pas</p>
                 <p class="walk__title">Du PC 192.168.1.25 jusqu'au serveur web 203.0.113.10</p>
                 <p class="frame__legend">Couche 2 en brun, couche 3 en terre cuite, couche 4 en ocre, contenu en vert. Flèches du clavier ou boutons pour avancer.</p>
                 <ol class="walk__steps">
@@ -1068,10 +1848,32 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                 <p class="tip__label">Capturer, oui — mais chez soi</p>
                 <p>On ne capture que sur un réseau dont on est responsable, ou avec autorisation : sur un réseau d'entreprise ou d'école, c'est une interception de communications. Le module <a href="securite.html">Sécurité</a> pose le cadre.</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Une requête web = <strong>DHCP</strong> (avant), <strong>ARP</strong>, <strong>DNS</strong>, <strong>routage</strong>, <strong>NAT</strong>, <strong>TCP</strong>, <strong>TLS</strong>, <strong>HTTP</strong>. Si tu sais dire à chaque étape ce qui peut casser et quelle commande le montre, tu sais dépanner un réseau.</p>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Constat dans Wireshark, d'après le lab : le filtre <code>arp</code> montre la question et sa réponse ; <code>dns</code> la requête et son adresse ; <code>tcp.flags.syn == 1</code> le SYN et le SYN, ACK vers le port 443 ; <code>tls.handshake</code> le <em>Client Hello</em> avec le nom du site en clair. Dans <em>Suivre → Flux TCP</em>, le contenu est illisible.</p>
+                <p class="verify__fail">Si un filtre n'affiche rien, les caches n'ont pas été vidés avant la capture (<code>ipconfig /flushdns</code>, <code>arp -d *</code>) ou la mauvaise carte réseau est capturée : recommence la capture.</p>
             </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">Exercice — quelle étape casse ?</p>
+                <p>Pour chaque constat, dis quelle étape de la chaîne est en cause : (a) <code>ipconfig</code> affiche une adresse <code>169.254.x.x</code> ; (b) <code>arp -a</code> n'a aucune entrée pour la passerelle ; (c) <code>ping 203.0.113.10</code> répond, <code>ping www.exemple.be</code> non ; (d) <code>tracert -d</code> s'arrête toujours au même saut.</p>
+                <details class="reveal">
+                    <summary>Afficher la correction</summary>
+                    <div class="reveal__body"><p>(a) <strong>DHCP</strong> : aucun serveur n'a répondu. (b) <strong>ARP</strong>, donc la couche 2 : câble, VLAN ou port du switch. (c) <strong>DNS</strong> : le réseau va bien, la résolution du nom échoue. (d) <strong>Routage</strong> : le problème est juste après le dernier routeur qui répond.</p></div>
+                </details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Dans ta capture, tu compares le SYN à la sortie du PC et le même SYN après la box. Cite trois éléments qui ont changé et un qui n'a pas changé.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Ont changé : les <strong>MAC</strong> (nouveau tronçon), l'<strong>IP et le port source</strong> (le NAT de la box) et le <strong>TTL</strong> (−1 par routeur). N'a pas changé : l'<strong>IP de destination</strong>, celle du serveur.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la passerelle répond, pas le serveur</p>
+                <p>Depuis un poste, le ping vers la passerelle répond, mais le ping vers <code>203.0.113.10</code> échoue, et <code>tracert -d</code> vers cette adresse s'arrête à la box, à chaque essai. Le poste a une adresse normale, pas en <code>169.254.x.x</code>.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> on remonte la chaîne. L'adresse est correcte (DHCP), la passerelle répond (ARP, couche 2), on joint une IP et pas un nom (le DNS n'est pas en cause). Un <code>tracert</code> qui s'arrête toujours au même saut désigne le dernier routeur qui répond : le problème est juste après la box. <strong>Cause probable :</strong> la liaison de la box vers l'extérieur (route, NAT, ou fournisseur d'accès) ; une route manquante ou un pare-feu sont les suspects. <strong>Correctif :</strong> contrôler l'état de la liaison et la route par défaut de la box, puis refaire <code>tracert</code>.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -1083,6 +1885,32 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
                     </div>
                     <div class="scenario__why"><p>IP de destination = le <strong>serveur</strong> ; MAC de destination = la <strong>passerelle</strong>. Dans Wireshark, ouvre la ligne <em>Ethernet II</em> du SYN : la destination est la MAC qu'affiche <code>arp -a</code> pour la passerelle.</p></div>
                 </div>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Une requête web = <strong>DHCP</strong> (avant), <strong>ARP</strong>, <strong>DNS</strong>, <strong>routage</strong>, <strong>NAT</strong>, <strong>TCP</strong>, <strong>TLS</strong>, <strong>HTTP</strong>.</li>
+                    <li>À chaque tronçon les <strong>MAC</strong> changent ; l'<strong>IP de destination</strong> reste celle du serveur ; le <strong>NAT</strong> réécrit l'IP et le port source ; le <strong>TTL</strong> baisse de 1 par routeur.</li>
+                    <li>Pour dépanner, teste dans l'ordre : adresse (DHCP), passerelle (ARP), nom (DNS), chemin (<code>tracert</code>). Une capture montre l'étape qui casse.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="brief" id="livrable" data-bloc="10">
+            <p class="brief__label">Livrable du module</p>
+            <div class="lab" data-lab="livrable-reseau-bases">
+                <p class="lab__label">Livrable · fiche de lecture d'une capture</p>
+                <p class="lab__title">Le parcours d'une requête web, schéma annoté et fiche d'une page</p>
+                <div class="lab__meta"><span><b>Objectif :</b> prouver que tu sais lire une capture et relier chaque trame à l'étape du modèle</span><span><b>Point de départ :</b> le lab Wireshark ci-dessus, fait sur ton propre réseau</span><span><b>Durée :</b> ≈ 1 h</span></div>
+                <ol class="lab__steps">
+                    <li><p><strong>Capture propre</strong> — une capture de ta requête, caches vidés avant, limitée à une page. Tu n'en gardes aucune donnée personnelle dans le livrable.</p></li>
+                    <li><p><strong>ARP et DNS</strong> — pour chacun, le filtre utilisé, la trame de question et celle de réponse, et le port ou la MAC concernés.</p></li>
+                    <li><p><strong>TCP et TLS</strong> — le SYN, le SYN-ACK et l'ACK avec les ports, puis le <em>Client Hello</em> ; une phrase sur ce que le SNI révèle.</p></li>
+                    <li><p><strong>Schéma annoté</strong> — PC, switch, box, Internet : à chaque tronçon, les MAC et IP présentes dans la trame, et ce qui change après la box (MAC, IP et port source, TTL).</p></li>
+                    <li><p><strong>Fiche d'une page</strong> — un tableau : étape, filtre Wireshark, ce qu'on y lit, ce qui peut casser, commande de contrôle (<code>arp -a</code>, <code>nslookup</code>, <code>tracert</code>…).</p></li>
+                    <li><p><strong>Relecture</strong> — aucune adresse, aucun nom de machine réels : remplace-les par les adresses d'exemple du module (<code>192.168.1.x</code>, <code>203.0.113.10</code>).</p></li>
+                </ol>
             </div>
         </section>
 
@@ -1209,10 +2037,10 @@ L        10.0.0.1/32 is directly connected, GigabitEthernet0/0/1</pre>
     <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a> · <a href="../revision.html">Révision du jour</a></p>
 </footer>
 
-<script src="../assets/catalogue.js?v=b9dafcdc"></script>
+<script src="../assets/catalogue.js?v=a8bae127"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/reseau-bases.js?v=e47c151b"></script>
+<script src="../assets/quiz/reseau-bases.js?v=49435560"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 <script src="../assets/atelier.js?v=c35298a6"></script>

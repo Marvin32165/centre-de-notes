@@ -202,6 +202,18 @@ Dockerfile | | Recette de construction d'une image Docker. | Dockerfile
 Docker Compose | | Décrit et lance un ensemble de conteneurs (services, réseaux, volumes) dans un fichier compose.yaml. | compose
 Volume | | Stockage persistant d'un conteneur, qui survit à sa suppression. | volumes?
 Reverse proxy | | Serveur frontal qui reçoit les requêtes web et les répartit vers les bons services internes. | reverse proxy
+Processus | | Programme en cours d'exécution, identifié par un numéro (PID) ; il a un parent (PPID). | processus
+PID | Process IDentifier | Numéro attribué par le noyau à chaque processus en cours. | PID\b;PPID
+Signal | | Notification envoyée à un processus : SIGTERM demande l'arrêt (interceptable), SIGKILL l'impose (non interceptable). | SIGTERM;SIGKILL
+Unité (systemd) | | Fichier (.service, .target…) qui décrit à systemd ce qu'il doit gérer, par exemple un service. | unités? systemd;fichiers? d'unité
+Partition | | Découpe d'un disque, qui reçoit un système de fichiers et se monte en un point de l'arborescence. | partitions?
+Swap | | Espace disque utilisé comme mémoire virtuelle quand la RAM sature ; équivalent du pagefile.sys de Windows. | swap
+initramfs | | Petit système de fichiers temporaire chargé avec le noyau, qui contient les pilotes nécessaires pour trouver et monter la vraie racine. | initramfs;initrd
+UUID | Universally Unique Identifier | Identifiant d'une partition (affiché par blkid), stable contrairement à un nom comme /dev/sdb1. | UUID\b
+Archive tar | | Fichier unique qui regroupe plusieurs fichiers ; avec l'option z, il est compressé en gzip (.tar.gz). | archives? tar;tar\.gz
+journald | systemd-journald | Service de systemd qui recueille les journaux du système, lus avec journalctl. | journald
+rsyslog | | Service qui écrit les journaux en fichiers texte de /var/log ; absent par défaut depuis Debian 12. | rsyslog
+Mode pont (bridged) | Bridged | Mode réseau d'une machine virtuelle reliée directement au réseau physique : elle est joignable de l'extérieur. | mode pont;bridged
 ## Sécurité
 Pare-feu | Firewall | Filtre le trafic selon des règles (adresses, ports, protocoles). | pare-feu;firewall
 VPN | Virtual Private Network | Tunnel chiffré qui relie un poste ou un site à un réseau distant (WireGuard, IPsec). | VPN

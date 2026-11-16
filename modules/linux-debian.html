@@ -2430,7 +2430,71 @@ iface ens33 inet <span class="k">static</span>
         <section class="chapter" id="chap17">
             <p class="chapter__num">17</p>
             <h2 class="chapter__title">Processus &amp; services</h2>
-            <p class="chapter__intro">Voir ce qui tourne, arrêter ce qui bloque, gérer les services système avec systemd.</p>
+<p class="chapter__intro">Voir ce qui tourne, arrêter ce qui bloque, gérer les services système avec systemd.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Repérer un processus avec <code>ps</code> et l'arrêter avec <code>kill</code>, en choisissant entre SIGTERM et SIGKILL.</li>
+                    <li>Gérer un service avec <code>systemctl</code> en distinguant <code>start</code> (maintenant) et <code>enable</code> (au démarrage).</li>
+                    <li>Lire la charge moyenne de <code>top</code> et la comparer au nombre de cœurs.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap2">Premiers pas post-install</a> (pour <code>sudo</code>) et <a href="#chap8">Redirections &amp; pipes</a> · 35 min · une Debian avec <code>sudo</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi regarder avant de redémarrer</h3>
+                <p>Une machine devient lente, ou un site ne répond plus. Redémarrer règle parfois le symptôme mais efface la preuve et coupe tous les autres programmes. Savoir quel processus consomme les ressources, et si le service attendu tourne vraiment, permet d'agir sur la seule cause.</p>
+                <p>Sur un serveur, presque tout ce qui rend un service (SSH, web, base de données) est un service géré par systemd : il faut savoir le démarrer, l'arrêter et décider s'il revient tout seul au prochain démarrage.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Processus, signal, service : le vocabulaire</h3>
+                <p>Un <strong>processus</strong> est un programme en cours d'exécution ; le noyau lui donne un numéro, le <strong>PID</strong>, et on connaît aussi le numéro de son parent, le <strong>PPID</strong>. Pour agir sur un processus, on lui envoie un <strong>signal</strong> : <code>SIGTERM</code> est une demande d'arrêt que le programme peut intercepter pour se terminer proprement ; <code>SIGKILL</code> ne peut être ni intercepté ni ignoré, le noyau retire le processus de force, sans lui laisser le temps de fermer ses fichiers.</p>
+                <p>Un <strong>service</strong> est un processus de longue durée, lancé et surveillé par systemd d'après un fichier d'<strong>unité</strong> (<code>.service</code>). Deux questions distinctes se posent : « tourne-t-il maintenant ? » (<em>actif</em> ou non) et « se lancera-t-il au démarrage ? » (<em>enabled</em> ou <em>disabled</em>). Elles ont chacune leur commande.</p>
+                <div class="table-wrap"><table>
+                    <thead><tr><th>Notion</th><th>Question à laquelle elle répond</th></tr></thead>
+                    <tbody>
+                        <tr><td>PID / PPID</td><td>quel processus, et qui l'a lancé ?</td></tr>
+                        <tr><td>SIGTERM / SIGKILL</td><td>arrêt demandé poliment / arrêt imposé</td></tr>
+                        <tr><td>actif / inactif</td><td>le service tourne-t-il à cet instant ?</td></tr>
+                        <tr><td>enabled / disabled</td><td>reviendra-t-il au prochain démarrage ?</td></tr>
+                        <tr><td>charge moyenne</td><td>combien de processus se disputent le processeur, comparé au nombre de cœurs ?</td></tr>
+                    </tbody>
+                </table></div>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/manpages/signal.7.en.html" rel="noopener">signal(7)</a> · <a href="https://manpages.debian.org/stable/systemd/systemd.service.5.en.html" rel="noopener">systemd.service(5)</a> · <a href="https://manpages.debian.org/stable/systemd/systemctl.1.en.html" rel="noopener">systemctl(1)</a> · <a href="https://manpages.debian.org/stable/procps/ps.1.en.html" rel="noopener">ps(1)</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Trouver et arrêter un processus qui monopolise le processeur</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · repérer</p>
+                        <p class="walk__head"><code>ps -edf --sort=+pcpu | tail -5</code></p>
+                        <p>Les cinq derniers de la liste triée sont ceux qui consomment le plus de CPU. On relève le <strong>PID</strong> du suspect et son nom.</p>
+                        <p class="walk__change">On agit sur un PID précis, jamais « au hasard ».</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · situer</p>
+                        <p class="walk__head"><code>ps -ef | grep nom</code></p>
+                        <p>On vérifie le parent (colonne PPID) et la commande complète : est-ce bien le programme qu'on croit, et pas un processus système ?</p>
+                        <p class="walk__change">Un doute sur le processus ? On ne le tue pas.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · demander</p>
+                        <p class="walk__head"><code>kill PID</code></p>
+                        <p>Envoie SIGTERM : le programme peut fermer ses fichiers et se terminer proprement. On laisse quelques secondes, puis on relance <code>ps</code> pour constater.</p>
+                        <p class="walk__change">Réponse attendue : le PID a disparu de la liste.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · imposer</p>
+                        <p class="walk__head"><code>kill -9 PID</code></p>
+                        <p>Seulement si le processus ignore SIGTERM. SIGKILL est immédiat mais ne laisse aucune chance de nettoyer (fichiers temporaires, verrous).</p>
+                        <p class="walk__change">Dernier recours, pas premier réflexe.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>Les processus (programmes en cours)</h3>
             <div class="table-wrap"><table>
@@ -2469,14 +2533,26 @@ iface ens33 inet <span class="k">static</span>
                     <tr><td><code>journalctl -u service</code> / <code>journalctl -f</code></td><td>logs d'un service / tous les logs en direct</td></tr>
                 </tbody>
             </table></div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p><code>start</code> agit maintenant, <code>enable</code> agit au prochain démarrage. Pour un service qui doit toujours tourner (comme SSH), il faut les <strong>deux</strong> — ou <code>enable --now</code>, qui fait les deux d'un coup.</p>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après <code>kill PID</code>, <code>ps -ef | grep nom</code> ne montre plus le processus (hors la ligne du <code>grep</code> lui-même). Après <code>sudo systemctl enable --now ssh</code>, <code>systemctl is-enabled ssh</code> répond <code>enabled</code> et <code>systemctl is-active ssh</code> répond <code>active</code>.</p>
+                <p class="verify__fail">Le PID est toujours là : SIGTERM a été ignoré ou le programme est occupé, voir « Quand ça casse ». Le service est <code>active</code> mais <code>disabled</code> : il ne reviendra pas au prochain démarrage, il manque <code>enable</code>.</p>
             </div>
-            <div class="cmdex" data-accept="(sudo )?systemctl enable --now ssh(\.service)?;;(sudo )?systemctl --now enable ssh(\.service)?" data-hint="Une seule commande systemctl, avec l&#x27;option qui démarre aussi tout de suite.">
+            <div class="cmdex" data-bloc="7" data-accept="(sudo )?systemctl enable --now ssh(\.service)?;;(sudo )?systemctl --now enable ssh(\.service)?" data-hint="Une seule commande systemctl, avec l&#x27;option qui démarre aussi tout de suite.">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>En une seule commande, active le service <code>ssh</code> au démarrage <strong>et</strong> démarre-le immédiatement.</p>
                 <details class="reveal"><summary>Voir la réponse</summary><div class="reveal__body"><p><code>sudo systemctl enable --now ssh</code>. Vérifier : <code>systemctl is-enabled ssh</code> répond <code>enabled</code>, <code>systemctl is-active ssh</code> répond <code>active</code>.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le service <code>ssh</code> tourne et doit continuer à tourner maintenant, mais tu ne veux plus qu'il démarre automatiquement au prochain démarrage. Quelle commande ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>sudo systemctl disable ssh</code> : sans <code>--now</code>, <code>disable</code> ne touche qu'au démarrage et laisse le service actif. Vérifier : <code>systemctl is-enabled ssh</code> répond <code>disabled</code>, <code>systemctl is-active ssh</code> répond encore <code>active</code>.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le processus ne disparaît pas</p>
+                <p>Un programme gèle et consomme tout le processeur. Tu lances <code>kill</code> avec son PID : la commande ne répond aucune erreur, mais le PID figure toujours dans <code>ps</code> une minute plus tard.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> <code>kill</code> sans option n'envoie pas « tue » mais SIGTERM, une <em>demande</em> d'arrêt. <strong>Cause :</strong> le programme peut intercepter ce signal et ne pas s'arrêter (signal(7)) ; SIGKILL, lui, ne peut pas être intercepté. <strong>Correctif :</strong> relancer <code>ps</code> pour confirmer le PID, puis <code>kill -9 PID</code> en dernier recours, en sachant que le programme n'a pas pu nettoyer derrière lui.</p></div></details>
             </div>
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
@@ -2490,6 +2566,14 @@ iface ens33 inet <span class="k">static</span>
                     <div class="scenario__why"><p><code>start</code> = maintenant, <code>enable</code> = à chaque démarrage. <code>disabled</code> dans le statut le dit clairement. Correction : <code>sudo systemctl enable --now nginx</code>.</p></div>
                 </div>
             </div>
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li><code>start</code> agit maintenant, <code>enable</code> agit au prochain démarrage : pour un service qui doit toujours tourner (comme SSH), il faut les <strong>deux</strong>, ou <code>enable --now</code> qui fait les deux d'un coup.</li>
+                    <li><code>kill PID</code> demande (SIGTERM), <code>kill -9 PID</code> impose (SIGKILL) : la seconde forme est un dernier recours.</li>
+                    <li>Une charge moyenne se juge par rapport au nombre de cœurs (<code>nproc</code>), pas dans l'absolu.</li></ul>
+            </div>
+
         </section>
 
         <!-- 18 -->
@@ -2497,6 +2581,54 @@ iface ens33 inet <span class="k">static</span>
             <p class="chapter__num">18</p>
             <h2 class="chapter__title">Disques, archives &amp; infos système</h2>
             <p class="chapter__intro">Surveiller l'espace disque, compresser, et connaître sa machine.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Diagnostiquer une partition qui se remplit avec <code>df -h</code> puis <code>du -sh</code>.</li>
+                    <li>Lister les disques et partitions (<code>lsblk</code>) et relever l'UUID d'une partition (<code>blkid</code>).</li>
+                    <li>Créer et extraire une archive <code>.tar.gz</code> avec <code>tar</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap4">Se déplacer &amp; gérer ses fichiers</a> et <a href="#chap7">Utilisateurs, permissions</a> · 30 min · une Debian avec <code>sudo</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi surveiller le disque</h3>
+                <p>Un disque plein fait tomber des services sans prévenir : les journaux ne s'écrivent plus, une base refuse d'enregistrer, une mise à jour échoue à mi-chemin. La question à se poser quand une machine se comporte bizarrement est souvent « reste-t-il de la place ? ».</p>
+                <p>Compresser un dossier en une archive sert à le déplacer, à l'envoyer ou à le sauvegarder en un seul fichier.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Du disque au point de montage</h3>
+                <p>Un <strong>disque</strong> est découpé en <strong>partitions</strong> ; chacune reçoit un <strong>système de fichiers</strong>, puis est rattachée à l'arborescence en un <strong>point de montage</strong> (un dossier, comme <code>/</code> ou <code>/home</code>). Deux commandes mesurent deux choses différentes : <code>df</code> lit l'occupation d'un système de fichiers monté (« combien reste-t-il sur cette partition ? »), <code>du</code> additionne la taille des fichiers d'un dossier (« qui prend la place ? »). Chaque partition porte aussi un identifiant, l'<strong>UUID</strong>, que <code>blkid</code> affiche et qui, contrairement à un nom comme <code>/dev/sdb1</code>, ne dépend pas de l'ordre de détection des disques.</p>
+                <p>Une <strong>archive</strong> <code>tar</code> regroupe plusieurs fichiers en un seul ; la compression gzip (option <code>z</code>) la réduit. Les deux opérations sont distinctes : <code>tar</code> assemble, gzip compresse.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/coreutils/df.1.en.html" rel="noopener">df(1)</a> · <a href="https://manpages.debian.org/stable/coreutils/du.1.en.html" rel="noopener">du(1)</a> · <a href="https://manpages.debian.org/stable/util-linux/lsblk.8.en.html" rel="noopener">lsblk(8)</a> · <a href="https://manpages.debian.org/stable/tar/tar.1.en.html" rel="noopener">tar(1)</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Une partition sature : qui prend la place ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · mesurer</p>
+                        <p class="walk__head"><code>df -h</code></p>
+                        <p>Une ligne par partition montée : taille, utilisé, libre, et point de montage. On repère celle qui approche de 100 %.</p>
+                        <p class="walk__change">Le « où » : quelle partition.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · creuser</p>
+                        <p class="walk__head"><code>du -sh dossier</code></p>
+                        <p>Sur la partition repérée, on mesure les dossiers un par un pour trouver le plus gros.</p>
+                        <p class="walk__change">Le « qui » : quel dossier.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · décider</p>
+                        <p class="walk__head">Archiver, déplacer ou supprimer</p>
+                        <p>Une fois le coupable identifié, on archive ce qui doit être gardé (<code>tar -czf</code>) puis on libère la place.</p>
+                        <p class="walk__change">On ne supprime rien avant d'avoir compris.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="table-wrap"><table>
                 <thead><tr><th>Commande</th><th>Action</th></tr></thead>
@@ -2519,9 +2651,36 @@ iface ens33 inet <span class="k">static</span>
 <span class="k">unzip</span> archive.zip                  <span class="c"># extraire un zip</span></pre>
             </div>
 
-            <div class="takeaway">
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p><code>df -h</code> affiche une ligne par partition montée ; <code>lsblk</code> montre les disques et leurs partitions ; <code>blkid</code> donne l'UUID de chacune. Après <code>tar -czf archive.tar.gz dossier/</code>, le fichier <code>archive.tar.gz</code> existe (<code>ls -l</code>) ; après <code>tar -xzf archive.tar.gz</code>, le dossier est de retour dans le dossier courant.</p>
+                <p class="verify__fail">Si <code>df -h</code> montre une partition presque pleine, enchaîne avec <code>du -sh</code> sur ses dossiers. Si <code>blkid</code> ne liste rien d'utile, essaie avec <code>sudo</code>.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — archiver puis restaurer un dossier</p>
+                <p>Tu dois sauvegarder le dossier <code>projets/</code> dans une archive compressée, puis la restaurer dans un autre dossier de ton choix. Énoncé seul : écris les commandes.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div><pre class="terminal__code"><span class="k">tar</span> <span class="p">-czf</span> projets.tar.gz projets/
+<span class="k">tar</span> <span class="p">-xzf</span> projets.tar.gz</pre></div><p>Mêmes commandes que dans le terminal du chapitre, avec un autre nom de dossier (<em>reconstitué, non testé</em>). <code>c</code> crée, <code>x</code> extrait, <code>z</code> gère gzip, <code>f</code> désigne le fichier.</p></div></details>
+            </div>
+
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un collègue t'envoie <code>logs.zip</code>. Avant de l'extraire, tu veux t'assurer que la partition de destination a de la place. Quelles commandes, dans quel ordre ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>df -h</code> pour lire la place libre de la partition concernée, puis <code>unzip logs.zip</code> (<em>reconstitué, non testé</em> : commande du chapitre, nom de fichier changé).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — les services s'arrêtent un à un</p>
+                <p>Sur une VM, des services s'arrêtent les uns après les autres et une mise à jour échoue. Aucun changement de configuration récent. L'utilisateur dit que « le disque a l'air plein ».</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> confirmer d'abord avec <code>df -h</code> quelle partition est pleine ; si c'est <code>/</code>, le système peut devenir instable. Puis <code>du -sh</code> sur les dossiers de cette partition pour trouver celui qui a grossi. <strong>Cause :</strong> une partition saturée ; le dossier fautif est désigné par <code>du</code>, pas deviné. <strong>Correctif :</strong> archiver ou déplacer ce qui est volumineux, libérer la place, puis relancer les services concernés.</p></div></details>
+            </div>
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p><code>df -h</code> répond à « combien reste-t-il ? », <code>du -sh</code> à « qui prend la place ? » : on enchaîne les deux dès qu'une partition sature. Pour <code>tar</code>, les options se lisent comme une phrase : <code>c</code> créer, <code>x</code> extraire, <code>z</code> compresser en gzip, <code>f</code> nom du fichier.</p>
+                <ul>
+                    <li><code>df -h</code> répond à « combien reste-t-il ? », <code>du -sh</code> à « qui prend la place ? » : on enchaîne les deux dès qu'une partition sature.</li>
+                    <li>Pour <code>tar</code>, les options se lisent comme une phrase : <code>c</code> créer, <code>x</code> extraire, <code>z</code> compresser en gzip, <code>f</code> nom du fichier.</li>
+                    <li>Préfère l'UUID (<code>blkid</code>) à un nom comme <code>/dev/sdb1</code> pour désigner une partition.</li></ul>
             </div>
         </section>
 
@@ -2531,7 +2690,25 @@ iface ens33 inet <span class="k">static</span>
             <h2 class="chapter__title">Logs système &amp; audit</h2>
             <p class="chapter__intro">Où regarder quand quelque chose s'est mal passé, ou pour savoir qui a fait quoi.</p>
 
-            <p>Sur Debian, <strong>systemd-journald</strong> recueille les journaux de tout le système ; on les lit avec <code>journalctl</code>. Les fichiers texte classiques (<code>/var/log/syslog</code>, <code>auth.log</code>, <code>kern.log</code>) sont écrits par un autre service, <code>rsyslog</code> (config dans <code>/etc/rsyslog.conf</code>)… qui <strong>n'est plus installé par défaut depuis Debian 12</strong>. Sur une Debian 12 ou 13 neuve, ces fichiers n'existent donc pas : on utilise <code>journalctl</code>, ou on installe <code>rsyslog</code> si l'on tient aux fichiers texte.</p>
+            
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Dire où lire les journaux d'une Debian récente selon que <code>rsyslog</code> est installé ou non.</li>
+                    <li>Filtrer <code>journalctl</code> par service, par démarrage, par priorité et par date.</li>
+                    <li>Savoir qui s'est connecté, hier ou en ce moment, avec <code>last</code>, <code>who</code> et <code>w</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap17">Processus &amp; services</a> et <a href="#chap8">Redirections &amp; pipes</a> · 30 min · une Debian 12 ou 13.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi savoir où est la trace</h3>
+                <p>Après une panne, ou pour savoir qui a fait quoi, la réponse est presque toujours dans un journal. Mais l'endroit a changé : sur une Debian neuve, un fichier que tous les tutoriels citent peut tout simplement ne pas exister, et on conclut à tort qu'il n'y a pas de trace.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Journal systemd et fichiers rsyslog</h3>
+                <p>Sur Debian, <strong>systemd-journald</strong> recueille les journaux de tout le système ; on les lit avec <code>journalctl</code>. Les fichiers texte classiques (<code>/var/log/syslog</code>, <code>auth.log</code>, <code>kern.log</code>) sont écrits par un autre service, <code>rsyslog</code> (config dans <code>/etc/rsyslog.conf</code>)… qui <strong>n'est plus installé par défaut depuis Debian 12</strong>. Sur une Debian 12 ou 13 neuve, ces fichiers n'existent donc pas : on utilise <code>journalctl</code>, ou on installe <code>rsyslog</code> si l'on tient aux fichiers texte.</p>
             <div class="table-wrap"><table>
                 <thead><tr><th>Avec rsyslog (fichier)</th><th>Équivalent journalctl (toujours disponible)</th></tr></thead>
                 <tbody>
@@ -2541,6 +2718,34 @@ iface ens33 inet <span class="k">static</span>
                     <tr><td><code>tail -f</code> d'un fichier</td><td><code>journalctl -f</code> · <code>journalctl --since "1 hour ago"</code></td></tr>
                 </tbody>
             </table></div>
+                <p>Trois questions, trois sources : « que s'est-il passé ? » se lit dans le journal ; « qui s'est connecté ? » dans l'historique des connexions (<code>wtmp</code>, lu par <code>last</code>) ; « qui est connecté maintenant ? » dans la liste des sessions ouvertes (<code>who</code>, <code>w</code>).</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/systemd/systemd-journald.service.8.en.html" rel="noopener">systemd-journald.service(8)</a> · <a href="https://manpages.debian.org/stable/systemd/journalctl.1.en.html" rel="noopener">journalctl(1)</a> · <a href="https://manpages.debian.org/stable/rsyslog/rsyslogd.8.en.html" rel="noopener">rsyslogd(8)</a> · <a href="https://manpages.debian.org/stable/manpages/wtmp.5.en.html" rel="noopener">wtmp(5)</a>.</p>
+            </div>
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Retrouver les échecs de connexion SSH de la nuit</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · constater</p>
+                        <p class="walk__head"><code>cat /var/log/auth.log</code></p>
+                        <p>Fichier absent sur une Debian 13 neuve : il est écrit par rsyslog, non installé par défaut. L'absence du fichier ne prouve pas l'absence d'événements.</p>
+                        <p class="walk__change">Les événements sont dans le journal systemd.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · interroger</p>
+                        <p class="walk__head"><code>sudo journalctl -u ssh --since yesterday</code></p>
+                        <p>On demande le journal du seul service ssh, depuis hier.</p>
+                        <p class="walk__change"><code>-u</code> filtre par service.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · filtrer</p>
+                        <p class="walk__head"><code>sudo journalctl -u ssh --since yesterday | grep -i failed</code></p>
+                        <p>Un tube vers <code>grep</code> ne garde que les échecs.</p>
+                        <p class="walk__change">Une commande, un filtre, une réponse.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="table-wrap"><table>
                 <thead><tr><th>Fichier / commande</th><th>Contenu</th></tr></thead>
                 <tbody>
@@ -2562,9 +2767,25 @@ iface ens33 inet <span class="k">static</span>
                 <p class="tip__label">Pourquoi wtmp est en binaire</p>
                 <p><code>/var/log/wtmp</code> est un fichier d'enregistrements de taille fixe, écrit par les programmes de connexion (<code>login</code>, <code>sshd</code>…), pas un texte : on le lit avec <code>last</code>, pas avec <code>cat</code>. Le binaire ne le protège pas : root peut le modifier, d'où l'intérêt d'envoyer les journaux vers un autre serveur. Son format n'irait pas au-delà de 2038, raison pour laquelle Debian 13 propose <code>wtmpdb</code> en remplacement.</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p><code>journalctl</code> marche sur toute Debian récente : <code>-u service</code>, <code>-k</code>, <code>-b</code>, <code>-p err</code>, <code>-f</code>. Les fichiers texte de <code>/var/log</code> n'existent que si <code>rsyslog</code> est installé. <code>last</code> pour les connexions passées, <code>who</code> / <code>w</code> pour les connexions en cours.</p>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p><code>sudo journalctl -u ssh --since yesterday</code> affiche des lignes datées du service ssh ; <code>last</code> liste les connexions passées et <code>who</code> les sessions ouvertes en ce moment.</p>
+                <p class="verify__fail">« No such file or directory » sur <code>/var/log/auth.log</code> : <code>rsyslog</code> n'est pas installé, lis le journal avec <code>journalctl</code>. <code>last</code> sans résultat attendu : sur Debian 13, l'historique peut être dans <code>wtmpdb</code>, essaie <code>wtmpdb last</code>.</p>
+            </div>
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — les erreurs depuis le dernier démarrage</p>
+                <p>Tu veux lire uniquement les messages de priorité « erreur » enregistrés depuis le dernier démarrage de la machine. Quelle commande ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div><pre class="terminal__code"><span class="k">journalctl</span> <span class="p">-b -p err</span></pre></div><p>Combinaison de deux options du chapitre : <code>-b</code> (depuis le dernier démarrage) et <code>-p err</code> (erreurs) (<em>reconstitué, non testé</em>).</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Qui est connecté sur la machine à cet instant et que fait-il ? Et à quelle date la machine a-t-elle redémarré pour la dernière fois ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>w</code> (qui est connecté, ce qu'il fait, depuis combien de temps il est inactif), puis <code>last | grep reboot</code> pour les redémarrages. <code>who</code> suffit si l'on ne veut que la liste des sessions.</p></div></details>
+            </div>
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — pas de kern.log</p>
+                <p>Sur une Debian 13 fraîchement installée, tu cherches le message du noyau affiché quand tu as branché un disque. <code>/var/log/kern.log</code> n'existe pas. Le message s'est pourtant bien produit.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> chercher qui écrit ce fichier. <strong>Cause :</strong> <code>kern.log</code> est écrit par <code>rsyslog</code>, absent par défaut depuis Debian 12 ; les messages du noyau sont quand même dans le journal systemd. <strong>Correctif :</strong> <code>journalctl -k</code> (ou <code>sudo apt install rsyslog</code> si tu tiens au fichier texte, qui ne sera alimenté qu'à partir de l'installation).</p></div></details>
             </div>
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
@@ -2578,6 +2799,14 @@ iface ens33 inet <span class="k">static</span>
                     <div class="scenario__why"><p>Les événements sont dans le <strong>journal systemd</strong> : <code>sudo journalctl -u ssh --since yesterday</code> (ajouter <code>| grep -i failed</code> pour les échecs). Si tu veux retrouver <code>auth.log</code> : <code>sudo apt install rsyslog</code> — les traces n'y apparaîtront qu'à partir de là.</p></div>
                 </div>
             </div>
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li><code>journalctl</code> marche sur toute Debian récente : <code>-u service</code>, <code>-k</code>, <code>-b</code>, <code>-p err</code>, <code>-f</code>.</li>
+                    <li>Les fichiers texte de <code>/var/log</code> n'existent que si <code>rsyslog</code> est installé.</li>
+                    <li><code>last</code> pour les connexions passées, <code>who</code> / <code>w</code> pour les connexions en cours.</li></ul>
+            </div>
+
         </section>
 
         <!-- 20 -->
@@ -2586,7 +2815,24 @@ iface ens33 inet <span class="k">static</span>
             <h2 class="chapter__title">Partitions, GRUB &amp; réseaux de virtualisation</h2>
             <p class="chapter__intro">Des notions utiles dès l'installation ou quand on travaille avec des machines virtuelles (VMware, Hyper-V, VirtualBox).</p>
 
-            <h3>Les partitions principales sous Debian</h3>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Dire le rôle de <code>/</code>, de <code>/home</code> et du swap, et justifier la séparation de <code>/home</code>.</li>
+                    <li>Dérouler le démarrage (UEFI, GRUB, noyau et initramfs, systemd, connexion) et situer l'étape où une panne se produit.</li>
+                    <li>Choisir le mode réseau d'une machine virtuelle (privé, NAT, pont) selon son accès à internet et son exposition.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap18">Disques, archives &amp; infos système</a> et <a href="#chap17">Processus &amp; services</a> · 40 min · lecture ; les commandes se testent sur une Debian virtuelle.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi comprendre le démarrage et le réseau virtuel</h3>
+                <p>Les partitions se choisissent à l'installation et sont pénibles à changer ensuite ; un système qui ne démarre plus affiche un symptôme différent selon l'étape qui échoue, et connaître l'ordre des étapes dit où chercher. En virtualisation, le mode réseau décide à lui seul si la VM atteint internet et si d'autres machines peuvent l'atteindre.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Les partitions principales sous Debian</h3>
             <div class="table-wrap"><table>
                 <thead><tr><th>Partition</th><th>Rôle</th><th>Analogie Windows</th></tr></thead>
                 <tbody>
@@ -2600,15 +2846,28 @@ iface ens33 inet <span class="k">static</span>
                 <p>En mode mémoire faible de l'installateur, Debian recommande une swap « relativement grande » (1–2 Go).</p>
             </div>
 
+
             <h3>GRUB : le démarrage du système</h3>
             <p>GRUB (GRand Unified Bootloader) est le premier programme lancé après le BIOS/UEFI : il charge le noyau Linux. Équivalent du Windows Boot Manager (<code>bootmgr</code>). Il permet de choisir quel OS ou quelle version du noyau démarrer, et sa config est générée dans <code>/boot/grub/grub.cfg</code> (ne pas éditer directement) à partir de <code>/etc/default/grub</code>.</p>
-            <div class="terminal">
-                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
-                <pre class="terminal__code"><span class="k">sudo update-grub</span>              <span class="c"># régénère grub.cfg après modif de /etc/default/grub</span>
-<span class="k">sudo grub-install</span> <span class="s">/dev/sda</span>    <span class="c"># réinstalle GRUB sur un disque en mode BIOS</span></pre>
+
+            <h3>Modes réseau en virtualisation</h3>
+            <div class="table-wrap"><table>
+                <thead><tr><th>Mode</th><th>Accès Internet</th><th>Accessible de l'extérieur</th><th>Cas d'usage</th></tr></thead>
+                <tbody>
+                    <tr><td>Host-only / Interne / Privé</td><td class="no">non</td><td class="no">non</td><td>lab isolé, VMs qui se parlent entre elles sans sortir sur le réseau réel</td></tr>
+                    <tr><td>NAT</td><td class="yes">oui (via l'hôte)</td><td class="no">non</td><td>VM qui a juste besoin d'internet, sans être exposée</td></tr>
+                    <tr><td>Bridged / Externe</td><td class="yes">oui (direct)</td><td class="yes">oui</td><td>serveur accessible par d'autres machines du réseau local</td></tr>
+                </tbody>
+            </table></div>
+            <div class="takeaway">
+                <p class="takeaway__label">Sous Hyper-V</p>
+                <p>Ces 3 modes correspondent aux « commutateurs virtuels » : Externe (bridged), Interne (communique avec l'hôte mais pas le réseau physique) et Privé (isolé, même l'hôte ne communique pas avec les VMs).</p>
             </div>
-            <div class="walk">
-                <p class="walk__label">Pas à pas</p>
+
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/manpages/hier.7.en.html" rel="noopener">hier(7)</a> (rôle de <code>/</code> et de <code>/home</code>) · <a href="https://wiki.debian.org/Swap" rel="noopener">Debian Wiki — Swap</a> · <a href="https://manpages.debian.org/stable/manpages/boot.7.en.html" rel="noopener">boot(7)</a> (séquence de démarrage) · <a href="https://manpages.debian.org/stable/grub2-common/update-grub.8.en.html" rel="noopener">update-grub(8)</a>.</p>
+            </div>
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
                 <p class="walk__title">Du bouton d'alimentation au prompt de connexion</p>
                 <ol class="walk__steps">
                     <li class="walk__step">
@@ -2655,23 +2914,48 @@ iface ens33 inet <span class="k">static</span>
                     </li>
                 </ol>
             </div>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash</span></div>
+                <pre class="terminal__code"><span class="k">sudo update-grub</span>              <span class="c"># régénère grub.cfg après modif de /etc/default/grub</span>
+<span class="k">sudo grub-install</span> <span class="s">/dev/sda</span>    <span class="c"># réinstalle GRUB sur un disque en mode BIOS</span></pre>
+            </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après modification de <code>/etc/default/grub</code> puis <code>sudo update-grub</code>, la commande se termine sans erreur et le changement apparaît au menu GRUB au redémarrage suivant. <code>ps -p 1</code> désigne <code>systemd</code> ; <code>systemctl get-default</code> donne la cible de démarrage.</p>
+                <p class="verify__fail">Le changement n'apparaît pas : <code>update-grub</code> n'a pas été relancé après l'édition (ne modifie jamais <code>grub.cfg</code> à la main, il serait régénéré). Une racine introuvable mène à l'invite <code>(initramfs)</code> ; une ligne fautive de <code>fstab</code> mène à l'<em>emergency mode</em>.</p>
+            </div>
             <div class="tip">
                 <p class="tip__label">Mode recovery</p>
                 <p>Si le système ne démarre plus normalement, GRUB permet de démarrer en mode « single »/« recovery » pour réparer, ou de revenir à un ancien noyau si une mise à jour a posé problème.</p>
             </div>
 
-            <h3>Modes réseau en virtualisation</h3>
-            <div class="table-wrap"><table>
-                <thead><tr><th>Mode</th><th>Accès Internet</th><th>Accessible de l'extérieur</th><th>Cas d'usage</th></tr></thead>
-                <tbody>
-                    <tr><td>Host-only / Interne / Privé</td><td class="no">non</td><td class="no">non</td><td>lab isolé, VMs qui se parlent entre elles sans sortir sur le réseau réel</td></tr>
-                    <tr><td>NAT</td><td class="yes">oui (via l'hôte)</td><td class="no">non</td><td>VM qui a juste besoin d'internet, sans être exposée</td></tr>
-                    <tr><td>Bridged / Externe</td><td class="yes">oui (direct)</td><td class="yes">oui</td><td>serveur accessible par d'autres machines du réseau local</td></tr>
-                </tbody>
-            </table></div>
-            <div class="takeaway">
-                <p class="takeaway__label">Sous Hyper-V</p>
-                <p>Ces 3 modes correspondent aux « commutateurs virtuels » : Externe (bridged), Interne (communique avec l'hôte mais pas le réseau physique) et Privé (isolé, même l'hôte ne communique pas avec les VMs).</p>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — changer un réglage de GRUB</p>
+                <p>Tu dois modifier le comportement du menu de démarrage. Sur quel fichier travailles-tu, quelle commande lances-tu ensuite, et quel fichier ne touches-tu surtout pas ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>On édite <code>/etc/default/grub</code>, puis <code>sudo update-grub</code> régénère <code>/boot/grub/grub.cfg</code>. Ce dernier ne s'édite pas directement : il est réécrit à chaque exécution de <code>update-grub</code>.</p></div></details>
+            </div>
+
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Pour un lab : la VM A doit installer des paquets depuis internet sans être joignable depuis le réseau local ; les VM B et C doivent seulement se parler entre elles, sans aucune sortie. Quel mode réseau pour chacune ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>VM A : <strong>NAT</strong> (accès internet via l'hôte, non accessible de l'extérieur). VM B et C : <strong>host-only / interne / privé</strong> (ni internet, ni accès depuis le réseau réel). Le mode <strong>pont</strong> serait réservé à une machine qui doit être joignable depuis le réseau local.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — une invite (initramfs) au lieu de la connexion</p>
+                <p>Une VM Debian dont le disque racine repose sur un RAID ou LVM ne finit plus son démarrage : au lieu de l'invite de connexion, l'écran affiche une invite <code>(initramfs)</code>. Elle démarrait normalement hier.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> placer la panne dans la séquence de démarrage : GRUB a bien chargé noyau et initramfs, c'est donc l'étape où la vraie racine doit être trouvée et montée qui échoue. <strong>Cause :</strong> l'initramfs n'a pas pu charger les pilotes de disque, assembler le RAID (<code>mdadm</code>) ou activer LVM, donc ne trouve pas <code>/</code>. <strong>Correctif :</strong> vérifier les disques et la configuration RAID/LVM, et régénérer l'initramfs avec <code>update-initramfs -u</code> après une modification de <code>mdadm.conf</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Séparer <code>/home</code> permet de réinstaller le système sans perdre les données personnelles ; une racine pleine rend le système instable.</li>
+                    <li>Démarrage : UEFI, GRUB, noyau + initramfs, systemd (PID 1), connexion. Une racine introuvable donne <code>(initramfs)</code>, un <code>fstab</code> fautif donne l'<em>emergency mode</em>.</li>
+                    <li>Mode réseau : privé = isolé, NAT = sort sans être joignable, pont = joignable de l'extérieur. <code>update-grub</code> après toute modification de <code>/etc/default/grub</code>.</li></ul>
             </div>
         </section>
 
@@ -3258,7 +3542,7 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
 <script src="../assets/catalogue.js?v=a8bae127"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/linux-debian.js?v=ddd5693c"></script>
+<script src="../assets/quiz/linux-debian.js?v=2f74321e"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 <script src="../assets/atelier.js?v=c35298a6"></script>

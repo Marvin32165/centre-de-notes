@@ -2364,6 +2364,46 @@ window.QUIZ_BANK = {
         a: 0,
         why: "Sans <code>-E</code>, l'expression est basique et <code>+</code> n'y est pas un opérateur. Avec <code>-E</code>, <code>[0-9]+</code> signifie « au moins un chiffre ».",
         ref: "Chapitre 10"
+    },
+    {
+        lvl: 1,
+        q: "Une partition est presque pleine d'après <code>df -h</code>. Quelle commande te dit quel dossier y prend le plus de place ?",
+        c: ["<code>du -sh dossier</code>, lancée sur les dossiers de cette partition", "<code>df -h dossier</code>, qui détaille chaque dossier", "<code>blkid</code>", "<code>uptime</code>"],
+        a: 0,
+        why: "<code>df</code> mesure l'occupation d'une partition (« combien reste-t-il ? »), <code>du</code> additionne la taille des fichiers d'un dossier (« qui prend la place ? »). On enchaîne les deux (source : df(1), du(1)).",
+        ref: "Chapitre 18"
+    },
+    {
+        lvl: 1,
+        q: "Pourquoi préfère-t-on désigner une partition par son UUID plutôt que par <code>/dev/sdb1</code> ?",
+        c: ["L'UUID est plus court à taper", "Le nom <code>/dev/sdb1</code> dépend de l'ordre de détection des disques, alors que l'UUID reste attaché à la partition", "L'UUID chiffre la partition", "<code>/dev/sdb1</code> est réservé à root"],
+        a: 1,
+        why: "<code>blkid</code> affiche l'UUID de chaque partition. Contrairement à un nom attribué selon l'ordre de détection des disques, il ne change pas quand on ajoute ou retire un disque.",
+        ref: "Chapitre 18"
+    },
+    {
+        lvl: 1,
+        q: "Sur une Debian 13 neuve, <code>/var/log/auth.log</code> n'existe pas. Que conclus-tu ?",
+        c: ["Personne ne s'est connecté", "Le fichier est écrit par rsyslog, absent par défaut : les événements sont dans le journal, lisible avec <code>journalctl</code>", "Le disque est plein", "Il faut redémarrer le service ssh pour recréer le fichier"],
+        a: 1,
+        why: "Depuis Debian 12, <code>rsyslog</code> n'est plus installé par défaut. Les événements sont enregistrés par systemd-journald : <code>journalctl -u ssh</code> les affiche (source : journalctl(1), rsyslogd(8)).",
+        ref: "Chapitre 19"
+    },
+    {
+        lvl: 2,
+        q: "Quelle commande liste les connexions passées, et laquelle liste les sessions ouvertes à cet instant ?",
+        c: ["<code>who</code> pour le passé, <code>last</code> pour le présent", "<code>last</code> pour le passé, <code>who</code> (ou <code>w</code>) pour le présent", "<code>journalctl -f</code> pour les deux", "<code>ps aux</code> pour les deux"],
+        a: 1,
+        why: "<code>last</code> lit l'historique des connexions (<code>wtmp</code>), <code>who</code> et <code>w</code> la liste des sessions ouvertes (<code>utmp</code>) (source : wtmp(5)).",
+        ref: "Chapitre 19"
+    },
+    {
+        lvl: 1,
+        q: "Pourquoi sépare-t-on souvent <code>/home</code> de la racine <code>/</code> à l'installation ?",
+        c: ["Pour que <code>/home</code> soit plus rapide", "Pour pouvoir réinstaller le système sans perdre les données personnelles", "Parce que Debian l'exige", "Pour économiser de la RAM"],
+        a: 1,
+        why: "<code>/home</code> contient les données des utilisateurs : sur une partition à part, une réinstallation de <code>/</code> ne les touche pas. Une racine pleine rend en outre le système instable (source : hier(7)).",
+        ref: "Chapitre 20"
     }
     ]
 },

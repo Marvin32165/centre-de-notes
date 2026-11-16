@@ -3505,6 +3505,46 @@ window.QUIZ_BANK = {
         a: 2,
         why: "<code>gpresult /h</code> écrit un rapport complet en HTML, à ouvrir dans un navigateur. <code>gpresult /r</code> et <code>gpresult /r /scope user</code> n'affichent qu'un résumé dans la console, et <code>gpupdate /force</code> réapplique les GPO sans produire de rapport.",
         ref: "Chapitre 13"
+    },
+    {
+        lvl: 1,
+        q: "Tu retires le rôle serveur web d'un serveur et tu veux aussi supprimer ses fichiers. Quelle commande ?",
+        c: ["<code>Uninstall-WindowsFeature Web-Server -Remove</code>", "<code>Uninstall-WindowsFeature Web-Server</code>, sans option : les fichiers partent avec le rôle", "<code>Remove-Item Web-Server</code>", "<code>Install-WindowsFeature Web-Server -Remove</code>"],
+        a: 0,
+        why: "C'est <code>-Remove</code> qui supprime aussi les fichiers du rôle ; sans lui, le rôle est désinstallé mais les fichiers restent sur le disque.",
+        ref: "Chapitre 01"
+    },
+    {
+        lvl: 2,
+        q: "Avant de joindre SRV-FILE01 au domaine, que vérifies-tu pour savoir qu'il est prêt ?",
+        c: ["Que <code>Get-NetIPConfiguration</code> montre le DNS du DC et que <code>Resolve-DnsName orion.local</code> répond", "Que <code>ping 8.8.8.8</code> répond : l'accès à Internet suffit à trouver le domaine", "Que le serveur porte déjà le rôle AD DS", "Que SRV-FILE01 a été renommé en dernier, après la jonction"],
+        a: 0,
+        why: "La jonction passe par le DNS du domaine : adresse, DNS vers les DC et résolution de <code>orion.local</code> sont les trois points à contrôler.",
+        ref: "Chapitre 02"
+    },
+    {
+        lvl: 1,
+        q: "Dans Active Directory, quel objet est la frontière de sécurité la plus haute ?",
+        c: ["L'OU", "Le site", "La forêt", "Le contrôleur de domaine"],
+        a: 2,
+        why: "La forêt partage un schéma et un catalogue global ; le domaine est l'espace de noms et la base d'authentification, l'OU range et délègue, le site décrit la topologie.",
+        ref: "Chapitre 03"
+    },
+    {
+        lvl: 1,
+        q: "Quelle commande crée la forêt et le premier domaine, avec le DNS intégré ?",
+        c: ["<code>Install-ADDSDomainController</code>", "<code>Install-WindowsFeature DNS</code>", "<code>New-ADForest</code> suivie d'un redémarrage", "<code>Install-ADDSForest -DomainName \"orion.local\" -InstallDns</code>"],
+        a: 3,
+        why: "<code>Install-ADDSForest</code> crée la forêt, le domaine et, avec <code>-InstallDns</code>, le DNS intégré. <code>Install-ADDSDomainController</code> ajoute un DC à un domaine qui existe déjà.",
+        ref: "Chapitre 03"
+    },
+    {
+        lvl: 2,
+        q: "Une extension de schéma (pour Exchange ou LAPS, par exemple) échoue alors que les utilisateurs ouvrent leur session normalement. Quel rôle FSMO regarder en premier ?",
+        c: ["L'émulateur PDC", "Le maître d'infrastructure", "Le maître de schéma", "Le maître RID"],
+        a: 2,
+        why: "Le maître de schéma est seul à pouvoir modifier le schéma ; s'il est arrêté, rien ne se voit au quotidien, sauf une extension impossible.",
+        ref: "Chapitre 04"
     }
     ]
 },

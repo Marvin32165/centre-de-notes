@@ -149,6 +149,14 @@ vCPU | Processeur virtuel | Processeur virtuel attribué à une VM ; trop de vCP
 SID | Security Identifier | Identifiant de sécurité unique d'une installation Windows ou d'un compte ; Sysprep retire celui de la machine. | SID
 OOBE | Out-Of-Box Experience | Écran de première configuration de Windows, qui s'affiche au premier démarrage d'une image généralisée. | OOBE
 NAT | Network Address Translation | Traduction d'adresses : les machines d'un réseau privé sortent par l'adresse de l'hôte, sans être joignables de l'extérieur. | NAT\b
+Server Core | | Installation de Windows Server sans bureau : administration en PowerShell, avec sconfig ou à distance ; moins de mises à jour et de failles. | Server Core
+Desktop Experience | | Installation de Windows Server avec l'interface graphique complète (utilisée dans le lab). | Desktop Experience
+DSRM | Directory Services Restore Mode | Mode de démarrage d'un contrôleur de domaine pour restaurer l'annuaire ; son mot de passe est demandé à la promotion. | DSRM
+Niveau fonctionnel | | Réglage d'une forêt ou d'un domaine qui fixe les fonctions d'AD disponibles et la version minimale de Windows des DC. | niveaux? fonctionnels?
+IFM | Install From Media | Copie de l'annuaire préparée sur un DC (ntdsutil) pour promouvoir un autre DC sans tout répliquer par le réseau. | IFM
+FSMO | Flexible Single Master Operations | Les cinq rôles d'AD qui n'ont qu'un seul maître : schéma, nommage de domaines, RID, émulateur PDC, infrastructure. | FSMO
+Émulateur PDC | | Rôle FSMO du domaine : source de temps, mots de passe récents, verrouillages. | émulateur PDC
+Catalogue global | GC | Copie partielle de tous les objets de la forêt, tenue par certains DC pour les recherches et l'ouverture de session. | catalogue global
 ## Linux & virtualisation
 Linux | | Noyau libre ; une distribution (Debian, Ubuntu) l'assemble avec des outils et des paquets. | Linux
 Debian | | Distribution Linux communautaire, stable, base d'Ubuntu et de Proxmox. | Debian

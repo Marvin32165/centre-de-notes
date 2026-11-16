@@ -4,7 +4,7 @@
    - pages : réseau d'abord (toujours la dernière version), cache si le réseau manque ;
    - polices Google : gardées au premier chargement.
    VERSION et FICHIERS sont réécrits par site/outils/construit.js — ne pas éditer à la main. */
-const VERSION = 'a05202a49d';
+const VERSION = '03cc690bd2';
 const FICHIERS = [
   "assets/app.js?v=fabe4251",
   "assets/atelier.js?v=c35298a6",
@@ -12,15 +12,15 @@ const FICHIERS = [
   "assets/cartes.js?v=e3c23ad2",
   "assets/catalogue.js?v=40c03489",
   "assets/commandes-ui.js?v=12f19476",
-  "assets/commandes.js?v=93bffe1a",
+  "assets/commandes.js?v=496868ae",
   "assets/dojo.js?v=b46a816e",
   "assets/favicon.svg",
   "assets/glossaire-ui.js?v=178c909e",
-  "assets/glossaire.js?v=b0e87091",
+  "assets/glossaire.js?v=686a49af",
   "assets/notes.js?v=172c0c32",
   "assets/plan.js?v=5a5966ea",
   "assets/pratique.js?v=6ed4d335",
-  "assets/quiz-data.js?v=0c7e05bf",
+  "assets/quiz-data.js?v=871cdf53",
   "assets/quiz.js?v=87192477",
   "assets/quiz/azure.js?v=42079444",
   "assets/quiz/ccna-reseau.js?v=de311779",
@@ -48,10 +48,10 @@ const FICHIERS = [
   "assets/quiz/storage-clustering.js?v=c6ebdd85",
   "assets/quiz/subnetting.js?v=813bc728",
   "assets/quiz/voip.js?v=7a05186a",
-  "assets/quiz/windows-server.js?v=f7ac0523",
+  "assets/quiz/windows-server.js?v=8fa3263e",
   "assets/quiz/zabbix-windows.js?v=50232a45",
   "assets/revision.js?v=843cfd26",
-  "assets/search-index.js?v=6fb056c8",
+  "assets/search-index.js?v=53553119",
   "assets/search.js?v=80a32003",
   "assets/serie.js?v=3e1cada5",
   "assets/simulateurs.js?v=b2610493",

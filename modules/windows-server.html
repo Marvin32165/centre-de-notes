@@ -81,6 +81,35 @@
             <h2 class="chapter__title">Rôles, fonctionnalités, Desktop ou Core</h2>
             <p class="chapter__intro">Windows Server est une base neutre qu'on spécialise : un <strong>rôle</strong> dit ce que fait le serveur (contrôleur de domaine, DHCP, serveur web), une <strong>fonctionnalité</strong> lui ajoute une brique de support (outils d'administration, sauvegarde, clustering).</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Distinguer un rôle d'une fonctionnalité et donner un exemple de chacun.</li>
+                    <li>Choisir entre Desktop Experience et Server Core selon l'usage du serveur, et justifier.</li>
+                    <li>Installer, lister et retirer un rôle avec <code>Install-WindowsFeature</code>, <code>Get-WindowsFeature</code> et <code>Uninstall-WindowsFeature</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> module <a href="hyperv.html">Hyper-V</a> (une VM Windows Server du lab) · 30 min · une session PowerShell ouverte en administrateur.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Un même Windows pour des métiers très différents</h3>
+                <p>Le service demande un serveur DHCP pour les postes. On n'installe pas un autre système : on ajoute un rôle à un Windows Server existant. Dans le lab Orion, SRV-AD01 est à la fois contrôleur de domaine, serveur DNS et serveur DHCP, et SRV-FILE01 ne fait que des partages : même système, rôles différents.</p>
+                <p>Savoir ce qu'on installe, et ce qu'on laisse de côté, évite un serveur chargé de services inutiles à mettre à jour et à protéger.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Rôle, fonctionnalité et édition d'installation</h3>
+                <p>Un <strong>rôle</strong> répond à la question « que fait ce serveur ? » ; une <strong>fonctionnalité</strong> répond à « de quelle brique de support a-t-il besoin pour le faire ou pour être administré ? ». Par-dessus, l'<strong>édition d'installation</strong> décide s'il y a un bureau ou non.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Notion</th><th>Question à se poser</th><th>Exemples</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Rôle</strong></td><td>Que fait le serveur ?</td><td>AD DS (contrôleur de domaine), DNS, DHCP, serveur web (<code>Web-Server</code>)</td></tr>
+                            <tr><td><strong>Fonctionnalité</strong></td><td>Quelle brique lui ajoute-t-on ?</td><td>Outils d'administration, sauvegarde, clustering</td></tr>
+                            <tr><td><strong>Édition d'installation</strong></td><td>A-t-il un bureau ?</td><td>Desktop Experience ou Server Core</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             <div class="cards">
                 <div class="card">
                     <h3>Desktop Experience</h3>
@@ -91,6 +120,32 @@
                     <p>Pas de bureau : administration en PowerShell, avec <code>sconfig</code> pour les réglages de base, ou à distance (Server Manager, Windows Admin Center). Moins de mises à jour, moins de failles. Le bon choix pour un DC ou un DNS en production.</p>
                 </div>
             </div>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/administration/server-core/what-is-server-core" rel="noopener">Microsoft Learn — What is the Server Core installation option in Windows Server</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/servermanager/install-windowsfeature" rel="noopener">Microsoft Learn — Install-WindowsFeature</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Préparer SRV-AD01 : quelle édition, quels rôles, dans quel ordre ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le besoin</p>
+                        <p class="walk__head">Un premier serveur qui porte l'annuaire, le DNS et le DHCP</p>
+                        <p>Le lab a besoin d'un contrôleur de domaine (rôle AD DS), d'un DNS et d'un DHCP pour les postes. Ce sont trois rôles sur la même machine, SRV-AD01.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · l'édition</p>
+                        <p class="walk__head">Desktop Experience pour apprendre, Core pour la production</p>
+                        <p>On apprend avec les consoles graphiques sous les yeux : le lab utilise Desktop Experience. En production, un DC ou un DNS gagne à passer en Server Core (moins de mises à jour, moins de failles), administré à distance.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · l'installation</p>
+                        <p class="walk__head">Rôle, consoles, redémarrage annoncé</p>
+                        <p>Chaque rôle s'installe avec <code>-IncludeManagementTools</code> pour avoir ses consoles ; le redémarrage n'est demandé (<code>-Restart</code>) que quand on est prêt et qu'on l'a annoncé.</p>
+                        <p class="walk__change">Le serveur fait ce qu'on lui a demandé et rien de plus : chaque rôle installé a une raison d'être.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — rôles et fonctionnalités</span></div>
                 <pre class="terminal__code"><span class="k">Get-WindowsFeature</span> | <span class="k">Where-Object</span> Installed<span class="c">            # ce qui est installé</span>
@@ -101,9 +156,42 @@
                 <p class="tip__label">Le redémarrage, quand on veut</p>
                 <p>Dans l'assistant du Server Manager comme en PowerShell, on ne coche pas « redémarrer automatiquement » : on garde la main sur le moment du redémarrage, et on l'annonce. <code>-Restart</code> seulement quand on est prêt.</p>
             </div>
-            <div class="takeaway">
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Dans le terminal ci-dessus, lance <code>Get-WindowsFeature | Where-Object Installed</code> : la liste ne montre que ce qui est installé, chaque ligne avec son nom court (celui à passer à <code>Install-WindowsFeature</code>). Après l'installation d'un rôle, il doit y figurer ; après <code>Uninstall-WindowsFeature</code>, il doit en avoir disparu.</p>
+                <p class="verify__fail">Le rôle est listé mais sa console n'apparaît pas dans le menu Outils du Server Manager : il a été installé sans <code>-IncludeManagementTools</code>.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — installer un rôle avec ses consoles</p>
+                <p>Sur un serveur du lab, installe le rôle DHCP avec ses outils d'administration, sans redémarrer automatiquement. Énoncé seul : écris la commande.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell</span></div>
+                    <pre class="terminal__code"><span class="k">Install-WindowsFeature</span> DHCP <span class="p">-IncludeManagementTools</span></pre>
+                </div><p>Pas de <code>-Restart</code> : on garde la main sur le moment du redémarrage.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le rôle serveur web (<code>Web-Server</code>) n'a plus d'utilité sur un serveur. Retire-le en supprimant aussi ses fichiers.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell</span></div>
+                    <pre class="terminal__code"><span class="k">Uninstall-WindowsFeature</span> Web-Server <span class="p">-Remove</span></pre>
+                </div><p>C'est <code>-Remove</code> qui supprime aussi les fichiers du rôle ; sans lui, ils restent sur le disque.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la console DHCP manque à l'appel</p>
+                <p>Sur SRV-AD01, <code>Get-WindowsFeature</code> montre que le rôle DHCP est installé, mais la console DHCP n'apparaît pas dans le menu Outils du Server Manager.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le rôle est bien là, c'est donc son outil d'administration qui manque. <strong>Cause :</strong> le rôle a été installé sans <code>-IncludeManagementTools</code>. <strong>Correctif :</strong> relancer <code>Install-WindowsFeature DHCP -IncludeManagementTools</code> (<em>reconstitué, non testé</em> : le module ne montre que l'installation initiale), puis rouvrir le Server Manager.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p>Rôle = ce que fait le serveur ; fonctionnalité = ce qui l'aide à le faire. <code>Install-WindowsFeature … -IncludeManagementTools</code> installe le rôle et ses consoles. Server Core pour la production quand c'est possible.</p>
+                <ul>
+                    <li>Rôle = ce que fait le serveur ; fonctionnalité = ce qui l'aide à le faire.</li>
+                    <li><code>Install-WindowsFeature … -IncludeManagementTools</code> installe le rôle et ses consoles ; <code>-Remove</code> supprime aussi les fichiers au retrait.</li>
+                    <li>Desktop Experience pour apprendre, Server Core pour la production quand c'est possible.</li>
+                </ul>
             </div>
         </section>
 
@@ -112,6 +200,63 @@
             <p class="chapter__num">02</p>
             <h2 class="chapter__title">Préparer les serveurs du lab</h2>
             <p class="chapter__intro">Tous les serveurs du lab partent du même disque parent généralisé par Sysprep (module <a href="hyperv.html#sysprep">Hyper-V</a>), puis reçoivent leur identité réseau. L'ordre compte : adresse et DNS d'abord, nom ensuite, domaine en dernier.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Donner à un serveur son identité réseau dans le bon ordre : adresse, DNS, nom, domaine.</li>
+                    <li>Expliquer pourquoi un membre de domaine n'utilise que le DNS des contrôleurs de domaine.</li>
+                    <li>Vérifier avec <code>Get-NetIPConfiguration</code> et <code>Resolve-DnsName</code> qu'un serveur est prêt à rejoindre le domaine.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#roles">Rôles, fonctionnalités, Desktop ou Core</a> et module <a href="hyperv.html#sysprep">Hyper-V</a> (disque parent Sysprep) · 35 min · une VM du lab démarrée sur le commutateur <code>LABOPS</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Un serveur qu'on ne retrouve pas ne sert à personne</h3>
+                <p>Un serveur issu d'un disque parent généralisé n'a ni adresse fixe ni nom utile : tous les clones se ressemblent. Les postes, eux, doivent le joindre toujours au même endroit, et le serveur doit trouver le domaine pour s'y inscrire. Sans cette préparation, la jonction au domaine échoue, et c'est le DNS qu'on met en cause bien après coup.</p>
+                <p>Dans le lab Orion, chaque serveur prend son adresse dans le <a href="../labo.html">plan d'adressage</a> : un petit script de premier démarrage, toujours le même, évite les oublis.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Pourquoi l'ordre adresse, DNS, nom, domaine</h3>
+                <p>Chaque étape prépare la suivante. Un serveur ne peut pas joindre un contrôleur de domaine s'il n'a pas d'adresse ; il ne le trouve que si son DNS connaît le domaine, parce que le DC se découvre par des enregistrements SRV publiés dans la zone DNS du domaine ; le nom est mieux choisi avant d'entrer dans l'annuaire, où il devient un objet.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Étape</th><th>Ce qu'on règle</th><th>Pourquoi à ce moment</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>1. Adresse</strong></td><td>IP fixe, longueur de préfixe, passerelle (plan Orion)</td><td>Sans elle, aucun échange avec les DC</td></tr>
+                            <tr><td><strong>2. DNS</strong></td><td>Les DC seulement (<code>172.16.50.10</code>)</td><td>Seul le DNS du domaine connaît ses enregistrements SRV</td></tr>
+                            <tr><td><strong>3. Nom</strong></td><td>Nom du serveur, puis redémarrage</td><td>Renommer après la jonction ou la promotion est possible, mais plus délicat</td></tr>
+                            <tr><td><strong>4. Domaine</strong></td><td>Jonction au domaine, puis redémarrage</td><td>Les trois étapes précédentes sont en place</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/powershell/module/dnsclient/set-dnsclientserveraddress" rel="noopener">Microsoft Learn — Set-DnsClientServerAddress</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/add-computer" rel="noopener">Microsoft Learn — Add-Computer</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">SRV-AD01 démarre pour la première fois depuis le disque parent</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · l'adresse</p>
+                        <p class="walk__head">Le plan Orion donne <code>172.16.50.10</code></p>
+                        <p>On repère le nom de la carte avec <code>Get-NetAdapter</code>, puis on fixe l'adresse, le préfixe <code>/24</code> et la passerelle <code>172.16.50.1</code> (l'hôte Hyper-V).</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · le DNS</p>
+                        <p class="walk__head">Le premier DC pointe vers lui-même</p>
+                        <p>SRV-AD01 sera le premier DNS du domaine : il se déclare lui-même comme serveur DNS (<code>172.16.50.10</code>). Les autres serveurs pointeront vers lui.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le nom</p>
+                        <p class="walk__head">Un nom lisible, un redémarrage</p>
+                        <p>On renomme en <code>SRV-AD01</code> avec <code>-Restart</code> : il n'y a pas encore de domaine à joindre, puisque c'est lui qui va le créer (chapitre suivant).</p>
+                        <p class="walk__change">Pour SRV-AD02 ou SRV-FILE01, la dernière étape est <code>Add-Computer -DomainName orion.local -Restart</code>, avec le DNS déjà pointé vers <code>172.16.50.10</code>.</p>
+                    </li>
+                </ol>
+            </div>
+
 
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01 au premier démarrage (script du TP final)</span></div>
@@ -126,7 +271,7 @@
                 <p class="takeaway__label">Le piège du DNS public</p>
                 <p>Le TP DNS du cours fait volontairement partir les serveurs avec <code>8.8.8.8</code> en DNS, puis fait corriger. À retenir : <strong>un membre de domaine n'utilise que le DNS des contrôleurs de domaine</strong>. Avec un DNS public, ni la jonction au domaine ni l'ouverture de session ne fonctionnent.</p>
             </div>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Le serveur est-il prêt à rejoindre le domaine ?</p>
             <div class="terminal">
@@ -141,9 +286,26 @@ IPv4DefaultGateway   : 172.16.50.1
 DNSServer            : 172.16.50.10</pre>
                 <p class="verify__fail"><code>Add-Computer</code> répond « The specified domain either does not exist or could not be contacted » (erreur 1355) : c'est souvent le DNS du serveur, pas le domaine.</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Adresse fixe, DNS vers les DC, nom, puis domaine — dans cet ordre. Renommer après la jonction ou la promotion est possible, mais plus délicat.</p>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — préparer SRV-FILE01</p>
+                <p>SRV-FILE01 doit prendre l'adresse <code>172.16.50.20/24</code> du plan Orion, avec sa passerelle, et n'utiliser que le DNS du premier contrôleur de domaine. Énoncé seul : écris les deux commandes (la carte s'appelle <code>Ethernet</code>).</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-FILE01</span></div>
+                    <pre class="terminal__code"><span class="k">New-NetIPAddress</span> <span class="p">-InterfaceAlias</span> <span class="s">"Ethernet"</span> <span class="p">-IPAddress</span> 172.16.50.20 <span class="p">-PrefixLength</span> 24 <span class="p">-DefaultGateway</span> 172.16.50.1
+<span class="k">Set-DnsClientServerAddress</span> <span class="p">-InterfaceAlias</span> <span class="s">"Ethernet"</span> <span class="p">-ServerAddresses</span> 172.16.50.10</pre>
+                </div><p>Mêmes commandes que pour SRV-AD01, avec l'adresse de SRV-FILE01 (<em>reconstitué, non testé</em>). Le DNS reste <code>172.16.50.10</code>, jamais <code>8.8.8.8</code>.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu prépares un nouveau serveur : tu as son adresse, son DNS, son nom et la jonction au domaine à faire. Dans quel ordre fais-tu les quatre opérations, et pourquoi la jonction passe-t-elle en dernier ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Adresse, DNS, nom, puis domaine. La jonction vient en dernier parce qu'elle a besoin d'une adresse qui joint le contrôleur de domaine et d'un DNS qui connaît <code>orion.local</code> ; le nom se choisit avant que le serveur devienne un objet de l'annuaire.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le domaine reste introuvable</p>
+                <p>Depuis SRV-FILE01, <code>ping 172.16.50.10</code> répond. Pourtant <code>Resolve-DnsName orion.local</code> échoue, et <code>Add-Computer</code> répond « The specified domain either does not exist or could not be contacted ».</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le ping par adresse répond, le réseau et la passerelle fonctionnent ; c'est donc la résolution du nom qui échoue. Lire la ligne <code>DNSServer</code> de <code>Get-NetIPConfiguration</code>. <strong>Cause :</strong> le serveur interroge un DNS public (par exemple <code>8.8.8.8</code>), qui ne connaît ni <code>orion.local</code> ni ses enregistrements SRV. <strong>Correctif :</strong> <code>Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 172.16.50.10</code>, puis <code>Resolve-DnsName orion.local</code> pour confirmer.</p></div></details>
             </div>
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
@@ -157,6 +319,15 @@ DNSServer            : 172.16.50.10</pre>
                     <div class="scenario__why"><p>Le ping par adresse prouve que le réseau marche. Pour joindre le domaine, le serveur doit trouver un DC par les enregistrements SRV de <code>orion.local</code> : seul le DNS du domaine les connaît. <code>Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 172.16.50.10</code>, puis <code>Resolve-DnsName orion.local</code> pour vérifier.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Adresse fixe, DNS vers les DC, nom, puis domaine — dans cet ordre.</li>
+                    <li>Un membre de domaine n'utilise que le DNS des contrôleurs de domaine : un DNS public ne connaît pas <code>orion.local</code>.</li>
+                    <li>Avant la jonction, <code>Get-NetIPConfiguration</code> et <code>Resolve-DnsName orion.local</code> disent si le serveur est prêt. Renommer après coup reste possible, mais plus délicat.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 03 -->
@@ -165,6 +336,25 @@ DNSServer            : 172.16.50.10</pre>
             <h2 class="chapter__title">Active Directory : la forêt et le premier contrôleur</h2>
             <p class="chapter__intro">AD DS est l'annuaire du réseau : il authentifie les utilisateurs, organise les machines et distribue les stratégies. Tout part d'une <strong>forêt</strong> qui contient un <strong>domaine</strong>, et d'un premier <strong>contrôleur de domaine</strong> (DC).</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Décrire forêt, domaine, contrôleur de domaine, OU et site, et les situer dans le lab Orion.</li>
+                    <li>Promouvoir le premier contrôleur de domaine avec <code>Install-ADDSForest</code>.</li>
+                    <li>Expliquer pourquoi AD dépend du DNS et des enregistrements SRV.</li>
+                    <li>Contrôler le résultat avec <code>Get-ADDomain</code>, <code>dcdiag</code> et <code>Resolve-DnsName</code>, et lire les niveaux fonctionnels.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#preparer">Préparer les serveurs du lab</a> (SRV-AD01 a son adresse <code>172.16.50.10</code> et son nom) · 40 min · une VM Windows Server du lab.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Un seul annuaire plutôt qu'un compte par machine</h3>
+                <p>Sans annuaire, chaque poste garde ses propres comptes : créer un utilisateur, le désactiver, changer une règle de sécurité se fait machine par machine. Avec AD DS, l'identité est centralisée : on crée un compte une fois, il ouvre une session partout, et une stratégie posée une fois s'applique à tout un service.</p>
+                <p>Ce service tient en un point : le contrôleur de domaine. Le monter proprement, avec le DNS dont il dépend, est donc la première étape de tout le reste du module.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Forêt, domaine, contrôleur de domaine, OU et site</h3>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Objet</th><th>Ce que c'est</th><th>Dans le lab</th></tr></thead>
@@ -177,15 +367,42 @@ DNSServer            : 172.16.50.10</pre>
                     </tbody>
                 </table>
             </div>
+            <p>La promotion fixe aussi les <strong>niveaux fonctionnels</strong> de la forêt et du domaine (paramètres <code>-ForestMode</code> et <code>-DomainMode</code>) : ils décident des fonctions d'AD disponibles et de la version minimale de Windows des DC. Windows Server 2025 apporte son propre niveau (Windows Server 2025). Dans l'autre sens, pour ajouter un DC 2025 à une forêt existante, celle-ci doit être au moins au niveau <strong>Windows Server 2016</strong>. Le niveau se lit avec <code>(Get-ADForest).ForestMode</code> et <code>(Get-ADDomain).DomainMode</code>. On le monte une fois tous les DC à jour ; le redescendre n'est possible que dans des cas limités.</p>
+            <p>La promotion installe le DNS (par défaut pour une nouvelle forêt) et crée la zone DNS <code>orion.local</code> intégrée à l'annuaire, avec les enregistrements <strong>SRV</strong> (<code>_ldap._tcp</code>, <code>_kerberos._tcp</code>) par lesquels les postes trouvent leurs contrôleurs. C'est pour ça qu'AD ne fonctionne pas sans un DNS correct.</p>
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview" rel="noopener">Microsoft Learn — Active Directory Domain Services overview</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/addsdeployment/install-addsforest" rel="noopener">Microsoft Learn — Install-ADDSForest</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Ce que fait la promotion de SRV-AD01, pas à pas</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · les paramètres</p>
+                        <p class="walk__head">Un nom de domaine DNS et son nom court</p>
+                        <p><code>-DomainName "orion.local"</code> donne l'espace de noms ; <code>-DomainNetbiosName "ORION"</code> le nom court. La commande demande ensuite un mot de passe DSRM, pour restaurer l'annuaire en cas de panne, puis une confirmation.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · ce qui est créé</p>
+                        <p class="walk__head">Forêt, domaine, DNS et zone intégrée</p>
+                        <p>Avec <code>-InstallDns</code>, le serveur devient aussi serveur DNS, avec la zone <code>orion.local</code> intégrée à l'annuaire et ses enregistrements SRV (<code>_ldap._tcp</code>, <code>_kerberos._tcp</code>).</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · après le redémarrage</p>
+                        <p class="walk__head">Les postes peuvent trouver un DC</p>
+                        <p>Un poste dont le DNS pointe vers SRV-AD01 interroge ces enregistrements SRV pour trouver un contrôleur de domaine. C'est aussi ce qu'on vérifie juste après.</p>
+                        <p class="walk__change">Un seul DC, une seule forêt : le second DC (chapitre suivant) viendra supprimer ce point de panne.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01</span></div>
                 <pre class="terminal__code"><span class="k">Install-WindowsFeature</span> AD-Domain-Services, DNS <span class="p">-IncludeManagementTools</span>
 <span class="k">Install-ADDSForest</span> <span class="p">-DomainName</span> <span class="s">"orion.local"</span> <span class="p">-DomainNetbiosName</span> <span class="s">"ORION"</span> <span class="p">-InstallDns</span>
 <span class="c"># demande le mot de passe DSRM (restauration de l'annuaire), une confirmation, puis redémarre</span></pre>
             </div>
-            <p>La promotion fixe aussi les <strong>niveaux fonctionnels</strong> de la forêt et du domaine (paramètres <code>-ForestMode</code> et <code>-DomainMode</code>) : ils décident des fonctions d'AD disponibles et de la version minimale de Windows des DC. Windows Server 2025 apporte son propre niveau (Windows Server 2025). Dans l'autre sens, pour ajouter un DC 2025 à une forêt existante, celle-ci doit être au moins au niveau <strong>Windows Server 2016</strong>. Le niveau se lit avec <code>(Get-ADForest).ForestMode</code> et <code>(Get-ADDomain).DomainMode</code>. On le monte une fois tous les DC à jour ; le redescendre n'est possible que dans des cas limités.</p>
-            <p>La promotion installe le DNS (par défaut pour une nouvelle forêt) et crée la zone DNS <code>orion.local</code> intégrée à l'annuaire, avec les enregistrements <strong>SRV</strong> (<code>_ldap._tcp</code>, <code>_kerberos._tcp</code>) par lesquels les postes trouvent leurs contrôleurs. C'est pour ça qu'AD ne fonctionne pas sans un DNS correct.</p>
-            <div class="verify">
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Le domaine répond-il, et le contrôleur est-il sain ?</p>
             <div class="terminal">
@@ -200,9 +417,37 @@ DNSServer            : 172.16.50.10</pre>
 orion.local ORION       SRV-AD01.orion.local</pre>
                 <p class="verify__fail"><code>dcdiag /q</code> n'affiche rien quand tout va bien. Une erreur sur les tests DNS ou <em>Advertising</em> juste après la promotion peut venir d'un service pas encore démarré : attendre quelques minutes et relancer.</p>
             </div>
-            <div class="takeaway">
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — lire les niveaux fonctionnels</p>
+                <p>Tu veux savoir à quel niveau fonctionnel tournent la forêt et le domaine avant d'y ajouter un DC. Énoncé seul : quelles deux commandes lis-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal">
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01</span></div>
+                    <pre class="terminal__code">(<span class="k">Get-ADForest</span>).ForestMode
+(<span class="k">Get-ADDomain</span>).DomainMode</pre>
+                </div><p>Pour ajouter un DC Windows Server 2025 à une forêt existante, elle doit être au moins au niveau Windows Server 2016.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu dois prouver que les postes pourront trouver un contrôleur de domaine pour Kerberos. Quel enregistrement cherches-tu dans le DNS, et avec quelle commande ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">PowerShell — SRV-AD01</span></div>
+                    <pre class="terminal__code"><span class="k">Resolve-DnsName</span> _kerberos._tcp.orion.local <span class="p">-Type</span> SRV</pre>
+                </div><p>Même commande que pour <code>_ldap._tcp</code>, avec l'autre enregistrement SRV cité au chapitre (<em>reconstitué, non testé</em>).</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — dcdiag proteste juste après la promotion</p>
+                <p>SRV-AD01 vient de redémarrer après <code>Install-ADDSForest</code>. Tu lances <code>dcdiag /q</code> tout de suite : il affiche des erreurs sur les tests DNS et <em>Advertising</em>.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> noter depuis quand le serveur a redémarré, puis relire le résultat plus tard avant de toucher à quoi que ce soit. <strong>Cause probable :</strong> un service pas encore démarré juste après la promotion. <strong>Correctif :</strong> attendre quelques minutes et relancer <code>dcdiag /q</code> ; s'il se tait, tout va bien. Si l'erreur persiste, contrôler que <code>Resolve-DnsName _ldap._tcp.orion.local -Type SRV</code> répond.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p><code>Install-ADDSForest</code> crée forêt, domaine et DNS intégré en une commande. Les enregistrements SRV publiés dans le DNS sont ce qui permet aux postes de trouver un DC : sans DNS, pas d'AD.</p>
+                <ul>
+                    <li><code>Install-ADDSForest</code> crée forêt, domaine et DNS intégré en une commande ; le mot de passe DSRM sert à restaurer l'annuaire.</li>
+                    <li>Les enregistrements SRV publiés dans le DNS permettent aux postes de trouver un DC : sans DNS, pas d'AD.</li>
+                    <li><code>dcdiag /q</code> n'affiche rien quand tout va bien ; juste après la promotion, patienter avant de conclure à une panne.</li>
+                </ul>
             </div>
         </section>
 
@@ -212,17 +457,27 @@ orion.local ORION       SRV-AD01.orion.local</pre>
             <h2 class="chapter__title">Le second contrôleur de domaine, par IFM</h2>
             <p class="chapter__intro">Un seul DC, c'est un seul point de panne pour toute l'authentification. Le TP final impose un second DC, promu à partir d'un <strong>IFM</strong> (<em>Install From Media</em>) : une copie de l'annuaire préparée sur le premier, qui évite de tout répliquer par le réseau.</p>
 
-            <div class="terminal">
-                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Sur SRV-AD01 — créer le média, puis le copier</span></div>
-                <pre class="terminal__code"><span class="k">ntdsutil</span> <span class="s">"activate instance ntds"</span> ifm <span class="s">"create sysvol full C:\IFM"</span> quit quit
-<span class="k">robocopy</span> C:\IFM \\SRV-AD02\C$\IFM /E</pre>
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Expliquer pourquoi un domaine a au moins deux contrôleurs et ce qu'apporte l'IFM.</li>
+                    <li>Promouvoir SRV-AD02 à partir d'un média créé sur SRV-AD01.</li>
+                    <li>Nommer les cinq rôles FSMO et dire lequel se remarque en premier quand il s'arrête.</li>
+                    <li>Contrôler la réplication avec <code>repadmin /replsummary</code> et lister les rôles avec <code>netdom query fsmo</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#adds">Active Directory : la forêt et le premier contrôleur</a> et <a href="#preparer">Préparer les serveurs du lab</a> · 40 min · SRV-AD01 promu, SRV-AD02 membre du domaine (<code>172.16.50.11</code>).</p>
             </div>
-            <div class="terminal">
-                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Sur SRV-AD02 — déjà membre du domaine</span></div>
-                <pre class="terminal__code"><span class="k">Install-WindowsFeature</span> AD-Domain-Services, DNS <span class="p">-IncludeManagementTools</span>
-<span class="k">Install-ADDSDomainController</span> <span class="p">-DomainName</span> <span class="s">"orion.local"</span> <span class="p">-InstallationMediaPath</span> <span class="s">"C:\IFM"</span> <span class="p">-InstallDns</span></pre>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Quand l'unique contrôleur s'arrête, tout s'arrête</h3>
+                <p>Avec un seul DC, une panne ou une maintenance de SRV-AD01 prive tout le domaine d'authentification et de DNS. Un second DC règle ce point de panne : il porte une copie complète de l'annuaire, du DNS et du catalogue global, et prend le relais.</p>
+                <p>Le TP final impose ce second DC. On le promeut avec un média (IFM) plutôt que par réplication complète sur le réseau : c'est la méthode qu'on utilise quand le lien vers le site est lent.</p>
             </div>
-            <p>Sur un petit lab, l'IFM ne fait gagner que quelques secondes ; sur un site distant relié par un lien lent, il évite de faire transiter des gigaoctets. La réplication ne transfère ensuite que ce qui a changé depuis la création du média.</p>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>L'IFM : promouvoir un DC à partir d'une copie locale</h3>
+                <p>L'<strong>IFM</strong> (<em>Install From Media</em>) est une copie de l'annuaire préparée sur le premier DC, qu'on emporte sur le futur DC : la promotion lit cette copie au lieu de tout recevoir par le réseau, puis la réplication ne transfère que ce qui a changé depuis la création du média.</p>
+                <p>Sur un petit lab, l'IFM ne fait gagner que quelques secondes ; sur un site distant relié par un lien lent, il évite de faire transiter des gigaoctets. La réplication ne transfère ensuite que ce qui a changé depuis la création du média.</p>
             <h3>Les rôles FSMO</h3>
             <p>Tous les DC sont égaux pour authentifier, mais cinq opérations n'ont qu'un seul maître : les <strong>rôles FSMO</strong>. Le premier DC les porte tous. Le plus sollicité au quotidien est l'<strong>émulateur PDC</strong> : source de temps du domaine, référence pour les changements de mot de passe.</p>
             <div class="table-wrap">
@@ -238,7 +493,44 @@ orion.local ORION       SRV-AD01.orion.local</pre>
                 </table>
             </div>
             <p><code>netdom query fsmo</code> les liste. On les <strong>transfère</strong> proprement quand le DC source est en ligne (<code>Move-ADDirectoryServerOperationMasterRole</code>) ; on ne les <strong>saisit</strong> (<code>-Force</code>) que si l'ancien porteur est perdu pour de bon, et il ne doit pas revenir sur le réseau avec son ancien état : on le retire du domaine et on nettoie ses métadonnées.</p>
-            <div class="verify">
+                <p class="note">Source : <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/fsmo-roles" rel="noopener">Microsoft Learn — Active Directory FSMO roles in Windows</a> · <a href="https://learn.microsoft.com/en-us/powershell/module/addsdeployment/install-addsdomaincontroller" rel="noopener">Microsoft Learn — Install-ADDSDomainController</a></p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Ajouter SRV-AD02 : de la copie de l'annuaire au second DC</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le média</p>
+                        <p class="walk__head">Une copie de l'annuaire, créée sur SRV-AD01</p>
+                        <p><code>ntdsutil</code> crée le média IFM dans <code>C:\IFM</code> (annuaire et SYSVOL), et <code>robocopy</code> le copie sur SRV-AD02, qui est déjà membre du domaine.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · la promotion</p>
+                        <p class="walk__head">Le même rôle, mais un DC de plus et non une nouvelle forêt</p>
+                        <p>SRV-AD02 reçoit AD DS et DNS, puis <code>Install-ADDSDomainController</code> pointe vers le média avec <code>-InstallationMediaPath</code> : le domaine existe déjà, on ne le crée pas.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le contrôle</p>
+                        <p class="walk__head">Deux DC qui répliquent, des rôles FSMO qui restent chez le premier</p>
+                        <p><code>repadmin /replsummary</code> doit montrer zéro échec ; <code>netdom query fsmo</code> montre que SRV-AD01 porte encore les cinq rôles.</p>
+                        <p class="walk__change">Les rôles FSMO ne bougent pas tout seuls : un transfert est une décision, pas un effet de la promotion.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Sur SRV-AD01 — créer le média, puis le copier</span></div>
+                <pre class="terminal__code"><span class="k">ntdsutil</span> <span class="s">"activate instance ntds"</span> ifm <span class="s">"create sysvol full C:\IFM"</span> quit quit
+<span class="k">robocopy</span> C:\IFM \\SRV-AD02\C$\IFM /E</pre>
+            </div>
+            <div class="terminal">
+                <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Sur SRV-AD02 — déjà membre du domaine</span></div>
+                <pre class="terminal__code"><span class="k">Install-WindowsFeature</span> AD-Domain-Services, DNS <span class="p">-IncludeManagementTools</span>
+<span class="k">Install-ADDSDomainController</span> <span class="p">-DomainName</span> <span class="s">"orion.local"</span> <span class="p">-InstallationMediaPath</span> <span class="s">"C:\IFM"</span> <span class="p">-InstallDns</span></pre>
+            </div>
+
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Les deux DC répliquent-ils ?</p>
             <div class="terminal">
@@ -252,9 +544,22 @@ SRV-AD01                 03m:12s    0 /   5    0
 SRV-AD02                 02m:48s    0 /   5    0</pre>
                 <p class="verify__fail">Des échecs de réplication : vérifier que chaque DC se résout dans le DNS de l'autre, que l'heure est la même (Kerberos, écart maximal de 5 minutes), et lancer <code>repadmin /showrepl</code> pour le détail.</p>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Deux DC minimum ; l'IFM promeut le second à partir d'une copie locale de l'annuaire. <code>repadmin /replsummary</code> doit afficher zéro échec. L'émulateur PDC donne l'heure à tout le domaine.</p>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — SRV-AD01 part en maintenance une semaine</p>
+                <p>SRV-AD01 porte les cinq rôles FSMO et sera arrêté une semaine, mais il reviendra. SRV-AD02 est en ligne. Que fais-tu des rôles FSMO, et quelle commande te dit où ils sont ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Tu <strong>transfères</strong> les rôles avant l'arrêt, puisque le DC source est en ligne : <code>Move-ADDirectoryServerOperationMasterRole</code>. <code>netdom query fsmo</code> liste les porteurs, avant comme après. Pas de saisie (<code>-Force</code>) : l'ancien porteur n'est pas perdu.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le disque de SRV-AD01 est détruit pour de bon ; le serveur ne reviendra jamais. SRV-AD02 est sain. Que fais-tu des rôles FSMO, et que ne dois-tu surtout pas faire ensuite avec l'ancien DC ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>L'ancien porteur est perdu pour de bon : on <strong>saisit</strong> les rôles sur SRV-AD02 (<code>-Force</code>). L'ancien DC ne doit jamais revenir sur le réseau avec son ancien état : on le retire du domaine et on nettoie ses métadonnées.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la réplication échoue</p>
+                <p>Après la promotion de SRV-AD02, <code>repadmin /replsummary</code> affiche des échecs dans la colonne <em>fails/total</em> pour SRV-AD02, alors que tout semblait fonctionner la veille.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> lire le détail avec <code>repadmin /showrepl</code>, puis contrôler deux choses. <strong>Causes possibles :</strong> un DC ne se résout plus dans le DNS de l'autre, ou l'heure des deux DC diffère de plus de 5 minutes (Kerberos). <strong>Correctif :</strong> rétablir la résolution de nom entre les deux DC et remettre les horloges d'accord (l'émulateur PDC est la source de temps du domaine), puis relancer <code>repadmin /replsummary</code>.</p></div></details>
             </div>
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
@@ -267,6 +572,15 @@ SRV-AD02                 02m:48s    0 /   5    0</pre>
                     </div>
                     <div class="scenario__why"><p>Un second DC sert justement à ça : il a toute la base, le DNS et le catalogue global. Pendant une heure, aucune opération à maître unique ne manque vraiment. Pour une absence longue, on <strong>transfère</strong> les rôles avant l'arrêt ; on ne les <strong>saisit</strong> que si SRV-AD01 ne reviendra jamais.</p></div>
                 </div>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Deux DC minimum ; l'IFM promeut le second à partir d'une copie locale de l'annuaire.</li>
+                    <li>Cinq rôles FSMO, un seul maître chacun : on les <strong>transfère</strong> quand le DC source est en ligne, on ne les <strong>saisit</strong> que s'il est perdu pour de bon.</li>
+                    <li><code>repadmin /replsummary</code> doit afficher zéro échec ; l'émulateur PDC donne l'heure à tout le domaine.</li>
+                </ul>
             </div>
         </section>
 
@@ -981,7 +1295,7 @@ BUILTIN\Administrators:(OI)(CI)(F)</pre>
 <script src="../assets/catalogue.js?v=40c03489"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/windows-server.js?v=f7ac0523"></script>
+<script src="../assets/quiz/windows-server.js?v=8fa3263e"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 </body>

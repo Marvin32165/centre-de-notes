@@ -2228,6 +2228,70 @@ window.QUIZ_BANK = {
         a: 2,
         why: "Un lien symbolique ne contient que le chemin de sa cible : si la cible disparaît ou change de nom, le lien reste et ne mène nulle part.",
         ref: "Chapitre 06"
+    },
+    {
+        lvl: 1,
+        q: "Un fichier doit être lisible et modifiable par son propriétaire, lisible par son groupe, fermé aux autres. Quel mode octal le donne ?",
+        c: ["<code>640</code>", "<code>604</code>", "<code>460</code>", "<code>750</code>"],
+        a: 0,
+        why: "<code>rw-</code> = 4+2 = 6 pour le propriétaire, <code>r--</code> = 4 pour le groupe, <code>---</code> = 0 pour les autres : <code>640</code>. <code>750</code> donnerait aussi l'exécution et rien en écriture au groupe.",
+        ref: "Chapitre 07"
+    },
+    {
+        lvl: 2,
+        q: "Avec un <code>umask</code> de <code>0022</code>, quels droits reçoit un dossier créé par <code>mkdir</code> ?",
+        c: ["<code>644</code> (rw-r--r--)", "<code>755</code> (rwxr-xr-x)", "<code>777</code> (rwxrwxrwx)", "<code>022</code> (----w--w-)"],
+        a: 1,
+        why: "Un dossier part de <code>777</code> et le <code>umask</code> en retire <code>022</code> : <code>755</code>. <code>644</code> est le résultat pour un fichier, qui part de <code>666</code>.",
+        ref: "Chapitre 07"
+    },
+    {
+        lvl: 1,
+        q: "Tu lances <code>./sauve.sh</code> et le terminal répond « Permission non accordée », alors que tu es propriétaire du fichier et que tu peux le lire. Que fais-tu en premier ?",
+        c: ["Relancer la commande avec <code>sudo</code> sans rien vérifier", "Lire les droits avec <code>ls -l</code> : il manque sans doute le droit <code>x</code>, que <code>chmod u+x</code> ajoute", "Changer le propriétaire du fichier avec <code>chown</code>", "Supprimer le fichier et le recréer"],
+        a: 1,
+        why: "Un fichier créé normalement n'a jamais le droit d'exécution. On lit d'abord l'état avec <code>ls -l</code>, puis on ajoute seulement le <code>x</code> du propriétaire avec <code>chmod u+x</code>.",
+        ref: "Chapitre 07"
+    },
+    {
+        lvl: 1,
+        q: "Après <code>echo \"log\" &gt;&gt; liste.txt</code>, que contient <code>liste.txt</code> ?",
+        c: ["Seulement le mot « log »", "L'ancien contenu, puis « log » ajouté à la fin", "Seulement l'ancien contenu : <code>&gt;&gt;</code> n'écrit rien", "Le mot « log » suivi de l'ancien contenu"],
+        a: 1,
+        why: "<code>&gt;&gt;</code> ajoute à la fin du fichier, alors que <code>&gt;</code> l'écrase. Le premier conserve l'historique, le second le remplace.",
+        ref: "Chapitre 08"
+    },
+    {
+        lvl: 2,
+        q: "Tu veux les 10 plus gros nombres d'un fichier, et <code>sort</code> place « 9 » après « 10 ». Quelle option corrige l'ordre ?",
+        c: ["<code>-u</code>", "<code>-r</code>", "<code>-n</code>", "<code>-k</code>"],
+        a: 2,
+        why: "Par défaut, <code>sort</code> compare comme du texte : « 10 » vient avant « 9 ». <code>-n</code> compare des nombres ; <code>-r</code> inverse seulement l'ordre.",
+        ref: "Chapitre 09"
+    },
+    {
+        lvl: 2,
+        q: "<code>cut -d: -f7 /etc/passwd | uniq -c</code> affiche des shells en double. Que faut-il corriger ?",
+        c: ["Ajouter <code>-n</code> à <code>cut</code>", "Placer un <code>sort</code> avant <code>uniq</code>, qui ne regroupe que les lignes voisines", "Remplacer <code>uniq -c</code> par <code>wc -l</code>", "Utiliser <code>-f1</code> à la place de <code>-f7</code>"],
+        a: 1,
+        why: "<code>uniq</code> ne détecte que les lignes identiques adjacentes. Après <code>sort</code>, les doublons se touchent et <code>uniq -c</code> les compte correctement.",
+        ref: "Chapitre 09"
+    },
+    {
+        lvl: 1,
+        q: "Tu veux remplacer un mot dans <code>/etc/os-release</code> avec <code>sed</code>. Que fais-tu avant d'ajouter l'option <code>-i</code> ?",
+        c: ["Rien : <code>-i</code> garde une copie de sauvegarde automatiquement", "Tu lances d'abord la commande sans <code>-i</code> pour relire le résultat affiché, le fichier restant intact", "Tu passes la commande dans <code>awk</code>", "Tu redémarres le service concerné"],
+        a: 1,
+        why: "Sans <code>-i</code>, <code>sed</code> se contente d'afficher le résultat. C'est le filet de sécurité : on relit, puis on ajoute <code>-i</code> pour appliquer.",
+        ref: "Chapitre 10"
+    },
+    {
+        lvl: 2,
+        q: "<code>grep \"[0-9]+\" fichier</code> ne trouve pas « version 12 », mais <code>grep -E \"[0-9]+\" fichier</code> la trouve. Pourquoi ?",
+        c: ["<code>-E</code> active les expressions étendues, où <code>+</code> est un opérateur de répétition", "<code>-E</code> ignore la casse", "<code>-E</code> cherche aussi dans les sous-dossiers", "<code>[0-9]</code> n'est valide qu'avec <code>-E</code>"],
+        a: 0,
+        why: "Sans <code>-E</code>, l'expression est basique et <code>+</code> n'y est pas un opérateur. Avec <code>-E</code>, <code>[0-9]+</code> signifie « au moins un chiffre ».",
+        ref: "Chapitre 10"
     }
     ]
 },

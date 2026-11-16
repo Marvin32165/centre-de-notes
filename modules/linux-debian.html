@@ -915,6 +915,62 @@
             <h2 class="chapter__title">Utilisateurs, permissions &amp; lecture de ls -l</h2>
             <p class="chapter__intro">Qui a le droit de faire quoi ? Le cœur de la sécurité Linux — et comment vérifier le résultat d'un <code>chmod</code> dans la sortie de <code>ls -l</code>.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Lire dans une ligne <code>ls -l</code> le type du fichier, son propriétaire, son groupe et les droits de chaque public.</li>
+                    <li>Convertir des droits <code>rwx</code> en valeur octale et inversement, puis les poser avec <code>chmod</code>.</li>
+                    <li>Ajouter un utilisateur à un groupe secondaire sans le retirer de ses autres groupes.</li>
+                    <li>Prévoir les droits d'un fichier ou d'un dossier créé sous un <code>umask</code> donné.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap2">Premiers pas post-install</a> (<code>sudo</code>, groupes) et <a href="#chap3">Les chemins de base</a> (chemins, dossiers) · 40 min · une machine ou une VM Debian et un compte avec <code>sudo</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi des droits sur chaque fichier</h3>
+                <p>Un serveur sert plusieurs personnes et plusieurs services à la fois. Sans règle d'accès, un stagiaire pourrait lire les sauvegardes de la comptabilité, ou un service web réécrire sa propre configuration. Les droits décident, fichier par fichier, qui lit, qui modifie et qui lance.</p>
+                <p>Au quotidien, c'est la cause de la plupart des « Permission non accordée » : un script qu'on ne peut pas lancer, un dossier partagé où l'équipe ne peut pas déposer de fichier, une clé privée trop ouverte. Savoir lire <code>ls -l</code> et poser le bon <code>chmod</code> règle ces tickets en une minute.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Propriétaire, groupe, autres : trois publics, trois droits</h3>
+                <p>Chaque fichier appartient à <strong>un utilisateur</strong> (le propriétaire) et à <strong>un groupe</strong> ; tous les autres comptes forment le troisième public, les « autres ». Un utilisateur a un identifiant numérique (<strong>UID</strong>), un groupe principal et, éventuellement, des <strong>groupes secondaires</strong> qui lui ouvrent des accès supplémentaires.</p>
+                <p>Pour chacun des trois publics, trois droits se combinent : <strong>r</strong> (lecture), <strong>w</strong> (écriture) et <strong>x</strong> (exécution). Leur sens change entre un fichier et un dossier :</p>
+                <div class="table-wrap"><table>
+                    <thead><tr><th>Droit</th><th>Sur un fichier</th><th>Sur un dossier</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>r</code> (4)</td><td>lire le contenu</td><td>lister les noms qu'il contient</td></tr>
+                        <tr><td><code>w</code> (2)</td><td>modifier le contenu</td><td>créer, renommer et supprimer des entrées dedans (avec <code>x</code>)</td></tr>
+                        <tr><td><code>x</code> (1)</td><td>lancer le fichier comme un programme</td><td>y entrer et traverser (« search »)</td></tr>
+                    </tbody>
+                </table></div>
+                <p>Les droits se notent en lettres (<code>rwxr-x---</code>) ou en une valeur octale à trois chiffres, un par public (<code>750</code>) : on additionne 4, 2 et 1. Au-dessus de ces trois droits, un <code>umask</code> fixe ceux que reçoit un fichier à sa création.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/coreutils/chmod.1.en.html" rel="noopener">chmod(1)</a> (lecture, écriture, exécution ou « search » pour un dossier) · <a href="https://man7.org/linux/man-pages/man7/path_resolution.7.html" rel="noopener">path_resolution(7)</a> (permission de traverser un dossier) · <a href="https://man7.org/linux/man-pages/man7/credentials.7.html" rel="noopener">credentials(7)</a> (UID, groupe principal, groupes secondaires).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">De <code>-rw-r--r--</code> à <code>640</code> : fermer un fichier aux autres</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · lire l'état actuel</p>
+                        <p class="walk__head">La ligne <code>-rw-r--r-- 1 root root 26 7 juil. 10h26 subgid</code></p>
+                        <p>Le premier caractère <code>-</code> dit « fichier normal ». Puis trois triplets : <code>rw-</code> pour le propriétaire (<code>root</code>), <code>r--</code> pour le groupe (<code>root</code>), <code>r--</code> pour les autres.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · traduire en chiffres</p>
+                        <p class="walk__head"><code>rw-</code> = 4+2 = 6, <code>r--</code> = 4, <code>r--</code> = 4</p>
+                        <p>L'état actuel s'écrit donc <code>644</code>, comme le dit l'encadré du chapitre.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · décider du résultat voulu</p>
+                        <p class="walk__head">Les autres ne doivent plus rien voir</p>
+                        <p>On garde 6 pour le propriétaire, 4 pour le groupe et on met 0 aux autres : <code>640</code>, soit <code>rw-r-----</code>. La commande serait <code>chmod 640 subgid</code>.</p>
+                        <p class="walk__change">Seul le troisième chiffre change : on ne touche qu'au public concerné.</p>
+                    </li>
+                </ol>
+            </div>
+
             <div class="table-wrap"><table>
                 <thead><tr><th>Commande</th><th>Action</th></tr></thead>
                 <tbody>
@@ -1108,16 +1164,34 @@
 <span class="k">setfacl</span> <span class="p">-m</span> g:sav:rwx dossier       <span class="c"># donner rwx au groupe "sav" sur ce dossier</span></pre>
             </div>
             <p>Un <code>+</code> à la fin du bloc de droits dans <code>ls -l</code> (<code>drwxrwxr-x+</code>) signale qu'une ACL est posée : seul <code>getfacl</code> montre alors les droits complets.</p>
-            <div class="cmdex" data-accept="(sudo )?chmod 640 rapport\.txt;;(sudo )?chmod u=rw,g=r,o= rapport\.txt;;(sudo )?chmod u=rw,g=r,o=- rapport\.txt" data-hint="r=4, w=2, x=1 : additionne pour chacun des trois publics.">
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après avoir posé des droits, relis-les toujours : <code>ls -l rapport.txt</code> doit afficher le triplet attendu en début de ligne (pour <code>640</code> : <code>-rw-r-----</code>). Pour un dossier, <code>ls -ld dossier</code> ; pour un utilisateur, <code>id nom</code> liste ses groupes. Avec un <code>umask</code> de <code>0022</code>, un fichier créé par <code>touch</code> sort en <code>-rw-r--r--</code>.</p>
+                <p class="verify__fail">Si le triplet n'est pas celui que tu voulais, recompte les chiffres (r=4, w=2, x=1) public par public. Un <code>+</code> en fin de bloc de droits signale une ACL : <code>getfacl</code> donne alors les droits complets.</p>
+            </div>
+            <div class="cmdex" data-bloc="7" data-accept="(sudo )?chmod 640 rapport\.txt;;(sudo )?chmod u=rw,g=r,o= rapport\.txt;;(sudo )?chmod u=rw,g=r,o=- rapport\.txt" data-hint="r=4, w=2, x=1 : additionne pour chacun des trois publics.">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>Le fichier <code>rapport.txt</code> doit être lisible et modifiable par son propriétaire, lisible par son groupe, et inaccessible aux autres. Pose ces droits en notation octale.</p>
                 <details class="reveal"><summary>Voir la réponse</summary><div class="reveal__body"><p><code>chmod 640 rapport.txt</code> — <code>rw-</code> = 4+2 = 6, <code>r--</code> = 4, <code>---</code> = 0. Vérifier avec <code>ls -l rapport.txt</code> : <code>-rw-r-----</code>.</p></div></details>
             </div>
             <div class="tool" data-tool="umask"><noscript><p>Cet outil a besoin de JavaScript.</p></noscript></div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Trois publics (u, g, o) × trois droits (r=4, w=2, x=1). Sur un <strong>dossier</strong>, <code>x</code> = pouvoir y entrer, <code>w</code> = créer et supprimer des fichiers dedans. Les nouveaux fichiers naissent avec <code>666 − umask</code>, les dossiers avec <code>777 − umask</code>.</p>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le dossier <code>/srv/partage</code> doit permettre à tous les membres du groupe <code>compta</code> d'y déposer des fichiers, et les fichiers créés doivent appartenir au groupe <code>compta</code>. Les autres comptes peuvent seulement lire. Quel groupe et quel mode poses-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>Groupe propriétaire <code>compta</code>, puis mode <code>2775</code> : le <code>2</code> est le SetGID, qui fait hériter le groupe du dossier aux fichiers créés dedans ; <code>775</code> donne rwx au propriétaire et au groupe, r-x aux autres.</p>
+                <div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — reconstitué, non testé</span></div>
+                    <pre class="terminal__code"><span class="k">sudo chgrp</span> compta /srv/partage
+<span class="k">sudo chmod</span> <span class="p">2775</span> /srv/partage</pre>
+                </div></div></details>
             </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le script qu'on ne peut pas lancer</p>
+                <p>Tu viens d'écrire <code>sauve.sh</code> dans ton dossier personnel. En tapant <code>./sauve.sh</code>, le terminal répond « Permission non accordée ». Tu es bien le propriétaire du fichier et tu peux l'ouvrir et le modifier sans problème.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> lire les droits avec <code>ls -l sauve.sh</code>. <strong>Cause :</strong> un fichier créé normalement naît avec 666 moins l'<code>umask</code>, donc <code>rw-r--r--</code> : jamais de <code>x</code> ; lancer un fichier comme programme exige le droit d'exécution. <strong>Correctif :</strong> <code>chmod u+x sauve.sh</code> (notation symbolique : on ajoute le seul <code>x</code> du propriétaire, sans toucher au reste), puis relire avec <code>ls -l</code>.</p></div></details>
+            </div>
+
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
                 <div class="scenario__step">
@@ -1130,6 +1204,11 @@
                     <div class="scenario__why"><p>Un fichier part de <code>666</code>. Le umask <code>027</code> retire <code>w</code> au groupe et tout aux autres : <code>666</code> → <code>640</code>, soit <code>rw-r-----</code>. Vérifier : <code>ls -l notes.txt</code>.</p></div>
                 </div>
             </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <p>Trois publics (u, g, o) × trois droits (r=4, w=2, x=1). Sur un <strong>dossier</strong>, <code>x</code> = pouvoir y entrer, <code>w</code> = créer et supprimer des fichiers dedans. Les nouveaux fichiers naissent avec <code>666 − umask</code>, les dossiers avec <code>777 − umask</code>.</p>
+            </div>
         </section>
 
         <!-- 08 -->
@@ -1137,6 +1216,53 @@
             <p class="chapter__num">08</p>
             <h2 class="chapter__title">Redirections &amp; pipes</h2>
             <p class="chapter__intro">La vraie puissance du terminal : brancher les commandes entre elles.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Rediriger la sortie normale et les erreurs d'une commande vers deux fichiers, ou vers un seul.</li>
+                    <li>Distinguer <code>&gt;</code> de <code>&gt;&gt;</code> et prévoir ce que contiendra le fichier.</li>
+                    <li>Enchaîner des commandes avec <code>|</code>, <code>&amp;&amp;</code> et <code>||</code>, et lire le code de sortie avec <code>echo $?</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#chap5">Lire &amp; éditer des fichiers</a> (<code>cat</code>, <code>grep</code>) · 30 min · un terminal Debian.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi brancher les commandes entre elles</h3>
+                <p>Un administrateur ne lit pas des milliers de lignes à l'écran : il garde le résultat dans un fichier, écarte le bruit et ne retient que ce qui l'intéresse. Une commande qui produit du texte peut alimenter la suivante, sans fichier intermédiaire ni script.</p>
+                <p>C'est aussi ce qui permet d'écrire des enchaînements sûrs, comme « ne lance la mise à jour que si la précédente a réussi », et de séparer ce qui est un résultat de ce qui est une erreur quand on archive une trace.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Trois canaux, un code de sortie</h3>
+                <p>Toute commande a trois <strong>canaux</strong>, numérotés : l'entrée standard (<code>stdin</code>, 0), la sortie standard (<code>stdout</code>, 1) et la sortie d'erreur (<code>stderr</code>, 2). Par défaut, le clavier alimente le canal 0 et l'écran reçoit les canaux 1 et 2 : c'est pourquoi résultats et erreurs se mélangent à l'écran alors qu'ils voyagent séparément.</p>
+                <p>Une <strong>redirection</strong> change la destination d'un canal : <code>&gt;</code> est un raccourci de <code>1&gt;</code>, elle ne touche donc pas au canal 2. Un <strong>pipe</strong> relie la sortie standard d'une commande à l'entrée standard de la suivante. Le shell traite les redirections de gauche à droite : rediriger le canal 2 « vers là où va le canal 1 » ne donne le résultat voulu que si le canal 1 a déjà sa destination finale.</p>
+                <p>Enfin, chaque commande termine avec un <strong>code de sortie</strong> : 0 pour un succès, une autre valeur pour un échec. <code>&amp;&amp;</code> et <code>||</code> ne regardent que ce code, jamais le texte affiché.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/bash/bash.1.en.html" rel="noopener">bash(1)</a>, sections « Redirection » (canaux, ordre d'évaluation) et « Pipelines », « Lists » (<code>&amp;&amp;</code>, <code>||</code>, statut de sortie).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Chercher les fichiers <code>.conf</code> sans le bruit des erreurs</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · le problème</p>
+                        <p class="walk__head"><code>find / -name "*.conf"</code> en utilisateur normal</p>
+                        <p>Le résultat utile (canal 1) est noyé sous des « Permission non accordée » (canal 2) : <code>find</code> parcourt des dossiers qu'il n'a pas le droit de lire.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · garder le résultat</p>
+                        <p class="walk__head">Ajouter <code>&gt; resultats.txt</code></p>
+                        <p><code>&gt;</code> ne redirige que le canal 1 : les fichiers trouvés partent dans <code>resultats.txt</code>, mais les erreurs continuent de s'afficher.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · jeter le bruit</p>
+                        <p class="walk__head">Ajouter <code>2&gt; /dev/null</code></p>
+                        <p>Le canal 2 part vers <code>/dev/null</code>, qui absorbe tout. La commande complète est <code>find / -name "*.conf" &gt; resultats.txt 2&gt; /dev/null</code>.</p>
+                        <p class="walk__change">Pour tout garder dans le même fichier, on écrirait plutôt <code>&gt; resultats.txt 2&gt;&amp;1</code>.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="table-wrap"><table>
                 <thead><tr><th>Symbole</th><th>Rôle</th></tr></thead>
@@ -1157,8 +1283,8 @@
 <span class="k">cat</span> liste.txt | <span class="k">grep</span> <span class="s">"log"</span>   <span class="c"># cherche "log" dans le contenu</span>
 <span class="k">sudo apt</span> update &amp;&amp; <span class="k">sudo apt</span> upgrade   <span class="c"># upgrade SI update a réussi</span></pre>
             </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
+            <div class="tip">
+                <p class="tip__label">Le code de sortie</p>
                 <p><code>echo $?</code> affiche le code de sortie de la dernière commande : <strong>0</strong> = succès, autre chose = erreur. C'est ce que <code>&amp;&amp;</code> et <code>||</code> utilisent pour décider.</p>
             </div>
 
@@ -1205,6 +1331,46 @@ EOF</pre>
                     <div class="scenario__why"><p><code>&gt;</code> = <code>1&gt;</code>. Pour un résultat propre : <code>find / -name &quot;*.conf&quot; &gt; resultats.txt 2&gt; /dev/null</code>, ou tout garder avec <code>&gt; resultats.txt 2&gt;&amp;1</code>.</p></div>
                 </div>
             </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Tape <code>ls &gt; liste.txt</code>, puis <code>echo "log" &gt;&gt; liste.txt</code>, puis <code>cat liste.txt</code> : la dernière ligne affichée est <code>log</code>, après les noms listés. Refais <code>ls &gt; liste.txt</code> : <code>log</code> a disparu, car <code>&gt;</code> écrase. Enfin, <code>ls /inexistant</code> puis <code>echo $?</code> affiche un nombre différent de 0.</p>
+                <p class="verify__fail">Si le fichier contient encore l'ancien contenu, tu as utilisé <code>&gt;&gt;</code> au lieu de <code>&gt;</code>. Si l'erreur s'affiche à l'écran au lieu d'aller dans le fichier, elle voyage sur le canal 2 : il faut <code>2&gt;</code>.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — séparer résultats et erreurs</p>
+                <p>Lance <code>ls</code> sur deux cibles, <code>/ok</code> et <code>/inexistant</code>. Les résultats doivent aller dans <code>sortie.txt</code> et les erreurs dans <code>erreurs.txt</code>. Quelle commande écris-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>&gt;</code> traite le canal 1 et <code>2&gt;</code> le canal 2, chacun vers son fichier.</p>
+                <div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — reconstitué, non testé</span></div>
+                    <pre class="terminal__code"><span class="k">ls</span> /ok /inexistant &gt; sortie.txt 2&gt; erreurs.txt</pre>
+                </div></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu veux lancer <code>sudo apt update</code> et, <strong>seulement si elle échoue</strong>, ajouter le mot « échec » à la fin du fichier <code>journal.log</code> sans en effacer le contenu. Quelle ligne écris-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>||</code> n'exécute la deuxième commande que si la première échoue, et <code>&gt;&gt;</code> ajoute à la fin au lieu d'écraser.</p>
+                <div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — reconstitué, non testé</span></div>
+                    <pre class="terminal__code"><span class="k">sudo apt</span> update || <span class="k">echo</span> <span class="s">"échec"</span> &gt;&gt; journal.log</pre>
+                </div></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — l'erreur qui échappe au fichier</p>
+                <p>Tu lances <code>ls /ok /inexistant 2&gt;&amp;1 &gt; tout.txt</code> en pensant tout capturer. Le fichier <code>tout.txt</code> contient bien le résultat pour <code>/ok</code>, mais le message d'erreur pour <code>/inexistant</code> s'affiche quand même à l'écran.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> chercher quel canal fuit (ici le 2, celui des erreurs) puis relire l'ordre des redirections, évaluées de gauche à droite. <strong>Cause :</strong> <code>2&gt;&amp;1</code> est lu en premier, quand le canal 1 pointe encore vers l'écran : les erreurs vont donc à l'écran, puis seule la sortie est envoyée au fichier. <strong>Correctif :</strong> placer <code>2&gt;&amp;1</code> après la redirection de la sortie : <code>ls /ok /inexistant &gt; tout.txt 2&gt;&amp;1</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Trois canaux : <code>0</code> entrée, <code>1</code> sortie, <code>2</code> erreurs. <code>&gt;</code> = <code>1&gt;</code> : il ne touche pas aux erreurs.</li>
+                    <li><code>&gt;</code> écrase, <code>&gt;&gt;</code> ajoute ; <code>2&gt; /dev/null</code> jette les erreurs ; <code>&gt; f 2&gt;&amp;1</code> met tout dans <code>f</code> (dans cet ordre).</li>
+                    <li><code>|</code> branche une sortie sur une entrée ; <code>&amp;&amp;</code> continue si le code est 0, <code>||</code> si le code est autre chose ; <code>echo $?</code> le montre.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 09 -->
@@ -1212,6 +1378,52 @@ EOF</pre>
             <p class="chapter__num">09</p>
             <h2 class="chapter__title">sort, cut, wc, tee — flux &amp; fichiers structurés</h2>
             <p class="chapter__intro">Quatre outils simples, chacun avec un rôle précis, qui se combinent par pipe pour traiter du texte structuré (CSV, listes, logs) sans écrire de script.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Compter, trier et extraire une colonne d'un fichier avec <code>wc</code>, <code>sort</code> et <code>cut</code>.</li>
+                    <li>Enchaîner <code>sort</code> et <code>uniq -c</code> pour obtenir un classement par fréquence.</li>
+                    <li>Écrire dans un fichier protégé avec <code>sudo tee</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#chap8">Redirections &amp; pipes</a> (pipe, canaux) · 30 min · un terminal Debian.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi traiter du texte en ligne de commande</h3>
+                <p>Une liste d'utilisateurs, un journal de connexions, un export CSV : presque tout ce qu'un administrateur lit est du texte en lignes et en colonnes. « Combien de comptes ? Quel shell est le plus utilisé ? Quelle partition est la plus pleine ? » se règlent en une ligne, sans tableur ni script.</p>
+                <p>Chaque outil fait une seule chose : c'est leur combinaison par pipe qui donne la réponse, à condition de savoir ce que chacun attend en entrée.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Un outil, un rôle : compter, trier, découper, dédoublonner</h3>
+                <p>Ces outils lisent le texte <strong>ligne par ligne</strong>. Les <strong>champs</strong> d'une ligne sont séparés par un délimiteur : une tabulation par défaut pour <code>cut</code>, le caractère <code>:</code> dans <code>/etc/passwd</code>, la virgule dans un CSV. <code>wc</code> compte (lignes, mots, octets), <code>sort</code> ordonne, <code>cut</code> extrait des champs ou des caractères, <code>uniq</code> supprime les doublons.</p>
+                <p>Trois pièges de modèle. D'abord, <code>sort</code> trie par défaut comme du texte : « 10 » passe avant « 9 », il faut l'ordre numérique (<code>-n</code>) pour comparer des nombres. Ensuite, <code>uniq</code> ne détecte que les lignes <strong>identiques et voisines</strong> : on le place donc toujours après un <code>sort</code>. Enfin, <code>wc -l</code> compte les fins de ligne : une dernière ligne sans retour final n'est pas comptée.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/coreutils/sort.1.en.html" rel="noopener">sort(1)</a> · <a href="https://manpages.debian.org/stable/coreutils/uniq.1.en.html" rel="noopener">uniq(1)</a> (« ne détecte pas les lignes répétées si elles ne sont pas adjacentes ») · <a href="https://manpages.debian.org/stable/coreutils/cut.1.en.html" rel="noopener">cut(1)</a> · <a href="https://manpages.debian.org/stable/coreutils/wc.1.en.html" rel="noopener">wc(1)</a> · <a href="https://manpages.debian.org/stable/coreutils/tee.1.en.html" rel="noopener">tee(1)</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Combien de shells différents dans <code>/etc/passwd</code> ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · isoler la colonne</p>
+                        <p class="walk__head"><code>cut -d: -f7 /etc/passwd</code></p>
+                        <p>Chaque ligne de <code>/etc/passwd</code> a sept champs séparés par <code>:</code> ; le septième est le shell. <code>-d:</code> fixe le délimiteur, <code>-f7</code> choisit le champ.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · rapprocher les doublons</p>
+                        <p class="walk__head"><code>| sort</code></p>
+                        <p>Les lignes identiques deviennent voisines, ce qui est la condition pour que <code>uniq</code> les voie.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · dédoublonner puis compter</p>
+                        <p class="walk__head"><code>| uniq | wc -l</code></p>
+                        <p><code>uniq</code> garde une ligne par valeur et <code>wc -l</code> compte les lignes restantes : c'est le nombre de shells différents. La commande complète figure dans le tableau de l'exercice guidé plus bas.</p>
+                        <p class="walk__change">Remplace <code>uniq</code> par <code>uniq -c</code> et supprime <code>wc -l</code> : on obtient chaque shell précédé de son nombre d'occurrences.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>wc, sort, cut : les options clés</h3>
             <div class="table-wrap"><table>
@@ -1263,6 +1475,42 @@ EOF</pre>
                 <p class="tip__label">Piège d'encodage rencontré en pratique</p>
                 <p>Un fichier transféré depuis Windows peut être en ISO-8859-1 au lieu d'UTF-8 : les accents (« Agnès ») posent alors problème à <code>grep</code> (qui peut signaler « binary file matches »). Diagnostic : <code>file telephone.txt</code> · correction : <code>iconv -f ISO-8859-1 -t UTF-8 telephone.txt -o telephone.utf8.txt</code>.</p>
             </div>
+
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Lance <code>cut -d: -f7 /etc/passwd | sort | uniq | wc -l</code> : tu obtiens un seul nombre, le nombre de shells différents. Retire <code>uniq</code> : le nombre devient celui des comptes, donc plus grand ou égal. Pour un classement, <code>cut -d: -f1 /etc/passwd | sort | uniq -c | sort -nr</code> affiche chaque valeur précédée de son nombre d'occurrences, la plus fréquente en premier.</p>
+                <p class="verify__fail">Si <code>uniq</code> laisse des doublons, il manque le <code>sort</code> avant lui. Si le classement place « 9 » avant « 10 », il manque le <code>-n</code> du second <code>sort</code>.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — classer les shells par fréquence</p>
+                <p>Écris la commande qui affiche, pour chaque shell déclaré dans <code>/etc/passwd</code>, le nombre de comptes qui l'utilisent, du plus fréquent au moins fréquent.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>On reprend le classement du module, appliqué au septième champ : extraire, trier, compter les doublons, puis trier les nombres en ordre décroissant.</p>
+                <div class="terminal" data-reconstitue>
+                    <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">Bash — reconstitué, non testé</span></div>
+                    <pre class="terminal__code"><span class="k">cut</span> <span class="p">-d:</span> <span class="p">-f7</span> <span class="s">/etc/passwd</span> | <span class="k">sort</span> | <span class="k">uniq</span> <span class="p">-c</span> | <span class="k">sort</span> <span class="p">-nr</span></pre>
+                </div></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le carnet <code>telephone.txt</code> compte 12 personnes, mais sa dernière ligne n'a pas de retour à la ligne final, et <code>wc -l</code> annonce 11. Quelle commande donne le vrai compte ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>grep -c "" telephone.txt</code> : <code>grep</code> compte les lignes réelles, même sans retour final, alors que <code>wc -l</code> compte les fins de ligne.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — sudo n'y change rien</p>
+                <p>Tu dois ajouter une ligne dans <code>/etc/fichier</code>, qui appartient à root. Tu tapes <code>sudo echo "config" &gt; /etc/fichier</code> : le terminal répond « Permission non accordée », alors que <code>sudo</code> a bien été saisi.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> se demander quel programme essaie réellement d'écrire dans le fichier. <strong>Cause :</strong> la redirection <code>&gt;</code> est interprétée par le shell, avec tes droits, avant que <code>sudo</code> ne s'applique ; <code>sudo</code> ne protège que <code>echo</code>, qui n'écrit rien. <strong>Correctif :</strong> faire écrire un processus élevé : <code>echo "config" | sudo tee /etc/fichier</code> (avec <code>-a</code> pour ajouter plutôt qu'écraser).</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li><code>wc -l</code> compte les lignes, <code>sort -n</code> trie les nombres, <code>cut -d: -f2</code> extrait un champ, <code>uniq -c</code> compte les doublons voisins.</li>
+                    <li><code>uniq</code> s'utilise toujours après <code>sort</code> ; le classement par fréquence est <code>sort | uniq -c | sort -nr</code>.</li>
+                    <li><code>sudo echo … &gt; fichier</code> échoue : on écrit avec <code>| sudo tee fichier</code>, et <code>-a</code> pour ajouter.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 10 -->
@@ -1270,6 +1518,52 @@ EOF</pre>
             <p class="chapter__num">10</p>
             <h2 class="chapter__title">sed, awk &amp; expressions régulières</h2>
             <p class="chapter__intro">Transformer un flux de texte à la volée, sans ouvrir d'éditeur — indispensable pour scripter des traitements.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Écrire une expression régulière avec <code>.</code>, <code>*</code>, <code>^</code>, <code>$</code> et <code>[ ]</code>, et la tester avec <code>grep -E</code>.</li>
+                    <li>Remplacer du texte avec <code>sed</code> en prévisualisant le résultat avant d'ajouter <code>-i</code>.</li>
+                    <li>Afficher ou supprimer des lignes selon un motif ou un numéro avec <code>awk</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap8">Redirections &amp; pipes</a> et <a href="#chap9">sort, cut, wc, tee</a> · 40 min · un terminal Debian.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Pourquoi modifier du texte sans l'ouvrir</h3>
+                <p>Changer une valeur dans vingt fichiers de configuration, extraire les lignes d'erreur d'un journal, masquer une colonne avant d'envoyer un export : à la main, c'est long et on se trompe. Un traitement de flux fait la même modification partout, à l'identique.</p>
+                <p>C'est aussi la base des scripts : le jour où une tâche se répète, elle s'écrit avec ces outils. Mais une modification en masse mal ciblée abîme vite des fichiers, d'où le réflexe de prévisualiser avant d'appliquer.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Motif, flux, champ : le vocabulaire des deux outils</h3>
+                <p>Une <strong>expression régulière</strong> décrit un ensemble de chaînes : des caractères ordinaires, plus des méta-caractères qui expriment « n'importe quel caractère », « répété », « en début de ligne ». Il en existe deux dialectes : les expressions <strong>basiques</strong> (le comportement par défaut de <code>grep</code> et <code>sed</code>) et les expressions <strong>étendues</strong> (<code>-E</code>), seules à connaître <code>?</code>, <code>+</code> et <code>|</code> comme opérateurs.</p>
+                <p><code>sed</code> est un éditeur de <strong>flux</strong> : il lit son entrée ligne par ligne, applique une commande (<code>s/avant/après/</code> pour substituer, <code>p</code> pour afficher) et écrit le résultat sur la sortie, sans toucher au fichier d'origine tant qu'on ne demande pas <code>-i</code>. <code>awk</code> découpe en plus chaque ligne en <strong>champs</strong> (<code>$1</code>, <code>$2</code>…) et applique des règles « motif, action » ; sans action, une ligne qui correspond au motif est simplement affichée.</p>
+                <p class="note">Source : <a href="https://man7.org/linux/man-pages/man7/regex.7.html" rel="noopener">regex(7)</a> (expressions modernes ou « étendues » et expressions obsolètes ou « basiques ») · <a href="https://manpages.debian.org/stable/sed/sed.1.en.html" rel="noopener">sed(1)</a> (<code>-n</code>, <code>-E</code>, <code>-i</code>) · <a href="https://manpages.debian.org/stable/mawk/mawk.1.en.html" rel="noopener">mawk(1)</a> (motifs, champs, <code>gsub</code>).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Remplacer « Debian » par « Ubuntu » sans abîmer <code>/etc/os-release</code></p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · écrire la substitution</p>
+                        <p class="walk__head"><code>s/Debian/Ubuntu/</code></p>
+                        <p><code>s</code> signifie « substituer », suivi du motif à chercher et du texte de remplacement, séparés par <code>/</code>. Sans option, seule la première occurrence de chaque ligne est remplacée.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · prévisualiser</p>
+                        <p class="walk__head"><code>sed 's/Debian/Ubuntu/' /etc/os-release</code></p>
+                        <p>Sans <code>-i</code>, <code>sed</code> n'affiche que le résultat : le fichier est intact. On relit la sortie pour vérifier que le motif n'a touché que ce qu'on voulait.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · appliquer seulement ensuite</p>
+                        <p class="walk__head">Ajouter <code>-i</code> sur un fichier à soi</p>
+                        <p><code>sed -i 's/Debian/Ubuntu/' fichier</code> modifie le fichier directement : il n'y a plus de retour en arrière, d'où l'étape 2 d'abord.</p>
+                        <p class="walk__change">Avec <code>awk '{gsub(/.ebian/,"Ubuntu")}1'</code>, le motif <code>.ebian</code> remplace aussi « Debian » ou « debian » : le <code>.</code> vaut n'importe quel caractère.</p>
+                    </li>
+                </ol>
+            </div>
 
             <h3>Les méta-caractères de base</h3>
             <div class="table-wrap"><table>
@@ -1308,9 +1602,36 @@ EOF</pre>
             </div>
 
             <div class="tool" data-tool="regex"><noscript><p>Cet outil a besoin de JavaScript.</p></noscript></div>
-            <div class="takeaway">
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Lance <code>sed 's/Debian/Ubuntu/' /etc/os-release</code> : les lignes contenant « Debian » s'affichent avec « Ubuntu ». Relance ensuite <code>cat /etc/os-release</code> : le fichier est inchangé. Avec <code>sed -n 2,6p /etc/passwd</code>, seules les lignes 2 à 6 s'affichent.</p>
+                <p class="verify__fail">Si le fichier a changé, une option <code>-i</code> était présente. Si <code>grep</code> ne trouve rien avec un <code>+</code> ou un <code>?</code>, ajoute <code>-E</code>.</p>
+            </div>
+
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — n'afficher qu'une plage de lignes</p>
+                <p>Affiche uniquement les lignes 2 à 6 de <code>/etc/passwd</code>, avec <code>sed</code>, sans modifier le fichier.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>sed -n 2,6p /etc/passwd</code> : <code>-n</code> coupe l'affichage automatique, et <code>2,6p</code> n'affiche que la plage demandée.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Avec <code>awk</code> cette fois, affiche uniquement les lignes 2 à 4 de <code>/etc/os-release</code>. Puis écris la commande qui affiche toutes les lignes <strong>sauf</strong> celles qui contiennent « ebian » précédé d'un caractère quelconque.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>awk 'NR==2,NR==4' /etc/os-release</code> pour la plage (<code>NR</code> est le numéro de ligne) ; <code>awk '!/.ebian/' /etc/os-release</code> pour exclure : le <code>!</code> inverse le motif.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le motif qui ne trouve rien</p>
+                <p>Un fichier contient la ligne « version 12 ». Tu tapes <code>grep "[0-9]+" fichier</code> pour trouver les lignes qui contiennent au moins un chiffre : aucune ligne ne s'affiche. Avec <code>grep -E "[0-9]+" fichier</code>, la ligne apparaît.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> comparer les deux commandes : seule l'option <code>-E</code> diffère, donc le dialecte de l'expression est en cause. <strong>Cause :</strong> sans <code>-E</code>, <code>grep</code> lit une expression basique, où <code>+</code> n'est pas un opérateur de répétition (il est cherché comme un plus littéral) ; <code>?</code> et <code>|</code> sont dans le même cas. <strong>Correctif :</strong> ajouter <code>-E</code> (ou <code>sed -E</code>) pour utiliser <code>?</code>, <code>+</code> et <code>|</code>.</p></div></details>
+            </div>
+
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
                 <p><code>sed</code> travaille <strong>ligne par ligne</strong> (<code>s/avant/après/</code>), <code>awk</code> travaille <strong>en colonnes</strong> (<code>$1</code>, <code>$2</code>…). Sans <code>-i</code>, <code>sed</code> se contente d'<em>afficher</em> le résultat : le fichier n'est pas modifié. C'est le filet de sécurité — on teste toujours sans <code>-i</code> avant de l'ajouter.</p>
+                <ul>
+                    <li><code>.</code> un caractère quelconque, <code>*</code> 0 ou n fois, <code>^</code> début, <code>$</code> fin, <code>[abc]</code> un caractère de l'ensemble ; <code>?</code>, <code>+</code> et <code>|</code> demandent <code>-E</code>.</li>
+                    <li><code>sed -n 2,6p</code> affiche une plage ; <code>awk '!/motif/'</code> exclut les lignes qui correspondent.</li>
+                </ul>
             </div>
         </section>
 
@@ -2473,7 +2794,7 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
 <script src="../assets/catalogue.js?v=a8bae127"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/linux-debian.js?v=6f79137f"></script>
+<script src="../assets/quiz/linux-debian.js?v=c41a1bbf"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 <script src="../assets/atelier.js?v=c35298a6"></script>

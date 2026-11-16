@@ -170,6 +170,11 @@ Joker | Wildcard | Caractère (* ou ?) que le shell remplace par la liste des no
 Lien physique | Hard link | Second nom pour le même inode : le contenu subsiste tant qu'un nom existe. | liens? physiques?;hard links?
 Lien symbolique | Symlink | Fichier qui contient le chemin d'une cible, comme un raccourci ; il devient orphelin si la cible disparaît. | liens? symboliques?;symlinks?
 Redirection | | Envoie la sortie d'une commande vers un fichier (>, >>) ou lit un fichier en entrée (<) ; 2> pour les erreurs. | redirections?
+Canal (stdin, stdout, stderr) | | Les trois flux d'une commande : entrée standard (0), sortie standard (1) et sortie d'erreur (2). | stdin;stdout;stderr;canaux? standard
+Code de sortie | Exit status | Nombre rendu par une commande qui se termine : 0 pour un succès, autre chose pour un échec (echo $?). | codes? de sortie;code de retour
+UID | User ID | Identifiant numérique d'un utilisateur ; les droits s'appuient sur lui, pas sur le nom. | UID\b
+Groupe secondaire | | Groupe supplémentaire d'un utilisateur, en plus de son groupe principal ; il ouvre des accès en plus (usermod -aG). | groupes? secondaires?
+SetGID | | Bit spécial : sur un dossier, les fichiers créés dedans héritent du groupe du dossier (mode 2775). | SetGID
 Paquet (logiciel) | | Archive d'un logiciel et de ses métadonnées, installée par le gestionnaire (apt et .deb sous Debian). | apt\b;paquets? \.deb
 systemd | | Système d'initialisation et gestionnaire de services de Linux (systemctl, journalctl). | systemd;systemctl
 journalctl | | Commande qui lit le journal de systemd. | journalctl

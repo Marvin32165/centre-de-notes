@@ -214,6 +214,18 @@ Archive tar | | Fichier unique qui regroupe plusieurs fichiers ; avec l'option z
 journald | systemd-journald | Service de systemd qui recueille les journaux du système, lus avec journalctl. | journald
 rsyslog | | Service qui écrit les journaux en fichiers texte de /var/log ; absent par défaut depuis Debian 12. | rsyslog
 Mode pont (bridged) | Bridged | Mode réseau d'une machine virtuelle reliée directement au réseau physique : elle est joignable de l'extérieur. | mode pont;bridged
+MBR | Master Boot Record | Ancien format de table de partitions : quatre partitions primaires au plus, ou trois plus une étendue qui contient des partitions logiques. | MBR
+mdadm | | Outil qui crée et gère le RAID logiciel du noyau Linux. | mdadm
+Array (RAID) | | Volume formé par l'assemblage de plusieurs disques en RAID ; /dev/md0 par exemple. | arrays?
+Parité | | Information de contrôle répartie sur les disques (RAID 5, 6) qui permet de recalculer le contenu d'un disque perdu. | parité
+Disque de secours | Spare | Disque d'un array RAID qui n'est pas utilisé tant qu'aucun autre ne tombe, puis prend sa place automatiquement. | spares?
+PV | Physical Volume | Disque ou partition donné à LVM. | PV
+VG | Volume Group | Réserve commune d'espace LVM, formée d'un ou plusieurs PV. | VG
+LV | Logical Volume | Volume découpé dans un VG, qu'on formate et qu'on monte comme une partition. | LV
+Snapshot LVM | | Copie figée d'un volume à un instant donné (copy-on-write) ; elle vit sur les mêmes disques, donc n'est pas une sauvegarde. | snapshots?
+Sauvegarde incrémentielle | | Sauvegarde qui ne copie que ce qui a changé depuis la précédente ; la restauration exige la complète puis chaque incrémentielle dans l'ordre. | incrémentielles?
+rsync | | Outil de copie qui ne transfère que les différences ; avec --delete, il tient un miroir exact de la source. | rsync
+
 ## Sécurité
 Pare-feu | Firewall | Filtre le trafic selon des règles (adresses, ports, protocoles). | pare-feu;firewall
 VPN | Virtual Private Network | Tunnel chiffré qui relie un poste ou un site à un réseau distant (WireGuard, IPsec). | VPN

@@ -1650,7 +1650,7 @@ window.QUIZ_BANK = {
     name: "Linux Debian",
     file: "linux-debian.html",
     title: "Test — Linux Debian",
-    intro: "Le module le plus dense du parcours : vingt questions tirées au hasard parmi soixante, sur le terminal, les permissions, les filtres texte, le réseau, les services, les disques et les volumes.",
+    intro: "Le module le plus dense du parcours : vingt questions tirées au hasard, sur le terminal, les permissions, les filtres texte, le réseau, les services, les disques et les volumes.",
     pass: 70,
     questions: [
     {
@@ -2404,6 +2404,94 @@ window.QUIZ_BANK = {
         a: 1,
         why: "<code>/home</code> contient les données des utilisateurs : sur une partition à part, une réinstallation de <code>/</code> ne les touche pas. Une racine pleine rend en outre le système instable (source : hier(7)).",
         ref: "Chapitre 20"
+    },
+    {
+        lvl: 1,
+        q: "Tu montes un disque avec <code>mount</code>, puis tu redémarres : <code>/mnt/donnees</code> est vide. Pourquoi ?",
+        c: ["Le montage manuel n'existe qu'en mémoire : sans ligne dans <code>/etc/fstab</code>, il n'est pas refait au démarrage", "Le disque a été formaté pendant le redémarrage", "Les partitions sont effacées à chaque démarrage", "<code>mount</code> ne fonctionne que sur les disques USB"],
+        a: 0,
+        why: "La partition et son système de fichiers sont écrits sur le disque, mais le rattachement à un dossier est un état en mémoire. C'est la ligne <code>fstab</code> (par UUID, testée avec <code>findmnt --verify</code>) qui le rejoue à chaque démarrage.",
+        ref: "Chapitre 21"
+    },
+    {
+        lvl: 2,
+        q: "Après un redémarrage, l'array RAID n'apparaît plus dans <code>/proc/mdstat</code> et son point de montage est vide. Que vérifies-tu ?",
+        c: ["La ligne <code>ARRAY</code> de <code>mdadm.conf</code> et l'initramfs régénéré avec <code>update-initramfs -u</code>", "Que le système de fichiers est en ext4 plutôt qu'en xfs", "Que le RAID est de niveau 5 et non de niveau 1", "Que les disques font la même taille"],
+        a: 0,
+        why: "Sans ligne <code>ARRAY</code> dans <code>mdadm.conf</code> (copiée dans l'initramfs), l'array n'est pas réassemblé au démarrage. Ensuite seulement vient l'entrée <code>fstab</code> par UUID.",
+        ref: "Chapitre 22"
+    },
+    {
+        lvl: 1,
+        q: "Tu n'as que deux disques et tu veux survivre à la panne de l'un d'eux. Quel niveau RAID choisis-tu ?",
+        c: ["RAID 1 (miroir), avec la moitié de la capacité utile", "RAID 0, qui répartit les données sur les deux disques", "RAID 5, qui demande au moins trois disques pour être pertinent", "RAID 6, qui tolère deux pannes"],
+        a: 0,
+        why: "Le RAID 0 n'a aucune redondance : la perte d'un disque détruit l'array. Le RAID 1 recopie chaque donnée sur les deux disques ; on perd la moitié de la capacité. Les niveaux 5 et 6 supposent davantage de disques.",
+        ref: "Chapitre 22"
+    },
+    {
+        lvl: 1,
+        q: "Dans LVM, que désigne un <strong>VG</strong> (<em>Volume Group</em>) ?",
+        c: ["La réserve commune d'espace, formée d'un ou plusieurs disques ou partitions donnés à LVM", "Le volume qu'on formate et qu'on monte", "Un disque ou une partition donné à LVM", "Une copie figée d'un volume à un instant donné"],
+        a: 0,
+        why: "PV = disque ou partition donné à LVM ; VG = réserve d'espace formée de PV ; LV = volume découpé dans le VG, qu'on formate et monte ; snapshot = copie figée.",
+        ref: "Chapitre 23"
+    },
+    {
+        lvl: 2,
+        q: "Le VG <code>vg_data</code> affiche <code>VFree</code> à 0 et le LV est plein. Que fais-tu d'abord ?",
+        c: ["J'ajoute un disque au VG : <code>pvcreate</code> puis <code>vgextend</code>", "Je lance <code>lvextend</code> avec <code>-l +100%FREE</code>", "Je lance <code>resize2fs</code> sur le LV", "Je supprime le snapshot et je recommence"],
+        a: 0,
+        why: "Un LV ne peut grandir que dans l'espace libre de son VG. Sans espace libre, on donne d'abord un nouveau disque à LVM (<code>pvcreate</code>) et on l'ajoute au VG (<code>vgextend</code>) ; ensuite seulement on agrandit le LV.",
+        ref: "Chapitre 23"
+    },
+    {
+        lvl: 1,
+        q: "Que fait l'option <code>-r</code> de <code>lvextend -r -L +5G /dev/vg_data/lv_storage</code> ?",
+        c: ["Elle agrandit aussi le système de fichiers, sans appeler <code>resize2fs</code> à part", "Elle rend le volume accessible en lecture seule", "Elle redémarre le service qui utilise le volume", "Elle crée un snapshot avant l'agrandissement"],
+        a: 0,
+        why: "<code>-r</code> est l'abréviation de <code>--resizefs</code> : le LV et le système de fichiers sont agrandis en une commande. Sans elle, <code>df -h</code> montre l'ancienne taille tant que <code>resize2fs</code> n'a pas été lancé.",
+        ref: "Chapitre 23"
+    },
+    {
+        lvl: 1,
+        q: "Pourquoi écrit-on <code>/usr/local/bin/sauvegarde-home.sh</code> avec son chemin complet dans une ligne <code>cron</code> ?",
+        c: ["Parce que cron lance la commande dans un environnement minimal, où les chemins relatifs ne sont pas résolus comme dans ton terminal", "Parce que cron refuse les scripts situés dans le dossier personnel", "Parce qu'un chemin complet rend la sauvegarde plus rapide", "Parce que cron ne sait exécuter que des fichiers de <code>/usr</code>"],
+        a: 0,
+        why: "Dans un script lancé par cron, on utilise des chemins absolus partout et on redirige la sortie vers un journal, pour savoir ce qui s'est passé à 2 h 30.",
+        ref: "Chapitre 24"
+    },
+    {
+        lvl: 2,
+        q: "À quelle condition peut-on dire qu'une sauvegarde existe vraiment ?",
+        c: ["Quand on a réussi à la restaurer et qu'on connaît le temps que cela prend", "Quand le script cron s'est terminé sans erreur", "Quand l'archive est stockée sur un snapshot LVM", "Quand un RAID 5 protège le disque qui la contient"],
+        a: 0,
+        why: "Le code de sortie d'un script ne prouve pas que l'archive est lisible. Un snapshot et un RAID vivent sur les mêmes disques que les données. Seule une restauration testée, chronométrée, prouve la sauvegarde.",
+        ref: "Chapitre 24"
+    },
+    {
+        lvl: 1,
+        q: "Tu as tapé hier une longue commande dont tu te rappelles un mot. Quel raccourci la retrouve le plus vite ?",
+        c: ["<code>Ctrl+R</code>, puis taper ce mot", "<code>Ctrl+L</code>, qui affiche l'historique", "<code>Ctrl+C</code>, qui rappelle la dernière commande", "<code>Ctrl+D</code>, qui liste les commandes passées"],
+        a: 0,
+        why: "<code>Ctrl+R</code> cherche dans l'historique : on tape un morceau de la commande, le shell affiche la plus récente qui le contient. <code>Ctrl+L</code> efface l'écran, <code>Ctrl+C</code> interrompt, <code>Ctrl+D</code> ferme le terminal.",
+        ref: "Chapitre 25"
+    },
+    {
+        lvl: 2,
+        q: "Tu tapes <code>Ctrl+Z</code> dans un programme et tu te retrouves à l'invite. Que s'est-il passé, et comment le reprendre ?",
+        c: ["Le programme est suspendu, pas fermé ; <code>fg</code> le ramène au premier plan", "Le programme est terminé ; il faut le relancer", "Le programme est passé en root ; <code>sudo</code> le reprend", "Le programme est supprimé de l'historique ; <code>Ctrl+R</code> le retrouve"],
+        a: 0,
+        why: "<code>Ctrl+Z</code> suspend la tâche, <code>Ctrl+C</code> l'interrompt. Une tâche suspendue attend et se reprend avec <code>fg</code>.",
+        ref: "Chapitre 25"
+    },
+    {
+        lvl: 1,
+        q: "Tu ne connais pas les options d'une commande et tu vas lancer une commande destructive. Quels sont les bons réflexes ?",
+        c: ["Lire <code>man commande</code>, utiliser <code>Tab</code> pour les noms, relire la commande avant <code>Entrée</code>", "Taper la commande en entier de mémoire, plus vite qu'avec <code>Tab</code>", "Ajouter <code>sudo</code> pour éviter les erreurs de droits", "Tester d'abord sur le serveur de production"],
+        a: 0,
+        why: "Les trois réflexes du chapitre : <code>Tab</code> pour compléter, <code>man</code> pour lire le manuel (<code>q</code> pour quitter), relire toute commande destructive (<code>rm</code>, <code>chmod</code>, <code>dd</code>) avant <code>Entrée</code>.",
+        ref: "Chapitre 25"
     }
     ]
 },

@@ -194,7 +194,7 @@ window.CATALOGUE = {
       "icon": "LX",
       "desc": "Du premier login root à l'administration d'un serveur : fichiers, permissions et lecture de ls -l, redirections et filtres texte, réseau et SSH, APT, processus et systemd, disques et fstab, RAID logiciel, LVM, sauvegardes tar/rsync/cron — avec les pièges réellement rencontrés en TP.",
       "level": 1,
-      "duree": "6 h",
+      "duree": "15 h 10",
       "chapters": 25,
       "prereq": [],
       "related": [

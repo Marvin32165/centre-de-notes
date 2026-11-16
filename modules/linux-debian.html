@@ -29,7 +29,7 @@
         </div>
         <div class="hero__facts">
             <span class="fact fact--n1"><b>Niveau</b> Débutant</span>
-            <span class="fact"><b>Durée</b> ≈ 6 h</span>
+            <span class="fact"><b>Durée</b> ≈ 15 h 10</span>
             <span class="fact"><b>Chapitres</b> 25</span>
             <span class="fact"><b>Test</b> 20 questions</span>
             <span class="fact"><b>Prérequis</b> aucun</span>
@@ -2965,6 +2965,76 @@ iface ens33 inet <span class="k">static</span>
             <h2 class="chapter__title">Disques : partitionner, formater, monter pour de bon</h2>
             <p class="chapter__intro">Ajouter un disque à un serveur suit toujours la même séquence : le repérer, le partitionner, le formater, le monter, puis rendre ce montage permanent dans <code>/etc/fstab</code>. C'est la dernière étape qui peut empêcher la machine de redémarrer.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Expliquer pourquoi un disque neuf doit être partitionné, formaté puis monté avant de servir, et à quelle étape chaque réglage disparaît ou survit au redémarrage.</li>
+                    <li>Écrire une ligne <code>/etc/fstab</code> par UUID et la tester avec <code>findmnt --verify</code> avant tout redémarrage.</li>
+                    <li>Choisir l'option <code>nofail</code> pour un disque de données qui peut être absent au démarrage.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap18">Disques, archives &amp; infos système</a> et <a href="#chap20">Partitions, GRUB</a> · 35 min · une VM Debian avec <code>sudo</code> et un disque vierge ajouté.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Un disque neuf ne sert à rien tout seul</h3>
+                <p>Le serveur de fichiers manque de place : on ajoute un disque dans l'hyperviseur. Pour le noyau, ce disque existe, mais il est vierge : aucun fichier ne peut s'y ranger tant qu'il n'a pas de partition, de système de fichiers, ni de dossier où apparaître.</p>
+                <p>Il y a ensuite un piège de métier : un montage fait à la main disparaît au redémarrage, et une ligne <code>fstab</code> fausse peut empêcher la machine de démarrer. On apprend donc la séquence complète, avec le test qui évite la mauvaise surprise.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Quatre couches entre le disque et un dossier</h3>
+                <p>Le noyau voit un disque comme un périphérique (<code>/dev/sdb</code>). Pour l'utiliser, on empile quatre couches. La <strong>table de partitions</strong> découpe le disque ; en <strong>MBR</strong>, on a au plus quatre partitions primaires, ou trois plus une partition étendue qui contient des partitions logiques. Le <strong>système de fichiers</strong> (ext4 par défaut) organise les fichiers à l'intérieur d'une partition. Le <strong>point de montage</strong> rattache ce système de fichiers à un dossier de l'arborescence. Enfin le fichier <strong>fstab</strong> répète ce montage à chaque démarrage.</p>
+                <div class="table-wrap"><table>
+                    <thead><tr><th>Couche</th><th>Ce qu'elle fait</th><th>Survit au redémarrage ?</th></tr></thead>
+                    <tbody>
+                        <tr><td>Partition</td><td>découpe le disque</td><td>oui, elle est écrite sur le disque</td></tr>
+                        <tr><td>Système de fichiers</td><td>range les fichiers dans la partition</td><td>oui, il est écrit sur le disque</td></tr>
+                        <tr><td>Montage manuel</td><td>rattache la partition à un dossier</td><td>non, il n'existe qu'en mémoire</td></tr>
+                        <tr><td>Ligne <code>fstab</code></td><td>refait le montage au démarrage</td><td>oui, c'est un fichier de configuration</td></tr>
+                    </tbody>
+                </table></div>
+                <p>Reste à désigner la partition dans <code>fstab</code>. Un nom comme <code>sdb1</code> suit l'<strong>ordre de détection</strong> des disques, qui peut changer ; l'<strong>UUID</strong>, lui, appartient au système de fichiers et le suit partout. <code>fstab</code> est lu au démarrage : une ligne fausse peut bloquer le démarrage, d'où l'intérêt de la tester avant. L'option <code>nofail</code> évite ce blocage quand le disque peut manquer.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/mount/fstab.5.en.html" rel="noopener">fstab(5)</a> · <a href="https://manpages.debian.org/stable/fdisk/fdisk.8.en.html" rel="noopener">fdisk(8)</a> · <a href="https://manpages.debian.org/stable/e2fsprogs/mke2fs.8.en.html" rel="noopener">mke2fs(8)</a> · <a href="https://manpages.debian.org/stable/util-linux/findmnt.8.en.html" rel="noopener">findmnt(8)</a> · <a href="https://manpages.debian.org/stable/mount/mount.8.en.html" rel="noopener">mount(8)</a> (option <code>nofail</code>).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Rendre un disque de sauvegarde permanent, en décidant à chaque étape</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · repérer</p>
+                        <p class="walk__head"><code>lsblk</code></p>
+                        <p>Le disque neuf apparaît sans partition. On note son nom, mais on sait déjà qu'il n'est valable que pour ce démarrage : on ne le copiera pas tel quel dans <code>fstab</code>.</p>
+                        <p class="walk__change">Le nom est provisoire.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · préparer</p>
+                        <p class="walk__head"><code>fdisk</code> puis <code>mkfs.ext4</code></p>
+                        <p>Une partition, puis un système de fichiers ext4. C'est la seule étape destructive : on relit deux fois le nom du disque avant d'appuyer sur Entrée.</p>
+                        <p class="walk__change">On ne formate que ce qu'on a identifié.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · monter à la main</p>
+                        <p class="walk__head"><code>mount</code></p>
+                        <p>On vérifie que le disque fonctionne avant de toucher au fichier de configuration. Si le montage échoue ici, <code>fstab</code> n'y changera rien.</p>
+                        <p class="walk__change">Un montage manuel est un test, pas un réglage.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · rendre permanent</p>
+                        <p class="walk__head"><code>blkid</code> puis une ligne dans <code>/etc/fstab</code></p>
+                        <p>On relève l'UUID de la partition et on le recopie dans <code>fstab</code> : il suit le système de fichiers même si <code>sdb</code> devient <code>sdc</code>.</p>
+                        <p class="walk__change">L'UUID, pas le nom.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 5</b> · tester</p>
+                        <p class="walk__head"><code>findmnt --verify</code> puis <code>mount -a</code></p>
+                        <p>On teste le fichier avant tout redémarrage : si la ligne est fausse, on la corrige maintenant, au lieu d'arriver en mode de secours.</p>
+                        <p class="walk__change">Tester avant de redémarrer.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <h3>Les cinq étapes, commande par commande</h3>
             <div class="steps">
                 <div class="step"><div class="step__num">1</div><div class="step__body"><strong>Repérer</strong><p><code>lsblk</code> : le nouveau disque apparaît sans partition (ex. <code>sdb</code>). Ajouté à chaud dans l'hyperviseur et absent ? <code>echo "- - -" | sudo tee /sys/class/scsi_host/host*/scan</code> force la détection.</p></div></div>
                 <div class="step"><div class="step__num">2</div><div class="step__body"><strong>Partitionner</strong><p><code>sudo fdisk /dev/sdb</code> (<code>n</code> nouvelle partition, <code>w</code> écrire). En MBR : 4 partitions primaires au plus, ou 3 + une étendue qui contient des logiques numérotées à partir de <strong>5</strong>.</p></div></div>
@@ -2981,7 +3051,7 @@ iface ens33 inet <span class="k">static</span>
                 <p class="takeaway__label">Ce que le TP a montré</p>
                 <p>Les lettres <code>sda</code>, <code>sdb</code>… <strong>changent</strong> d'un démarrage à l'autre : c'est arrivé plusieurs fois sur la VM du cours, après un ajout de disque ou un simple redémarrage. Dans <code>fstab</code>, toujours l'UUID. Et toujours <code>sudo findmnt --verify</code> (puis <code>sudo mount -a</code>) avant de redémarrer : une erreur dans <code>fstab</code> peut bloquer le démarrage en mode de secours. Pour un disque de données qui peut être absent (disque USB de sauvegarde), l'option <code>nofail</code> (<code>defaults,nofail</code>) laisse le système démarrer sans lui.</p>
             </div>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Le disque est-il monté, et le sera-t-il au prochain démarrage ?</p>
             <div class="terminal">
@@ -2997,17 +3067,13 @@ TARGET      SOURCE    FSTYPE OPTIONS
 /mnt/backup /dev/sde1 ext4   rw,relatime</pre>
                 <p class="verify__fail"><code>findmnt --verify</code> ou <code>mount -a</code> signale une erreur : la ligne de <code>fstab</code> est fausse (UUID mal recopié, point de montage absent, type erroné). La corriger <strong>avant</strong> de redémarrer. Si c'est trop tard, le mode de secours (<em>emergency mode</em>) permet d'éditer <code>/etc/fstab</code>.</p>
             </div>
-            <div class="cmdex" data-accept="(sudo )?blkid /dev/sdb1;;lsblk -f /dev/sdb1" data-hint="la commande s&#x27;appelle « block id ».">
+            <div class="cmdex" data-bloc="7" data-accept="(sudo )?blkid /dev/sdb1;;lsblk -f /dev/sdb1" data-hint="la commande s&#x27;appelle « block id ».">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>Affiche l'UUID et le type de système de fichiers de la partition <code>/dev/sdb1</code>.</p>
                 <details class="reveal">
                     <summary>Voir la solution</summary>
                     <div class="reveal__body"><p><code>sudo blkid /dev/sdb1</code> (ou <code>lsblk -f</code> pour tous les disques). C'est cette valeur <code>UUID=…</code> qui va dans <code>/etc/fstab</code>.</p></div>
                 </details>
-            </div>
-            <div class="takeaway">
-                <p class="takeaway__label">À retenir</p>
-                <p>Repérer (<code>lsblk</code>), partitionner (<code>fdisk</code>), formater (<code>mkfs</code>), monter, puis <code>fstab</code> par UUID, <code>findmnt --verify</code> pour tester et <code>mount -a</code> pour monter. Sauvegarder la table avant de toucher à un disque : <code>sudo sfdisk -d /dev/sdb &gt; table.sfdisk</code>.</p>
             </div>
             <div class="scenario scenario--quick">
                 <p class="scenario__label scenario__label--quick">Question éclair</p>
@@ -3021,6 +3087,25 @@ TARGET      SOURCE    FSTYPE OPTIONS
                     <div class="scenario__why"><p>Les noms <code>sda</code>, <code>sdb</code>… suivent l'<strong>ordre de détection</strong>, qui peut changer. L'<strong>UUID</strong> appartient au système de fichiers et le suit partout : <code>sudo blkid</code>, puis <code>UUID=…</code> dans <code>fstab</code>, et <code>sudo findmnt --verify</code> pour tester.</p></div>
                 </div>
             </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Un disque de données a été ajouté à <code>web01</code>. Il doit apparaître sur <code>/srv/web</code> à chaque démarrage, mais il est parfois retiré pendant les opérations de maintenance et la machine doit alors démarrer quand même. Quelle ligne écris-tu dans <code>/etc/fstab</code>, et que fais-tu juste après ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">/etc/fstab</span></div><pre class="terminal__code">UUID=&lt;UUID relevé avec blkid&gt;  /srv/web  ext4  defaults,nofail  0  2</pre></div><p>Ligne adaptée de l'exemple du chapitre, avec <code>nofail</code> (<em>reconstitué, non testé</em>). Juste après : <code>sudo findmnt --verify</code> puis <code>sudo mount -a</code>, avant de redémarrer. Le dossier <code>/srv/web</code> doit exister.</p></div></details>
+            </div>
+
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la VM n'arrive plus au login</p>
+                <p>Après un redémarrage, la VM n'arrive pas à l'écran de connexion : elle affiche le mode de secours (<em>emergency mode</em>). Quelqu'un vient d'ajouter une ligne dans <code>/etc/fstab</code> pour monter un nouveau disque.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> la dernière modification, c'est <code>/etc/fstab</code> ; on le relit ligne par ligne. <strong>Cause :</strong> une ligne fausse (UUID mal recopié, point de montage absent, type erroné), qui n'a pas été testée avant de redémarrer. <strong>Correctif :</strong> depuis le mode de secours, éditer <code>/etc/fstab</code> et corriger la ligne, puis relancer <code>findmnt --verify</code>. La prochaine fois : tester avant de redémarrer, et ajouter <code>nofail</code> si le disque peut manquer.</p></div></details>
+            </div>
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li>Séquence : repérer (<code>lsblk</code>), partitionner (<code>fdisk</code>), formater (<code>mkfs</code>), monter, puis <code>fstab</code> par UUID. Le montage manuel ne survit pas au redémarrage, la ligne <code>fstab</code> si.</li>
+                    <li><code>sudo findmnt --verify</code> puis <code>sudo mount -a</code> avant de redémarrer ; <code>nofail</code> pour un disque qui peut manquer.</li>
+                    <li>Sauvegarder la table avant de toucher à un disque : <code>sudo sfdisk -d /dev/sdb &gt; table.sfdisk</code>.</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 22 -->
@@ -3029,6 +3114,25 @@ TARGET      SOURCE    FSTYPE OPTIONS
             <h2 class="chapter__title">Le RAID logiciel avec mdadm</h2>
             <p class="chapter__intro">Le TP du cours monte un <strong>RAID 5</strong> sur trois disques avec <code>mdadm</code>, lui ajoute un disque de secours, puis vérifie qu'il survit à un redémarrage. Le RAID protège contre la panne d'un disque ; il ne remplace jamais une sauvegarde.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Choisir un niveau RAID (0, 1, 5, 6 ou 10) selon la capacité utile voulue et le nombre de disques qu'on accepte de perdre.</li>
+                    <li>Lire <code>/proc/mdstat</code> pour dire si un array est sain (<code>[UUU]</code>) ou dégradé (<code>[UU_]</code>).</li>
+                    <li>Rendre un array permanent après redémarrage : ligne <code>ARRAY</code>, initramfs, entrée <code>fstab</code>.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitre <a href="#disques-fstab">Disques : partitionner, formater, monter</a> · 40 min · une VM Debian avec <code>sudo</code> et trois ou quatre disques vierges.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Quand un disque meurt, le service continue</h3>
+                <p>Un disque finit toujours par tomber en panne. Sur un serveur de fichiers avec un seul disque, c'est l'arrêt du service et la perte des données écrites depuis la dernière sauvegarde. Avec plusieurs disques assemblés en RAID, la machine continue de répondre pendant qu'on remplace le disque défaillant.</p>
+                <p>Mais le RAID ne protège que du disque mort : un fichier effacé par erreur l'est sur tous les disques à la fois. Il complète la sauvegarde, il ne la remplace pas.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Redondance, parité et array dégradé</h3>
+                <p>Le <strong>RAID</strong> regroupe plusieurs disques en un seul volume, appelé <strong>array</strong>. Sous Linux, <code>mdadm</code> pilote le RAID logiciel du noyau (le sous-système « md »). Un niveau <strong>miroir</strong> (RAID 1) écrit chaque donnée deux fois. Un niveau à <strong>parité</strong> (RAID 5, RAID 6) répartit sur tous les disques les données et une information de contrôle, qui permet de recalculer le contenu d'un disque perdu : on y gagne de la capacité, au prix d'un recalcul à la reconstruction. Quand un disque manque, l'array est <strong>dégradé</strong> : il fonctionne encore, mais sans marge. Un <strong>disque de secours</strong> (<em>spare</em>) attend, inutilisé, et prend la place du disque défaillant dès la panne.</p>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Niveau</th><th>Disques mini</th><th>Capacité utile</th><th>Tolère la perte de</th></tr></thead>
@@ -3041,7 +3145,41 @@ TARGET      SOURCE    FSTYPE OPTIONS
                     </tbody>
                 </table>
             </div>
-            <div class="terminal">
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/mdadm/mdadm.8.en.html" rel="noopener">mdadm(8)</a> · <a href="https://www.kernel.org/doc/html/latest/admin-guide/md.html" rel="noopener">kernel.org — md</a> · <a href="https://wiki.debian.org/SoftwareRAID" rel="noopener">Debian Wiki — Software RAID</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Trois disques en RAID 5 : combien de place, et que se passe-t-il quand un disque tombe ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · calculer</p>
+                        <p class="walk__head">Capacité utile</p>
+                        <p>Avec la parité, un disque sur trois sert au contrôle : on garde (3 − 1) disques de place. La sortie du <code>/proc/mdstat</code> plus bas affiche 20953088 blocs, soit environ 20 Gio sur trois disques.</p>
+                        <p class="walk__change">On paie un disque de redondance.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · lire l'état</p>
+                        <p class="walk__head"><code>cat /proc/mdstat</code></p>
+                        <p><code>[3/3] [UUU]</code> : trois disques attendus, trois présents et actifs. Le <code>(S)</code> à côté d'un disque le marque comme disque de secours.</p>
+                        <p class="walk__change">Un <code>U</code> par disque sain.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · simuler la panne</p>
+                        <p class="walk__head"><code>mdadm --fail</code> puis <code>--remove</code> sur un membre</p>
+                        <p>L'état passe à <code>[UU_]</code> : l'array est dégradé mais répond encore. Avec un secours, la reconstruction démarre seule.</p>
+                        <p class="walk__change">Dégradé ne veut pas dire arrêté.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · réintégrer</p>
+                        <p class="walk__head"><code>mdadm --add</code></p>
+                        <p>Le disque remplacé revient comme secours ou rejoint l'array ; on suit la reconstruction dans <code>/proc/mdstat</code> jusqu'au retour à <code>[UUU]</code>.</p>
+                        <p class="walk__change">On vérifie le retour à l'état sain.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="terminal" data-reconstitue>
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash — créer, formater, rendre permanent (démarche du TP)</span></div>
                 <pre class="terminal__code"><span class="k">sudo</span> <span class="k">apt</span> install mdadm
 <span class="k">sudo</span> <span class="k">mdadm</span> <span class="p">--create</span> /dev/md0 <span class="p">--level=5</span> <span class="p">--raid-devices=3</span> /dev/sdb /dev/sdc /dev/sdd
@@ -3052,13 +3190,14 @@ TARGET      SOURCE    FSTYPE OPTIONS
 <span class="k">sudo</span> <span class="k">update-initramfs</span> <span class="p">-u</span>
 <span class="c"># puis une ligne UUID=… /mnt/raid5 ext4 defaults 0 2 dans /etc/fstab, puis sudo findmnt --verify et sudo mount -a</span></pre>
             </div>
+            <p>La commande <code>mdadm --create</code> est <em>reconstituée, non testé</em> : le TP a été fait sous un autre nom d'array (voir l'encadré suivant).</p>
             <div class="tip">
                 <p class="tip__label">md0 devenu md127</p>
                 <p>Dans le TP, l'array (commande de création reconstituée, sous le nom <code>md0</code>) est apparu en <code>/dev/md127</code> : <code>mdadm.conf</code> n'avait pas encore de ligne <code>ARRAY</code>, et le noyau lui a donné un autre nom. <code>sudo mdadm --detail /dev/md0</code> échouait donc. Réflexe : lire le vrai nom dans <code>cat /proc/mdstat</code> ou <code>lsblk</code> avant toute commande.</p>
             </div>
             <h3>Disque de secours et panne</h3>
             <p><code>sudo mdadm --add /dev/md127 /dev/sde</code> ajoute un disque en <strong>spare</strong> (marqué <code>(S)</code> dans <code>/proc/mdstat</code>) : si un disque actif tombe, la reconstruction démarre seule dessus. Pour simuler une panne : <code>--fail</code> puis <code>--remove</code> sur un membre, observer la reconstruction, et <code>--add</code> pour réintégrer.</p>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>L'array est-il sain ?</p>
             <div class="terminal">
@@ -3071,9 +3210,28 @@ md127 : active raid5 sdd[3] sdc[1] sdb[0] sde[4](S)
       20953088 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]</pre>
                 <p class="verify__fail"><code>[UU_]</code> : un disque manque, l'array est dégradé — il fonctionne, mais une deuxième panne serait fatale. <code>sudo mdadm --detail /dev/md127</code> dit lequel. Après un redémarrage, l'array absent : la ligne <code>ARRAY</code> manque dans <code>mdadm.conf</code>, ou l'initramfs n'a pas été régénéré.</p>
             </div>
-            <div class="takeaway">
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — dimensionner un array</p>
+                <p>Quatre disques de 10 Go sont assemblés en RAID 6. Quelle capacité utile obtiens-tu, et combien de disques peuvent tomber sans perte de données ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>(4 − 2) × 10 Go = <strong>20 Go</strong> utiles ; <strong>deux</strong> disques peuvent tomber (valeurs du tableau du chapitre).</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu n'as que deux disques de 1 To et tu veux survivre à la panne de l'un d'eux. Quel niveau choisis-tu, et quelle capacité utile obtiens-tu ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p>RAID 1 (miroir) : capacité utile de <strong>1 To</strong> (50 %), un disque sur deux peut tomber.</p></div></details>
+            </div>
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — l'array a disparu au redémarrage</p>
+                <p>Le RAID 5 fonctionnait avant l'arrêt de la machine. Après le redémarrage, <code>/mnt/raid5</code> est vide et <code>cat /proc/mdstat</code> ne liste aucun array.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> les disques sont-ils présents (<code>lsblk</code>) ? L'array n'est pas réassemblé : on regarde ce qui le réassemble au démarrage. <strong>Cause :</strong> la ligne <code>ARRAY</code> manque dans <code>mdadm.conf</code>, ou l'initramfs n'a pas été régénéré. <strong>Correctif :</strong> ajouter la ligne avec <code>mdadm --detail --scan</code>, puis <code>sudo update-initramfs -u</code> et vérifier l'entrée <code>fstab</code>.</p></div></details>
+            </div>
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p><code>mdadm --create</code>, puis <strong>trois</strong> étapes pour la persistance : ligne <code>ARRAY</code> dans <code>mdadm.conf</code>, <code>update-initramfs -u</code> (le hook mdadm y copie mdadm.conf), entrée <code>fstab</code> par UUID. <code>[UUU]</code> = sain, un <code>_</code> = dégradé. Le RAID protège du disque mort, pas du fichier effacé.</p>
+                <ul>
+                    <li><code>mdadm --create</code>, puis <strong>trois</strong> étapes pour la persistance : ligne <code>ARRAY</code> dans <code>mdadm.conf</code>, <code>update-initramfs -u</code>, entrée <code>fstab</code> par UUID.</li>
+                    <li><code>[UUU]</code> = sain, un <code>_</code> = dégradé ; un disque de secours <code>(S)</code> prend le relais.</li>
+                    <li>Le RAID protège du disque mort, pas du fichier effacé : il ne remplace jamais une sauvegarde.</li>
+                </ul>
             </div>
         </section>
 
@@ -3082,6 +3240,60 @@ md127 : active raid5 sdd[3] sdc[1] sdb[0] sde[4](S)
             <p class="chapter__num">23</p>
             <h2 class="chapter__title">LVM : des volumes qu'on agrandit à chaud</h2>
             <p class="chapter__intro">Avec des partitions classiques, agrandir un disque plein veut dire repartitionner. Avec <strong>LVM</strong>, on met l'espace de plusieurs disques en commun et on y découpe des volumes qu'on agrandit en une commande, sans arrêter le service.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Décrire les trois couches de LVM (PV, VG, LV) et dire laquelle on agrandit en premier.</li>
+                    <li>Agrandir un volume logique à chaud, système de fichiers compris, avec <code>lvextend -r</code>.</li>
+                    <li>Dire ce qu'un snapshot LVM apporte, et pourquoi ce n'est pas une sauvegarde.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#disques-fstab">Disques : partitionner, formater, monter</a> et <a href="#raid">Le RAID logiciel</a> · 40 min · une VM Debian avec <code>sudo</code> et deux disques vierges.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Un volume plein sans repartitionner</h3>
+                <p>Le dossier de données d'un serveur se remplit. Avec une partition classique, agrandir veut dire arrêter le service, repartitionner et recopier. Quand le service ne peut pas s'arrêter, c'est un vrai problème de métier.</p>
+                <p>LVM déplace la limite : l'espace de plusieurs disques est mis en commun, et chaque volume en prend la part dont il a besoin, qu'on peut augmenter plus tard sans interruption.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Trois couches : disque, réserve, volume</h3>
+                <p>LVM empile trois couches. Un <strong>PV</strong> (<em>Physical Volume</em>) est un disque ou une partition donné à LVM. Un <strong>VG</strong> (<em>Volume Group</em>) est la réserve commune d'espace, formée d'un ou plusieurs PV. Un <strong>LV</strong> (<em>Logical Volume</em>) est le volume découpé dans cette réserve : c'est lui qu'on formate et qu'on monte, comme une partition. Pour agrandir, on suit le chemin inverse : s'il reste de l'espace libre dans le VG, on agrandit le LV ; sinon on ajoute d'abord un PV au VG. Agrandir le LV ne suffit pas : le système de fichiers doit ensuite être agrandi à son tour.</p>
+                <p>Un <strong>snapshot</strong> fige l'état d'un volume à un instant : seuls les blocs modifiés après coup sont copiés (<em>copy-on-write</em>). Il vit sur les mêmes disques que le volume d'origine.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/lvm2/lvm.8.en.html" rel="noopener">lvm(8)</a> · <a href="https://manpages.debian.org/stable/lvm2/lvextend.8.en.html" rel="noopener">lvextend(8)</a> · <a href="https://wiki.debian.org/LVM" rel="noopener">Debian Wiki — LVM</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Le volume <code>lv_storage</code> est plein : l'agrandir sans l'arrêter</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · mesurer</p>
+                        <p class="walk__head"><code>sudo vgs</code></p>
+                        <p>On lit <code>VFree</code> : l'espace encore libre dans le VG. S'il est à 0, aucun LV ne peut grandir.</p>
+                        <p class="walk__change">D'abord la réserve, ensuite le volume.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · alimenter</p>
+                        <p class="walk__head"><code>pvcreate</code> puis <code>vgextend</code></p>
+                        <p>Si le VG est plein, on donne un nouveau disque à LVM, puis on l'ajoute à la réserve.</p>
+                        <p class="walk__change">Un disque de plus = de la place pour le VG.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · agrandir</p>
+                        <p class="walk__head"><code>lvextend -r -l +100%FREE</code> sur le chemin du LV</p>
+                        <p>On vise le LV (pas le VG), avec un <code>+</code> pour dire « en plus de la taille actuelle ». L'option <code>-r</code> agrandit aussi le système de fichiers.</p>
+                        <p class="walk__change">Le LV et son système de fichiers, en une commande.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · contrôler</p>
+                        <p class="walk__head"><code>df -h</code></p>
+                        <p>La nouvelle taille doit apparaître. Si elle n'a pas bougé, le système de fichiers n'a pas été agrandi.</p>
+                        <p class="walk__change">On vérifie là où l'utilisateur regarde.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="table-wrap">
                 <table>
@@ -3114,7 +3326,7 @@ md127 : active raid5 sdd[3] sdc[1] sdb[0] sde[4](S)
             </div>
             <h3>Le snapshot LVM</h3>
             <p><code>sudo lvcreate -n lv_storage_snap -L 2G -s /dev/vg_data/lv_storage</code> fige le volume : seuls les blocs modifiés ensuite sont copiés (copy-on-write). On peut le monter en lecture seule pour récupérer un fichier, ou revenir en arrière : volumes démontés, <code>sudo lvconvert --merge /dev/vg_data/lv_storage_snap</code>. Comme un point de contrôle Hyper-V, ce n'est pas une sauvegarde : il vit sur les mêmes disques.</p>
-            <div class="verify">
+            <div class="verify" data-bloc="6">
                 <p class="verify__label">Vérifier</p>
                 <p>Combien reste-t-il de place dans le VG, et quelle taille fait le LV ?</p>
             <div class="terminal">
@@ -3129,7 +3341,7 @@ LV         VG      Attr       LSize  Pool Origin
 lv_storage vg_data -wi-ao---- 30,00g</pre>
                 <p class="verify__fail"><code>VFree</code> à 0 : il faut ajouter un PV (<code>vgextend</code>) avant de pouvoir agrandir quoi que ce soit. <code>df -h</code> montre l'ancienne taille après <code>lvextend</code> : <code>resize2fs</code> oublié.</p>
             </div>
-            <div class="cmdex" data-accept="(sudo )?lvextend (-r -L ?\+5G|-L ?\+5G -r|--resizefs -L ?\+5G|-L ?\+5G --resizefs) /dev/vg_data/lv_storage;;(sudo )?lvextend /dev/vg_data/lv_storage (-r -L ?\+5G|-L ?\+5G -r)" data-hint="lvextend, l&#x27;option qui redimensionne le système de fichiers, et -L avec un signe devant la taille.">
+            <div class="cmdex" data-bloc="7" data-accept="(sudo )?lvextend (-r -L ?\+5G|-L ?\+5G -r|--resizefs -L ?\+5G|-L ?\+5G --resizefs) /dev/vg_data/lv_storage;;(sudo )?lvextend /dev/vg_data/lv_storage (-r -L ?\+5G|-L ?\+5G -r)" data-hint="lvextend, l&#x27;option qui redimensionne le système de fichiers, et -L avec un signe devant la taille.">
                 <p class="cmdex__label">À toi de taper</p>
                 <p>Agrandis le LV <code>/dev/vg_data/lv_storage</code> de <strong>5 Go</strong> et son système de fichiers ext4 en une seule commande.</p>
                 <details class="reveal">
@@ -3137,9 +3349,25 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
                     <div class="reveal__body"><p><code>sudo lvextend -r -L +5G /dev/vg_data/lv_storage</code> — <code>-r</code> (<code>--resizefs</code>) enchaîne le redimensionnement du système de fichiers. Sans le <code>+</code>, <code>-L 5G</code> voudrait dire « fixer la taille à 5 Go ».</p></div>
                 </details>
             </div>
-            <div class="takeaway">
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Le VG <code>vg_data</code> affiche <code>VFree</code> à 0 et le LV <code>lv_storage</code> doit gagner 10 Go. Un nouveau disque <code>/dev/sdd</code> vient d'être ajouté à la VM. Quelles commandes, dans quel ordre ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash</span></div><pre class="terminal__code"><span class="k">sudo</span> <span class="k">pvcreate</span> /dev/sdd
+<span class="k">sudo</span> <span class="k">vgextend</span> vg_data /dev/sdd
+<span class="k">sudo</span> <span class="k">lvextend</span> <span class="p">-r</span> <span class="p">-L</span> +10G /dev/vg_data/lv_storage</pre></div><p>Séquence du chapitre avec une taille changée (<em>reconstitué, non testé</em>).</p></div></details>
+            </div>
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le volume a grandi, mais pas l'espace libre</p>
+                <p>Un administrateur a agrandi <code>lv_storage</code> : <code>lvs</code> affiche la nouvelle taille. Pourtant <code>df -h</code> montre toujours l'ancienne et l'application se plaint encore de manquer de place.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> comparer ce que voit LVM (<code>lvs</code>) et ce que voit le système de fichiers (<code>df -h</code>) : deux couches, deux tailles. <strong>Cause :</strong> le LV a été agrandi, pas son système de fichiers (<code>resize2fs</code> oublié). <strong>Correctif :</strong> <code>sudo resize2fs /dev/vg_data/lv_storage</code>, ou <code>lvextend -r</code> la prochaine fois.</p></div></details>
+            </div>
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p>PV → VG → LV → système de fichiers → montage. Pour agrandir : <code>vgextend</code> si le VG est plein, puis <code>lvextend -r -l +100%FREE</code> sur le chemin du LV. Le snapshot LVM fige un état, mais n'est pas une sauvegarde.</p>
+                <ul>
+                    <li>PV → VG → LV → système de fichiers → montage. On agrandit le LV (son chemin, pas celui du VG) avec <code>lvextend -r -l +100%FREE</code>.</li>
+                    <li>VG plein : <code>vgextend</code> d'abord. Sans le <code>+</code>, la taille est lue comme absolue.</li>
+                    <li>Le snapshot LVM fige un état mais n'est pas une sauvegarde : il vit sur les mêmes disques.</li>
+                </ul>
             </div>
         </section>
 
@@ -3149,6 +3377,61 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
             <h2 class="chapter__title">Sauvegarder : tar incrémentiel, rsync et cron</h2>
             <p class="chapter__intro">Le TP de sauvegarde du cours prépare un disque dédié, fait une sauvegarde complète de <code>/home</code> avec <code>tar</code>, puis vérifie que la suivante ne contient que ce qui a changé. Il reste à l'automatiser — et à vérifier qu'on sait restaurer.</p>
 
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Faire une sauvegarde complète puis une incrémentielle de <code>/home</code> avec <code>tar -g</code>, et les restaurer dans le bon ordre.</li>
+                    <li>Distinguer un miroir <code>rsync</code> d'un historique, et expliquer l'effet de la barre finale et de <code>--delete</code>.</li>
+                    <li>Planifier une sauvegarde avec <code>cron</code> (chemins absolus, journal) et prouver qu'on sait restaurer.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap18">Disques, archives &amp; infos système</a> et <a href="#disques-fstab">Disques : partitionner, monter</a> · 45 min · une VM Debian avec <code>sudo</code> et un disque monté sur <code>/mnt/backup</code>.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Une sauvegarde qu'on n'a jamais restaurée n'existe pas</h3>
+                <p>Un utilisateur efface un dossier un lundi matin, ou un disque tombe. La seule question qui compte alors est : que peut-on récupérer, et en combien de temps ? Une copie sur le même disque, ou une copie jamais relue, ne répond à aucune des deux.</p>
+                <p>On cherche donc un compromis entre le volume copié chaque nuit, la durée de la restauration et l'historique conservé, puis on automatise pour que l'oubli humain ne compte plus.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>Complète, incrémentielle, miroir</h3>
+                <p>Une sauvegarde <strong>complète</strong> copie tout. Une sauvegarde <strong>incrémentielle</strong> ne copie que ce qui a changé depuis la dernière sauvegarde, ce qui la rend rapide et légère. Avec <code>tar</code>, un fichier de suivi (option <code>-g</code>) mémorise l'état de ce qui a déjà été archivé. Le prix à payer est la restauration : il faut la complète, puis chaque incrémentielle <strong>dans l'ordre</strong>.</p>
+                <p><code>rsync</code> fait autre chose : il tient à jour une copie, un <strong>miroir</strong>, en ne transférant que les différences. Avec <code>--delete</code>, la copie est identique à la source, y compris pour les suppressions : un miroir garde l'état présent, pas l'historique. Enfin <code>cron</code> lance une commande à heures fixes, dans un environnement minimal : d'où les chemins absolus et un journal de sortie.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/tar/tar.1.en.html" rel="noopener">tar(1)</a> (<code>--listed-incremental</code>) · <a href="https://manpages.debian.org/stable/rsync/rsync.1.en.html" rel="noopener">rsync(1)</a> · <a href="https://manpages.debian.org/stable/cron/crontab.5.en.html" rel="noopener">crontab(5)</a> · <a href="https://www.debian.org/doc/manuals/debian-reference/ch10.en.html" rel="noopener">Debian Reference — chap. 10, gestion des données</a>.</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Dimanche une complète, les autres soirs une incrémentielle : que contient chaque archive ?</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · dimanche</p>
+                        <p class="walk__head">Première passe avec <code>tar -czf … -g snapshot_file /home</code></p>
+                        <p>Le fichier de suivi n'existe pas encore : <code>tar</code> archive tout et l'écrit. Cette archive est la complète.</p>
+                        <p class="walk__change">Complète = point de départ.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · lundi à samedi</p>
+                        <p class="walk__head">Même commande, autre nom d'archive</p>
+                        <p>Le fichier de suivi existe : <code>tar</code> n'archive que les changements depuis la passe précédente, puis le met à jour.</p>
+                        <p class="walk__change">Le fichier de suivi est partagé.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · le dimanche suivant</p>
+                        <p class="walk__head">Remplacer le fichier de suivi avant de relancer</p>
+                        <p>Sans cela, la « complète » n'est qu'une incrémentielle de plus. Le script doit supprimer ou remplacer <code>snapshot_file</code>.</p>
+                        <p class="walk__change">Une nouvelle complète exige un nouveau suivi.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 4</b> · restaurer</p>
+                        <p class="walk__head">La complète, puis chaque incrémentielle dans l'ordre</p>
+                        <p>Une incrémentielle seule est inutilisable : elle ne contient que des différences par rapport à ce qui précède.</p>
+                        <p class="walk__change">L'ordre fait la restauration.</p>
+                    </li>
+                </ol>
+            </div>
+
+            <h3>La démarche du TP, commande par commande</h3>
             <div class="terminal">
                 <div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash — complète, puis incrémentielle (tar -g)</span></div>
                 <pre class="terminal__code"><span class="k">sudo</span> <span class="k">mkdir</span> <span class="p">-p</span> /mnt/backup/home/{full,incremental}
@@ -3184,6 +3467,11 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
             <p>Dans un script lancé par cron, l'environnement est minimal : chemins <strong>absolus</strong> partout, et la sortie redirigée vers un journal (<code>&gt;&gt; /var/log/sauvegarde.log 2&gt;&amp;1</code>) pour savoir ce qui s'est passé à 2 h 30. L'outil ci-dessous traduit une ligne cron en clair et calcule ses prochaines exécutions. Sur une Debian récente, un <em>timer</em> systemd fait la même chose avec un journal intégré.</p>
 
             <div class="tool" data-tool="cron"><noscript><p>Cet outil a besoin de JavaScript.</p></noscript></div>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Après une sauvegarde, <code>tar -tzf archive.tar.gz</code> liste les fichiers archivés sans rien extraire ; l'incrémentielle est nettement plus petite que la complète (<code>ls -lh</code>). Le vrai test est le lab de restauration ci-dessous : un fichier supprimé doit revenir identique, et <code>diff -r</code> ne signale aucune différence.</p>
+                <p class="verify__fail">Une « complète » aussi légère qu'une incrémentielle : le fichier de suivi n'a pas été remplacé. Une tâche cron qui ne produit rien : lire le journal, vérifier les chemins absolus du script.</p>
+            </div>
             <div class="lab" data-lab="linux-restauration">
                 <p class="lab__label">Lab guidé</p>
                 <p class="lab__title">Prouver que la sauvegarde se restaure</p>
@@ -3205,9 +3493,28 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
                 <li><p>Comparer avec <code>diff -r</code>, puis remettre le fichier à sa place. Noter le temps passé : c'est le temps de restauration réel.</p></li>
                 </ol>
             </div>
-            <div class="takeaway">
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — planifier la sauvegarde du soir</p>
+                <p>Écris la ligne <code>crontab</code> qui lance <code>/usr/local/bin/sauvegarde-home.sh incr</code> tous les jours à 23 h 15.</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">sudo crontab -e</span></div><pre class="terminal__code">15 23 * * *  /usr/local/bin/sauvegarde-home.sh incr</pre></div><p>Même forme que les lignes du chapitre, avec une autre heure (<em>reconstitué, non testé</em>) : minute, heure, jour du mois, mois, jour de la semaine, commande.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu veux copier le <em>contenu</em> de <code>/srv/donnees</code> dans <code>/mnt/backup/donnees-miroir</code>, en conservant droits et dates, mais sans qu'un fichier supprimé à la source disparaisse de la copie. Quelle commande ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><div class="terminal" data-reconstitue><div class="terminal__bar"><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__dot"></span><span class="terminal__title">bash</span></div><pre class="terminal__code"><span class="k">rsync</span> <span class="p">-aAXv</span> /srv/donnees/ /mnt/backup/donnees-miroir/</pre></div><p>Commande du chapitre sans <code>--delete</code> et avec d'autres chemins (<em>reconstitué, non testé</em>). La barre finale de <code>/srv/donnees/</code> copie le contenu du dossier.</p></div></details>
+            </div>
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — la « complète » du dimanche ne pèse presque rien</p>
+                <p>Depuis plusieurs semaines, l'archive « complète » du dimanche est aussi petite que celles des autres soirs. Personne n'a changé la tâche cron, et le script se termine sans erreur.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> comparer le contenu de la « complète » (<code>tar -tzf</code>) avec <code>/home</code> : elle est incomplète. Puis relire le script. <strong>Cause :</strong> le fichier de suivi <code>snapshot_file</code> n'est jamais remplacé : <code>tar</code> n'archive que les changements, la « complète » n'est qu'une incrémentielle de plus. <strong>Correctif :</strong> supprimer ou remplacer le fichier de suivi au début de la passe complète.</p></div></details>
+            </div>
+            <div class="takeaway" data-bloc="9">
                 <p class="takeaway__label">À retenir</p>
-                <p>Une complète, puis des incrémentielles qui partagent le même fichier de suivi <code>-g</code> ; <code>rsync</code> pour un miroir (pas un historique) ; cron avec des chemins absolus et un journal. Et plusieurs copies, dont une hors ligne, et une restauration testée.</p>
+                <ul>
+                    <li>Une complète, puis des incrémentielles qui partagent le même fichier de suivi <code>-g</code> ; une nouvelle complète exige un nouveau fichier de suivi.</li>
+                    <li><code>rsync</code> fait un miroir, pas un historique ; <code>cron</code> exige des chemins absolus et un journal.</li>
+                    <li>Plusieurs copies, dont une hors ligne, et une restauration testée : sinon la sauvegarde n'existe pas.</li>
+                </ul>
             </div>
         </section>
 
@@ -3216,6 +3523,53 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
             <p class="chapter__num">25</p>
             <h2 class="chapter__title">Raccourcis &amp; réflexes</h2>
             <p class="chapter__intro">Les gestes qui font gagner un temps fou au quotidien.</p>
+
+            <div class="brief" data-bloc="1">
+                <p class="brief__label">Ce que tu sauras faire</p>
+                <ul class="brief__list">
+                    <li>Compléter un nom avec <code>Tab</code>, rappeler une commande avec <code>↑</code> et la retrouver avec <code>Ctrl+R</code>.</li>
+                    <li>Interrompre une commande (<code>Ctrl+C</code>) ou la suspendre puis la reprendre (<code>Ctrl+Z</code>, <code>fg</code>).</li>
+                    <li>Appliquer les trois réflexes : <code>Tab</code>, <code>man</code>, relecture avant une commande destructive.</li>
+                </ul>
+                <p class="brief__foot"><strong>Avant de commencer :</strong> chapitres <a href="#chap4">Se déplacer &amp; gérer ses fichiers</a> et <a href="#chap13">Commandes internes/externes, PATH &amp; aide</a> · 15 min · un terminal Debian.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="3">
+                <h3>Moins taper, moins se tromper</h3>
+                <p>Un administrateur passe sa journée à taper des commandes longues, avec des noms de fichiers et de dossiers parfois difficiles à orthographier. Chaque caractère tapé à la main est une occasion de faute de frappe, et sur un serveur, une faute peut coûter cher.</p>
+                <p>Les raccourcis du terminal font gagner du temps, mais surtout ils réduisent les erreurs : on laisse le shell compléter, retrouver et reprendre ce qu'on a déjà écrit.</p>
+            </div>
+
+            <div class="lecon__bloc" data-bloc="4">
+                <h3>L'éditeur de ligne, l'historique et les tâches</h3>
+                <p>Quand on tape dans le terminal, c'est le shell qui lit la ligne et propose de l'aide. Le <strong>complètement</strong> (touche <code>Tab</code>) devine la fin d'un nom de commande ou de fichier. L'<strong>historique</strong> garde les commandes déjà tapées : on les parcourt avec les flèches ou on les cherche avec <code>Ctrl+R</code>. Enfin, une commande en cours est une <strong>tâche</strong> du terminal : on peut l'interrompre pour de bon (<code>Ctrl+C</code>) ou la <strong>suspendre</strong> (<code>Ctrl+Z</code>) pour la reprendre ensuite au premier plan avec <code>fg</code>. Suspendre n'arrête pas le programme : il attend.</p>
+                <p class="note">Source : <a href="https://manpages.debian.org/stable/bash/bash.1.en.html" rel="noopener">bash(1)</a> (Readline, History, Job Control).</p>
+            </div>
+
+            <div class="walk" data-bloc="5">
+                <p class="walk__label">Exemple travaillé</p>
+                <p class="walk__title">Relancer une commande longue tapée plus tôt, sans la retaper</p>
+                <ol class="walk__steps">
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 1</b> · chercher</p>
+                        <p class="walk__head"><code>Ctrl+R</code> puis quelques lettres</p>
+                        <p>On tape un morceau de la commande : le shell affiche la plus récente qui le contient. Plusieurs <code>Ctrl+R</code> remontent vers les plus anciennes.</p>
+                        <p class="walk__change">On cherche par mémoire, pas par flèches.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 2</b> · compléter</p>
+                        <p class="walk__head"><code>Tab</code></p>
+                        <p>Pour modifier un nom de fichier, on tape le début puis <code>Tab</code> : si le début est unique, le nom se complète tout seul.</p>
+                        <p class="walk__change">Le shell complète, on ne devine pas.</p>
+                    </li>
+                    <li class="walk__step">
+                        <p class="walk__where"><b>Étape 3</b> · relire</p>
+                        <p class="walk__head">Avant <code>Entrée</code></p>
+                        <p>Surtout pour <code>rm</code>, <code>chmod</code> ou <code>dd</code> : une commande retrouvée dans l'historique n'est pas forcément celle qu'on veut relancer.</p>
+                        <p class="walk__change">On relit chaque commande destructive.</p>
+                    </li>
+                </ol>
+            </div>
 
             <div class="table-wrap"><table>
                 <thead><tr><th>Raccourci</th><th>Action</th></tr></thead>
@@ -3229,9 +3583,33 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
                     <tr><td><code>Ctrl+D</code></td><td>fermer le terminal / se déconnecter</td></tr>
                 </tbody>
             </table></div>
-            <div class="takeaway">
-                <p class="takeaway__label">Les 3 réflexes du débutant</p>
-                <p><strong>1.</strong> <code>Tab</code> pour compléter les noms au lieu de tout taper. <strong>2.</strong> <code>man commande</code> pour lire le manuel de n'importe quelle commande (<code>q</code> pour quitter). <strong>3.</strong> Relire toute commande destructive (<code>rm</code>, <code>chmod</code>, <code>dd</code>) avant d'appuyer sur Entrée.</p>
+            <div class="verify" data-bloc="6" data-constat>
+                <p class="verify__label">Vérifier</p>
+                <p>Tape le début d'un nom de dossier existant puis <code>Tab</code> : le nom se complète. <code>↑</code> rappelle la commande précédente, <code>Ctrl+R</code> affiche une invite de recherche dans l'historique.</p>
+                <p class="verify__fail">Rien ne se complète : le début est peut-être ambigu (appuie deux fois sur <code>Tab</code> pour voir les candidats) ou le nom n'existe pas.</p>
+            </div>
+            <div class="exo" data-bloc="7">
+                <p class="exo__label">À toi — reprendre la main</p>
+                <p>Une commande tourne et le terminal ne te rend pas l'invite. Quel raccourci l'interrompt ? Quel raccourci la met de côté, et quelle commande la reprend ensuite ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>Ctrl+C</code> interrompt ; <code>Ctrl+Z</code> suspend ; <code>fg</code> reprend la tâche suspendue.</p></div></details>
+            </div>
+            <div class="exo exo--sans-indice" data-bloc="7">
+                <p class="exo__label">Variante sans indice</p>
+                <p>Tu as tapé hier une longue commande dont tu ne te rappelles que le mot <code>rsync</code>. Comment la retrouver sans la retaper et sans remonter ligne par ligne ?</p>
+                <details class="reveal"><summary>Voir la solution</summary><div class="reveal__body"><p><code>Ctrl+R</code>, puis taper <code>rsync</code> : le shell affiche la commande la plus récente qui contient ce mot ; <code>Ctrl+R</code> de nouveau remonte vers les plus anciennes.</p></div></details>
+            </div>
+            <div class="panne" data-bloc="8">
+                <p class="exo__label">Quand ça casse — le programme a « disparu »</p>
+                <p>Un collègue travaillait dans un programme en plein écran, a tapé un raccourci par réflexe, et se retrouve à l'invite du shell. Il pense avoir fermé le programme et perdu son travail.</p>
+                <details class="reveal"><summary>Voir la démarche et la cause</summary><div class="reveal__body"><p><strong>Démarche :</strong> le programme est-il fermé, ou seulement mis de côté ? <strong>Cause :</strong> si le raccourci était <code>Ctrl+Z</code>, le programme est <em>suspendu</em>, pas terminé. <strong>Correctif :</strong> <code>fg</code> le ramène au premier plan.</p></div></details>
+            </div>
+            <div class="takeaway" data-bloc="9">
+                <p class="takeaway__label">À retenir</p>
+                <ul>
+                    <li><code>Tab</code> pour compléter, <code>↑</code> et <code>Ctrl+R</code> pour retrouver : moins de frappe, moins de fautes.</li>
+                    <li><code>Ctrl+C</code> interrompt, <code>Ctrl+Z</code> suspend (reprise avec <code>fg</code>).</li>
+                    <li>Les 3 réflexes : <code>Tab</code> ; <code>man commande</code> (<code>q</code> pour quitter) ; relire toute commande destructive (<code>rm</code>, <code>chmod</code>, <code>dd</code>) avant <code>Entrée</code>.</li>
+                </ul>
             </div>
         </section>
 
@@ -3499,6 +3877,25 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
             </table></div>
         </section>
 
+        <section class="brief" id="livrable" data-bloc="10">
+            <p class="brief__label">Livrable du module</p>
+            <div class="lab" data-lab="livrable-linux-debian">
+                <p class="lab__label">Livrable · runbook et plan de sauvegarde</p>
+                <p class="lab__title">Installer et durcir un serveur Debian, puis le sauvegarder</p>
+                <div class="lab__meta"><span><b>Objectif :</b> écrire, pour une VM Debian du lab (nom fictif, par exemple <code>srv-debian</code>, domaine <code>orion.local</code>), un runbook court d'installation et de durcissement, et un plan de sauvegarde que tu as réellement testé</span><span><b>Point de départ :</b> une VM Debian neuve et les chapitres du module</span><span><b>Durée :</b> ≈ 1 h 30</span></div>
+                <ol class="lab__steps">
+                    <li><p><strong>Compte et droits</strong> — un utilisateur nominatif dans le groupe <code>sudo</code> (sans l'avoir retiré de ses autres groupes), vérifié avec <code>groups</code>. Dans le runbook : la commande et la preuve.</p></li>
+                    <li><p><strong>Mises à jour</strong> — <code>apt update</code> puis la mise à jour des paquets, et la version de Debian relevée dans <code>/etc/os-release</code>.</p></li>
+                    <li><p><strong>Réseau</strong> — adresse, passerelle et DNS lus avec <code>ip a</code> et <code>ip r</code>, et la configuration permanente notée (pas seulement un réglage temporaire).</p></li>
+                    <li><p><strong>Accès SSH par clé</strong> — clé ed25519 générée sur ton poste, clé publique diffusée, connexion testée, <code>~/.ssh</code> en 700. Mot de passe SSH désactivé seulement après ce test, avec une session de secours ouverte. Aucune clé ni mot de passe réels dans le livrable.</p></li>
+                    <li><p><strong>Services et journaux</strong> — le service SSH actif au démarrage (<code>systemctl</code>), et l'endroit où lire ses journaux (<code>journalctl</code>).</p></li>
+                    <li><p><strong>Disque de données</strong> — disque partitionné, formaté, monté par UUID dans <code>/etc/fstab</code>, testé avec <code>findmnt --verify</code> avant redémarrage.</p></li>
+                    <li><p><strong>Plan de sauvegarde</strong> — une page : ce qu'on sauvegarde, complète et incrémentielle avec <code>tar -g</code>, la ligne <code>cron</code>, l'emplacement, et une copie hors ligne. Le temps d'une restauration réelle, mesuré avec le lab de restauration du chapitre Sauvegarder.</p></li>
+                    <li><p><strong>Relecture</strong> — aucune adresse réelle, aucun nom de machine réel : remplace-les par des valeurs d'exemple (<code>orion.local</code>, adresses du plan du lab) ; chaque étape a sa commande de contrôle.</p></li>
+                </ol>
+            </div>
+        </section>
+
         <section class="test" id="test" data-test="linux-debian">
             <noscript><p class="note">Le test de fin de module a besoin de JavaScript pour s'afficher.</p></noscript>
         </section>
@@ -3539,10 +3936,10 @@ lv_storage vg_data -wi-ao---- 30,00g</pre>
     <p><a href="../index.html">← Retour au portail</a> · <a href="../examens.html">Examens transversaux</a></p>
 </footer>
 
-<script src="../assets/catalogue.js?v=a8bae127"></script>
+<script src="../assets/catalogue.js?v=40c03489"></script>
 <script src="../assets/app.js?v=fabe4251"></script>
 <script src="../assets/notes.js?v=172c0c32"></script>
-<script src="../assets/quiz/linux-debian.js?v=2f74321e"></script>
+<script src="../assets/quiz/linux-debian.js?v=644bd424"></script>
 <script src="../assets/quiz.js?v=87192477"></script>
 <script src="../assets/pratique.js?v=6ed4d335"></script>
 <script src="../assets/atelier.js?v=c35298a6"></script>

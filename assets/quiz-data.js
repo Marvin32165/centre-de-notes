@@ -518,7 +518,7 @@ window.QUIZ_BANK = {
     name: "Dépannage réseau",
     file: "depannage-reseau.html",
     title: "Test — Dépannage réseau",
-    intro: "Huit chapitres, vingt questions tirées au hasard parmi soixante : que fais-tu, et que conclus-tu de ce que tu vois ?",
+    intro: "Huit chapitres, vingt questions tirées au hasard : que fais-tu, et que conclus-tu de ce que tu vois ?",
     pass: 70,
     questions: [
     {
@@ -999,6 +999,14 @@ window.QUIZ_BANK = {
         c: ["La méthode bottom-up", "Le divide and conquer", "La méthode STARR", "La grille de lecture par couches"],
         a: 2,
         why: "Le chapitre 08 renvoie au module Entretien : la méthode STARR sert à raconter un incident en entretien. Bottom-up, divide and conquer et la grille par couches sont des façons de chercher une panne, pas de la raconter.",
+        ref: "Chapitre 08"
+    },
+    {
+        lvl: 2,
+        q: "Un incident touche tout un étage depuis ce matin et le diagnostic dure. Quel message envoies-tu à l'utilisateur pendant ce temps ?",
+        c: ["Aucun : on le prévient seulement quand tout est réparé", "Un point d'étape sans jargon : ce qui est écarté, ce qui est en test, et quand il aura des nouvelles", "La liste complète des commandes lancées et de leurs sorties", "Une demande de redémarrer son poste pour gagner du temps"],
+        a: 1,
+        why: "L'utilisateur ne voit pas ton travail : sans nouvelles il rappelle ou ouvre un second ticket. Le point d'étape lui dit où on en est, en langage clair, et quand il aura la suite. Les commandes et sorties vont dans le ticket, pour le collègue qui reprend ; un redémarrage demandé au hasard modifie l'état du poste avant d'avoir observé.",
         ref: "Chapitre 08"
     }
     ]

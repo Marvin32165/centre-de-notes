@@ -227,7 +227,7 @@ window.CATALOGUE = {
       "icon": "?!",
       "desc": "La méthode par couches, les commandes de diagnostic Windows, Linux et Cisco, la lecture de captures, les signatures d'une douzaine de pannes classiques et six scénarios de panne interactifs.",
       "level": 2,
-      "duree": "3 h",
+      "duree": "5 h",
       "chapters": 8,
       "prereq": [
         "reseau-bases",

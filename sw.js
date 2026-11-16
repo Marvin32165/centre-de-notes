@@ -4,28 +4,28 @@
    - pages : réseau d'abord (toujours la dernière version), cache si le réseau manque ;
    - polices Google : gardées au premier chargement.
    VERSION et FICHIERS sont réécrits par site/outils/construit.js — ne pas éditer à la main. */
-const VERSION = 'adff8f8f4c';
+const VERSION = 'f70c2e5b1f';
 const FICHIERS = [
   "assets/app.js?v=fabe4251",
   "assets/atelier.js?v=c35298a6",
   "assets/carnet.js?v=69bcfe1d",
   "assets/cartes.js?v=e3c23ad2",
-  "assets/catalogue.js?v=44004775",
+  "assets/catalogue.js?v=b9dafcdc",
   "assets/commandes-ui.js?v=12f19476",
   "assets/commandes.js?v=7087bc5f",
   "assets/dojo.js?v=b46a816e",
   "assets/favicon.svg",
   "assets/glossaire-ui.js?v=178c909e",
-  "assets/glossaire.js?v=0b418351",
+  "assets/glossaire.js?v=ff75df1e",
   "assets/notes.js?v=172c0c32",
   "assets/plan.js?v=5a5966ea",
   "assets/pratique.js?v=6ed4d335",
-  "assets/quiz-data.js?v=adc48d78",
+  "assets/quiz-data.js?v=967b8f71",
   "assets/quiz.js?v=87192477",
   "assets/quiz/azure.js?v=42079444",
   "assets/quiz/ccna-reseau.js?v=de311779",
   "assets/quiz/cisco-securite.js?v=b16892fb",
-  "assets/quiz/depannage-reseau.js?v=a452307b",
+  "assets/quiz/depannage-reseau.js?v=9ca61d6b",
   "assets/quiz/docker.js?v=4750fdd2",
   "assets/quiz/dpm.js?v=4a76a83c",
   "assets/quiz/entretien-recrutement.js?v=89df4143",
@@ -51,7 +51,7 @@ const FICHIERS = [
   "assets/quiz/windows-server.js?v=f7ac0523",
   "assets/quiz/zabbix-windows.js?v=50232a45",
   "assets/revision.js?v=843cfd26",
-  "assets/search-index.js?v=307e019d",
+  "assets/search-index.js?v=6b9be2ac",
   "assets/search.js?v=80a32003",
   "assets/serie.js?v=3e1cada5",
   "assets/simulateurs.js?v=b2610493",

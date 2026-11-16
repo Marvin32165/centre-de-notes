@@ -61,6 +61,13 @@ QoS | Quality of Service | Ensemble de mécanismes qui donnent la priorité à c
 Duplex | | Mode d'un lien : full (émet et reçoit en même temps) ou half ; un désaccord des deux côtés cause erreurs et lenteurs. | duplex
 PoE | Power over Ethernet | Alimentation électrique d'un appareil (téléphone, borne Wi-Fi) par le câble réseau. | PoE
 Wi-Fi | IEEE 802.11 | Réseau local sans fil. | Wi-Fi
+ARP | Address Resolution Protocol | Protocole qui retrouve l'adresse MAC d'une machine du même réseau à partir de son adresse IP ; le résultat est gardé dans un cache (voisins) qu'on peut lire pour vérifier la passerelle. | ARP\b
+APIPA | Automatic Private IP Addressing | Adresse 169.254.x.x qu'un poste s'attribue seul quand aucun serveur DHCP ne répond (lien local, RFC 3927) : elle révèle un DHCP injoignable. | APIPA;169\.254
+RST | Reset | Segment TCP qui refuse ou coupe une connexion ; reçu aussitôt après un SYN, il signifie que rien n'écoute sur ce port. | \bRST\b
+CRC | Cyclic Redundancy Check | Contrôle d'erreur en fin de trame ; un compteur CRC qui monte signale des trames abîmées (câble, duplex). | \bCRC\b
+err-disabled | | État d'un port de switch Cisco coupé automatiquement après une violation de sécurité (port-security, BPDU Guard) ; on retire la cause avant de le réactiver. | err-disabled
+BPDU Guard | | Protection Cisco qui coupe un port PortFast dès qu'il reçoit des BPDU de spanning tree, signe d'un switch branché par erreur. | BPDU Guard
+Bottom-up | | Méthode de diagnostic qui teste du bas vers le haut des couches (câble, adresse, route, port, service) ; chaque étape réussie élimine une couche. | bottom-up
 ## Téléphonie
 VoIP | Voice over IP | Téléphonie sur un réseau IP. | VoIP
 SIP | Session Initiation Protocol | Protocole de signalisation qui établit, modifie et termine les appels (INVITE, 180, 200 OK, BYE). | SIP
